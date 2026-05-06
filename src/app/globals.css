@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Helixa";
+  src: url("/fonts/Helixa-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Helixa";
+  src: url("/fonts/Helixa-Book.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Helixa";
+  src: url("/fonts/Helixa-Regular.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --rojo: #ed3424;
+  --blanco: #ffffff;
+  --negro: #111111;
+  --tinta: #1a1a1a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-rojo: #ed3424;
+  --color-blanco: #ffffff;
+  --color-negro: #111111;
+  --font-sans: "Helixa", "Helvetica Neue", Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html, body {
+  background: var(--blanco);
+  color: var(--rojo);
+  font-family: "Helixa", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--rojo);
+  color: var(--blanco);
+}
+
+img { -webkit-user-drag: none; user-select: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
