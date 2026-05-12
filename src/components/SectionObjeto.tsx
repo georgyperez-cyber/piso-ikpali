@@ -27,7 +27,6 @@ export default function SectionObjeto() {
           donde los objetos conviven, rotan,
           <Img src="/assets-optimized/hero-icono-negro-4-600.webp" alt="" className={ICON} />
           se venden,
-          <br />
           se
           <Img src="/assets-optimized/hero-icono-negro-3-600.webp" alt="" className={ICON_LG} />
           reponen y construyen

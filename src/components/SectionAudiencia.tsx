@@ -127,7 +127,7 @@ export default function SectionAudiencia() {
   return (
     <section className="relative w-full bg-blanco py-40 md:py-56 px-6 md:px-12">
       <div className="mx-auto max-w-[1400px]">
-        <div className="flex items-baseline justify-between mb-12 md:mb-16">
+        <div className="flex flex-col gap-3 md:flex-row md:items-baseline md:justify-between mb-12 md:mb-16">
           <p className="text-[11px] tracking-[0.22em] uppercase text-rojo/70">audiencia · 02</p>
           <h2
             className="text-rojo font-medium"

@@ -48,11 +48,11 @@ export default function SectionModelo() {
     const ctx = gsap.context(() => {
       const split = splitRef.current!;
       if (reduced) {
-        split.style.gridTemplateColumns = "65fr 35fr";
+        split.style.gridTemplateColumns = "minmax(0,65fr) minmax(0,35fr)";
         return;
       }
       const ratio = { v: 0.5 };
-      split.style.gridTemplateColumns = "50fr 50fr";
+      split.style.gridTemplateColumns = "minmax(0,50fr) minmax(0,50fr)";
 
       gsap.to(ratio, {
         v: 0.65,
@@ -66,7 +66,7 @@ export default function SectionModelo() {
         },
         onUpdate: () => {
           const r = ratio.v;
-          split.style.gridTemplateColumns = `${r * 100}fr ${(1 - r) * 100}fr`;
+          split.style.gridTemplateColumns = `minmax(0,${r * 100}fr) minmax(0,${(1 - r) * 100}fr)`;
         },
       });
     }, splitRef);
@@ -97,8 +97,8 @@ export default function SectionModelo() {
       */}
       <div
         ref={splitRef}
-        className="w-full grid"
-        style={{ gridTemplateColumns: "65fr 35fr" }}
+        className="w-full grid overflow-x-clip"
+        style={{ gridTemplateColumns: "minmax(0,65fr) minmax(0,35fr)" }}
       >
         {/* Eyebrow row */}
         <div className="bg-rojo text-blanco px-6 md:px-12 pt-12 md:pt-16 pb-4 md:pb-6">
@@ -138,7 +138,7 @@ export default function SectionModelo() {
         <div className="bg-rojo text-blanco px-6 md:px-12 pt-10 md:pt-14 pb-12 md:pb-16 border-t border-blanco/30 flex items-end justify-between gap-4">
           <span
             className="font-medium leading-[0.85] tabular-nums"
-            style={{ fontSize: "clamp(110px, 20vw, 320px)", letterSpacing: "-0.05em" }}
+            style={{ fontSize: "clamp(72px, 18vw, 320px)", letterSpacing: "-0.05em" }}
           >
             65
           </span>
@@ -149,11 +149,11 @@ export default function SectionModelo() {
         <div className="bg-blanco text-rojo px-6 md:px-12 pt-10 md:pt-14 pb-12 md:pb-16 border-t border-rojo/25 border-l border-l-rojo flex items-end justify-between gap-4">
           <span
             className="font-medium leading-[0.85] tabular-nums"
-            style={{ fontSize: "clamp(70px, 12vw, 200px)", letterSpacing: "-0.05em" }}
+            style={{ fontSize: "clamp(44px, 11vw, 200px)", letterSpacing: "-0.05em" }}
           >
             35
           </span>
-          <span className="text-[10px] md:text-[12px] tracking-[0.18em] uppercase pb-2 md:pb-4 text-rojo/70 max-w-[12ch] text-right">
+          <span className="hidden md:block text-[10px] md:text-[12px] tracking-[0.18em] uppercase pb-2 md:pb-4 text-rojo/70 max-w-[12ch] text-right">
             cubre operación + edición
           </span>
         </div>

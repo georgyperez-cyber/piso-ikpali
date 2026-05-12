@@ -120,7 +120,7 @@ export default function SectionCierre() {
           </p>
 
           <a
-            href="mailto:hola@pisoikpali.mx?subject=Propuesta%20de%20piezas%20para%20Piso%20ikpali"
+            href="mailto:hola@pisoikpali.com?subject=Propuesta%20de%20piezas%20para%20Piso%20ikpali"
             className="inline-flex items-center gap-4 bg-blanco text-rojo px-8 py-5 text-[15px] tracking-tight font-medium hover:bg-blanco/90 transition-colors group"
           >
             proponer piezas
@@ -139,10 +139,10 @@ export default function SectionCierre() {
           <div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-rojo/60 mb-3">correo</p>
             <a
-              href="mailto:hola@pisoikpali.mx"
+              href="mailto:hola@pisoikpali.com"
               className="text-rojo font-medium text-[15px] hover:underline"
             >
-              hola@pisoikpali.mx
+              hola@pisoikpali.com
             </a>
           </div>
           <div>

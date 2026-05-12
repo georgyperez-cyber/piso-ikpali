@@ -142,10 +142,10 @@ export default function Hero() {
       <link rel="preload" as="image" href="/logo.svg" />
       <link rel="preload" as="image" href="/assets-optimized/hero-icono-foto-1-720.webp" />
 
-      <div className="absolute top-6 left-6 md:top-8 md:left-10 text-[11px] tracking-[0.18em] uppercase text-rojo/80 z-10">
+      <div className="absolute top-5 left-5 md:top-8 md:left-10 text-[8px] tracking-[0.1em] md:text-[11px] md:tracking-[0.18em] uppercase text-rojo/80 z-10 whitespace-nowrap">
         piso ikpali · est. 2025 · cdmx
       </div>
-      <div className="absolute top-6 right-6 md:top-8 md:right-10 text-[11px] tracking-[0.18em] uppercase text-rojo/80 z-10">
+      <div className="absolute top-5 right-5 md:top-8 md:right-10 text-[8px] tracking-[0.1em] md:text-[11px] md:tracking-[0.18em] uppercase text-rojo/80 z-10 whitespace-nowrap">
         dentro de asamblea
       </div>
 
@@ -164,7 +164,7 @@ export default function Hero() {
           {/* Wrapper collapses ALL of "( stage )" to zero width when closed */}
           <span
             data-wrapper
-            className="relative inline-flex items-center justify-center overflow-hidden mx-0 will-change-[width]"
+            className="relative inline-flex items-center justify-center overflow-hidden mx-[0.1em] will-change-[width]"
             style={{ width: 0, height: "clamp(100px, 14vw, 210px)" }}
           >
             <span className="inline-block leading-none px-1 md:px-2">(</span>
