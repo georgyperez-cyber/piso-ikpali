@@ -143,7 +143,7 @@ export default function Hero() {
       <link rel="preload" as="image" href="/assets-optimized/hero-icono-foto-1-720.webp" />
 
       <div className="absolute top-5 left-5 md:top-8 md:left-10 text-[8px] tracking-[0.1em] md:text-[11px] md:tracking-[0.18em] uppercase text-rojo/80 z-10 whitespace-nowrap">
-        piso ikpali · est. 2025 · cdmx
+        piso ikpali · est. 2026 · cdmx
       </div>
       <div className="absolute top-5 right-5 md:top-8 md:right-10 text-[8px] tracking-[0.1em] md:text-[11px] md:tracking-[0.18em] uppercase text-rojo/80 z-10 whitespace-nowrap">
         dentro de asamblea
