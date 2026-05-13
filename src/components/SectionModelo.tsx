@@ -27,8 +27,8 @@ const TERMINOS = [
   },
   {
     k: "Inventario",
-    s: "Asegurado en sitio",
-    v: "Registrado al ingresar y cubierto por el seguro de Asamblea.",
+    s: "Lo gestionamos nosotros",
+    v: "Nos encargamos del inventario de las piezas que tenemos en el espacio.",
   },
   {
     k: "Contenido",
