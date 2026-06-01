@@ -22,8 +22,8 @@ const TERMINOS = [
   },
   {
     k: "Devolución",
-    s: "Libre · 5 días",
-    v: "Retiras piezas avisando con cinco días hábiles. Sin penalizaciones.",
+    s: "Sin penalización",
+    v: "Sin penalización siempre y cuando se cumpla con el tiempo del acuerdo.",
   },
   {
     k: "Inventario",

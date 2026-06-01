@@ -2,7 +2,7 @@ import Img from "./Img";
 
 const REFERENTES = [
   {
-    nombre: "Tienda de Tetlán",
+    nombre: "Tienda de Tetetlán",
     nota: "Selección de objeto mexicano contemporáneo, Guadalajara.",
   },
   {
