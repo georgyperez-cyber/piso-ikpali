@@ -159,7 +159,7 @@ export default function SectionCierre() {
           <div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-rojo/60 mb-3">ubicación</p>
             <p className="text-rojo font-medium text-[15px]">
-              Asamblea
+              Fayet
               <br />
               Ciudad de México
             </p>

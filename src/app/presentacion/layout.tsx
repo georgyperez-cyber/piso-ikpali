@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 export const metadata: Metadata = {
   title: "piso ikpali — presentación a marcas",
   description:
-    "Pitch comercial para marcas y diseñadores invitados a consignar en Piso ikpali, dentro de Asamblea, Ciudad de México.",
+    "Pitch comercial para marcas y diseñadores invitados a consignar en Piso ikpali, dentro de Fayet, Ciudad de México.",
 };
 
 export const viewport: Viewport = {

@@ -146,7 +146,7 @@ export default function Hero() {
         piso ikpali · est. 2026 · cdmx
       </div>
       <div className="absolute top-5 right-5 md:top-8 md:right-10 text-[8px] tracking-[0.1em] md:text-[11px] md:tracking-[0.18em] uppercase text-rojo/80 z-10 whitespace-nowrap">
-        dentro de asamblea
+        dentro de fayet
       </div>
 
       <div className="relative h-screen w-full flex flex-col items-center justify-center px-4">
@@ -211,7 +211,7 @@ export default function Hero() {
             habitarse — no para exhibirse.
           </p>
           <p data-paragraph className="text-[13px] md:text-[14px] leading-relaxed mb-4 font-light will-change-transform">
-            Opera dentro de <em className="not-italic font-medium">Asamblea</em>, un hub creativo
+            Opera dentro de <em className="not-italic font-medium">Fayet</em>, un hub creativo
             en la Ciudad de México. Cada objeto en el espacio puede comprarse. El cliente no
             necesita investigar ni conocer todas las marcas: la selección es la garantía.
           </p>

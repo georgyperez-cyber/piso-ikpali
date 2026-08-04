@@ -20,7 +20,7 @@ const PASOS = [
   {
     n: "03",
     t: "Entrega de piezas",
-    d: "Coordinamos la recepción en Asamblea. Inventario fotografiado y registrado al ingresar.",
+    d: "Coordinamos la recepción en Fayet. Inventario fotografiado y registrado al ingresar.",
     eta: "1–2 sem",
   },
   {
@@ -32,7 +32,7 @@ const PASOS = [
   {
     n: "05",
     t: "Lanzamiento en espacio y canales",
-    d: "Las piezas entran al montaje, a Instagram, al sitio y a la agenda de activaciones de Asamblea cuando aplica.",
+    d: "Las piezas entran al montaje, a Instagram, al sitio y a la agenda de activaciones de Fayet cuando aplica.",
     eta: "1 día",
   },
   {

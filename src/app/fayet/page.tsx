@@ -1,18 +1,28 @@
+import type { Metadata } from "next";
+
 import Hero from "@/components/Hero";
 import SectionObjeto from "@/components/SectionObjeto";
 import SectionAudiencia from "@/components/SectionAudiencia";
 import SectionGlosario from "@/components/SectionGlosario";
 import SectionCuraduria from "@/components/SectionCuraduria";
-import SectionFayet from "@/components/SectionFayet";
-import SectionModelo from "@/components/SectionModelo";
-import SectionBeneficios from "@/components/SectionBeneficios";
-import SectionProceso from "@/components/SectionProceso";
 import SectionEspacios from "@/components/SectionEspacios";
+import SectionMarcas from "@/components/SectionMarcas";
 import SectionCierre from "@/components/SectionCierre";
 import SectionTextura from "@/components/SectionTextura";
 import Marquee from "@/components/Marquee";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "piso ikpali — para fayet",
+  description:
+    "Piso ikpali presentado a la comunidad de Fayet: qué es, a quién le habla, cómo cura, y las marcas que trae al espacio.",
+  robots: { index: false, follow: false },
+};
+
+// Versión del pitch para la gente de Fayet.
+// Reutiliza las secciones de la home. Fuera: modelo de negocio, "por qué estar",
+// el proceso de consignación, y la explicación a fondo de qué es Fayet.
+// Dentro, nuevo: la lámina de marcas.
+export default function FayetPage() {
   return (
     <main className="bg-blanco text-rojo">
       <Hero />
@@ -48,17 +58,11 @@ export default function Home() {
         ]}
       />
 
-      <SectionFayet />
-
-      <SectionTextura textura={7} iconoRojo={2} caption="el contexto" />
-
-      <SectionModelo />
-      <SectionBeneficios />
-      <SectionProceso />
+      <SectionEspacios />
 
       <SectionTextura textura={8} iconoRojo={6} caption="el ritmo" />
 
-      <SectionEspacios />
+      <SectionMarcas />
       <SectionCierre />
     </main>
   );

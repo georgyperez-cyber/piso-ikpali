@@ -5,7 +5,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Deck shell — keyboard + click navigation
+// Deck shell — versión para la comunidad de Fayet.
+// Reutiliza portada, plantillas y átomos del deck a marcas, sin modelo de
+// negocio, sin "por qué entrar", sin seis pasos, sin explicar Fayet.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function Deck() {
@@ -53,7 +55,7 @@ export default function Deck() {
         else next();
       }}
       role="application"
-      aria-label="piso ikpali presentación"
+      aria-label="piso ikpali presentación a fayet"
     >
       <div className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-6 md:px-10 pt-5 md:pt-7 pointer-events-none">
         <span
@@ -61,7 +63,7 @@ export default function Deck() {
             chromeIsLight ? "text-blanco/85" : "text-rojo/70"
           }`}
         >
-          piso ikpali · presentación · 2026
+          piso ikpali · fayet · 2026
         </span>
         <span
           className={`text-[9px] md:text-[11px] tracking-[0.22em] uppercase tabular-nums ${
@@ -169,7 +171,7 @@ function SlideShell({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 01 — Cover: icon grid full-bleed with "piso" / "ikpali" gaps + random flip
+// 01 — Portada: reutilizada tal cual del deck a marcas.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function S01Cover() {
@@ -177,7 +179,6 @@ function S01Cover() {
   const ROWS = 5;
   const total = COLS * ROWS;
 
-  // Wait until after mount to randomize, so SSR HTML matches first client render
   const [icons, setIcons] = useState<number[] | null>(null);
 
   useEffect(() => {
@@ -188,9 +189,7 @@ function S01Cover() {
     setIcons(arr);
   }, [total]);
 
-  // Where the word "piso" sits in the grid (row index, col index, span)
   const PISO = { row: 1, col: 1, colSpan: 2 };
-  // Where "ikpali" sits — different row, on the right side
   const IKPALI = { row: 3, col: 4, colSpan: 3 };
 
   const absorbed = useMemo(() => {
@@ -203,7 +202,6 @@ function S01Cover() {
     return s;
   }, []);
 
-  // Cells available to flip
   const flipCandidates = useMemo(() => {
     const arr: number[] = [];
     for (let i = 0; i < total; i++) if (!absorbed.has(i)) arr.push(i);
@@ -242,7 +240,7 @@ function S01Cover() {
             style={{ gridRow: r + 1, gridColumn: c + 1 }}
             className="flex items-center justify-center p-3 md:p-5 lg:p-6"
           >
-              <img
+            <img
               src={src}
               alt=""
               aria-hidden
@@ -302,7 +300,7 @@ function S01Cover() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 02 — Intro: pure typography. Small logo in the middle, text around it.
+// 02 — Qué es. Misma plantilla de intro, reencuadrada hacia la casa.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function S02Intro() {
@@ -341,7 +339,7 @@ function S02Intro() {
         </p>
 
         <span className="text-[10px] md:text-[11px] tracking-[0.28em] uppercase text-rojo/55 pt-2">
-          segunda expresión de ikpali studio · fayet cdmx · 2026
+          la nueva expresión de objeto que se suma a la casa
         </span>
       </div>
     </SlideShell>
@@ -349,7 +347,7 @@ function S02Intro() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 03 — Nuestro equipo — B&W team photo, big title
+// 03 — Nuestro equipo — reutilizada tal cual.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function S03Equipo() {
@@ -384,101 +382,10 @@ function S03Equipo() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 04 — Fayet + Visión, split layout
+// 04 — Los vecinos — misma plantilla, reencuadrada como pertenencia.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function S04Fayet() {
-  return (
-    <section className="h-full w-full bg-blanco text-rojo flex flex-col">
-      <div className="px-6 md:px-12 pt-16 md:pt-20">
-        <Eyebrow>03 · el contexto</Eyebrow>
-      </div>
-      <div className="flex-1 min-h-0 grid grid-cols-12 gap-0">
-        {/* LEFT half — fayet info + visión */}
-        <div className="col-span-12 md:col-span-6 px-6 md:px-12 pb-20 md:pb-24 flex flex-col justify-center gap-6 md:gap-8">
-          <h2
-            className="font-medium leading-[0.9]"
-            style={{ fontSize: "clamp(44px, 7vw, 120px)", letterSpacing: "-0.028em" }}
-          >
-            fayet,
-            <br />
-            cdmx.
-          </h2>
-
-          <p
-            className="font-light max-w-[52ch]"
-            style={{ fontSize: "clamp(13px, 1.1vw, 17px)" }}
-          >
-            Un espacio multidisciplinario en la Ciudad de México. Gastronomía, diseño, música y
-            arte conviven bajo un mismo techo — un organismo vivo, no un programa cerrado.
-          </p>
-
-          <p
-            className="font-medium text-rojo"
-            style={{ fontSize: "clamp(16px, 1.7vw, 26px)", letterSpacing: "-0.012em" }}
-          >
-            fayet funciona como reunión.
-          </p>
-
-          <div className="grid grid-cols-3 gap-3 md:gap-5 pt-2 max-w-[640px]">
-            {[
-              { k: "liderazgo", v: "goya taller" },
-              { k: "curaduría", v: "filo art services" },
-              { k: "asesoría", v: "ikpali studio" },
-            ].map((r) => (
-              <div key={r.k} className="flex flex-col gap-1.5 border-l border-rojo/30 pl-3">
-                <span className="text-[10px] tracking-[0.24em] uppercase text-rojo/55">
-                  {r.k}
-                </span>
-                <span
-                  className="font-medium leading-tight"
-                  style={{ fontSize: "clamp(12px, 0.95vw, 15px)" }}
-                >
-                  {r.v}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 md:gap-5 pt-4 border-t border-rojo/20 max-w-[640px]">
-            {[
-              { k: "gastronomía", v: "la mesa como reunión" },
-              { k: "cultura", v: "exhibiciones e intervenciones" },
-              { k: "entretenimiento", v: "música y vida nocturna" },
-            ].map((r) => (
-              <div key={r.k} className="flex flex-col gap-1 pt-3">
-                <span className="text-[10px] tracking-[0.24em] uppercase text-rojo/55">
-                  {r.k}
-                </span>
-                <span
-                  className="font-light text-rojo/85 leading-snug"
-                  style={{ fontSize: "clamp(11px, 0.9vw, 13px)" }}
-                >
-                  {r.v}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* RIGHT half — gif clean on white */}
-        <div className="hidden md:flex col-span-6 items-center justify-center">
-          <img
-            src="/sketch-turntable.gif"
-            alt="boceto del espacio en rotación"
-            className="w-full h-full object-contain"
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 05 — Los vecinos — centered list, big
-// ─────────────────────────────────────────────────────────────────────────────
-
-function S05Vecinos() {
+function S04Vecinos() {
   const items = [
     { name: "goya taller", note: "cocina · panadería · comedor" },
     { name: "com com com", note: "sound bar" },
@@ -489,7 +396,7 @@ function S05Vecinos() {
   ];
 
   return (
-    <SlideShell eyebrow="04 · los vecinos">
+    <SlideShell eyebrow="03 · un vecino más en la reunión">
       <div className="h-full flex flex-col items-center justify-center gap-3 md:gap-5 text-center">
         {items.map((v) => (
           <div key={v.name} className="flex flex-col items-center gap-1.5">
@@ -525,65 +432,110 @@ function S05Vecinos() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 06 — Por qué piso ikpali — RED slide
+// 05 — Las marcas — NUEVA lámina, tipografía grande, las 12 marcas (slide rojo).
 // ─────────────────────────────────────────────────────────────────────────────
 
-function S06PorQue() {
+const MARCAS = [
+  "Aventurina",
+  "Estela Williams",
+  "Estebanez Studio",
+  "en_ro",
+  "Pulpo y chango",
+  "Rio Estudio",
+  "Burro",
+  "kmy",
+  "MOT studio",
+  "Paralelo Mexicano",
+  "Malfarero",
+  "La Casa Ocho",
+];
+
+function S05Marcas() {
+  return (
+    <section className="h-full w-full bg-rojo text-blanco flex flex-col">
+      <div className="px-6 md:px-16 pt-16 md:pt-20 flex items-baseline justify-between gap-4">
+        <Eyebrow light>04 · la selección</Eyebrow>
+        <span className="text-[10px] md:text-[11px] tracking-[0.28em] uppercase text-blanco/60 tabular-nums">
+          12 marcas
+        </span>
+      </div>
+      <div className="flex-1 min-h-0 px-6 md:px-16 pb-20 md:pb-24 flex items-center">
+        <div className="flex flex-wrap items-baseline gap-x-6 md:gap-x-10 gap-y-1 md:gap-y-2 w-full">
+          {MARCAS.map((m, idx) => (
+            <span key={m} className="inline-flex items-baseline">
+              <span
+                className="font-medium leading-[0.92] text-blanco"
+                style={{ fontSize: "clamp(30px, 5.4vw, 96px)", letterSpacing: "-0.03em" }}
+              >
+                {m}
+              </span>
+              {idx < MARCAS.length - 1 ? (
+                <span
+                  aria-hidden
+                  className="text-blanco/40 font-light px-2 md:px-3"
+                  style={{ fontSize: "clamp(24px, 4vw, 72px)" }}
+                >
+                  ·
+                </span>
+              ) : null}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 06 — Lo que le sumamos a la reunión — versión comunidad, no venta.
+//      (Se puede quitar sin romper el flujo.)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function S06Suma() {
   const items = [
     {
-      n: "01",
-      t: "legitimidad editorial",
-      v: "el espacio carga peso curatorial — las marcas que entran heredan ese contexto.",
+      t: "público que compra por valor",
+      v: "el cliente de piso no llega por descuento; llega porque confía en la selección. público que también camina la casa.",
     },
     {
-      n: "02",
-      t: "cliente que compra por valor",
-      v: "no llega por descuento; llega porque confía en la selección.",
+      t: "contenido que circula",
+      v: "cada pieza se fotografía y se documenta. material editorial que suma a la conversación del espacio.",
     },
     {
-      n: "03",
-      t: "contenido editorial",
-      v: "fotografía y ficha curatorial reutilizables por la marca.",
+      t: "un motivo más para volver",
+      v: "no es un pop-up ni un evento. es un lugar que se queda — y que da razón de regresar.",
     },
     {
-      n: "04",
-      t: "visibilidad sin gestión",
-      v: "fayet trae la audiencia. la marca aparece en la agenda cultural.",
-    },
-    {
-      n: "05",
-      t: "comunidad entre marcas",
-      v: "diálogo con los vecinos curados. clientes compartidos.",
-    },
-    {
-      n: "06",
-      t: "continuidad curatorial",
-      v: "no es un evento ni una feria. es un lugar al que se vuelve.",
+      t: "clientes compartidos",
+      v: "el que viene por goya o por el café, se encuentra el objeto. el que viene por el objeto, se queda a la mesa.",
     },
   ];
 
   return (
-    <SlideShell eyebrow="05 · por qué" bg="rojo">
+    <SlideShell eyebrow="05 · lo que compartimos">
       <div className="h-full flex flex-col justify-center gap-10 md:gap-14 max-w-[1200px] mx-auto">
         <h2
-          className="font-medium leading-[0.92] text-blanco text-center"
-          style={{ fontSize: "clamp(36px, 6vw, 92px)", letterSpacing: "-0.025em" }}
+          className="font-medium leading-[0.95]"
+          style={{ fontSize: "clamp(32px, 5.4vw, 84px)", letterSpacing: "-0.025em" }}
         >
-          por qué estar en piso ikpali.
+          lo que le sumamos a la reunión.
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 md:gap-x-14 gap-y-8 md:gap-y-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 md:gap-x-16 gap-y-8 md:gap-y-10">
           {items.map((c) => (
-            <div key={c.n} className="flex flex-col gap-2 md:gap-3">
+            <div
+              key={c.t}
+              className="flex flex-col gap-2 md:gap-3 border-t border-rojo/20 pt-4 md:pt-5"
+            >
               <span
-                className="text-blanco font-medium leading-tight"
-                style={{ fontSize: "clamp(18px, 1.8vw, 26px)", letterSpacing: "-0.014em" }}
+                className="font-medium leading-tight"
+                style={{ fontSize: "clamp(18px, 1.9vw, 28px)", letterSpacing: "-0.014em" }}
               >
                 {c.t}
               </span>
               <span
-                className="text-blanco/85 font-light"
-                style={{ fontSize: "clamp(12px, 1vw, 15px)" }}
+                className="text-rojo/80 font-light"
+                style={{ fontSize: "clamp(13px, 1.05vw, 16px)" }}
               >
                 {c.v}
               </span>
@@ -596,197 +548,16 @@ function S06PorQue() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 07 — Modelo (pie chart 65/35)
+// 07 — Cierre — misma plantilla, reencuadrado a colaboración.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function S07Modelo() {
-  const r = 40;
-  const C = 2 * Math.PI * r;
-  const filled = C * 0.65;
-
-  const terms = [
-    { k: "modelo", v: "consignación" },
-    { k: "liquidación", v: "mensual" },
-    { k: "precio", v: "lo fija la marca" },
-    { k: "devolución", v: "sin penalización siempre y cuando se cumpla con el tiempo del acuerdo" },
-    { k: "inventario", v: "asegurado" },
-    { k: "contenido", v: "compartido" },
-  ];
-
-  return (
-    <SlideShell eyebrow="06 · cómo trabajamos juntos">
-      <div className="h-full grid grid-cols-12 gap-8 md:gap-14 items-center">
-        <div className="col-span-12 md:col-span-6 flex items-center justify-center">
-          <div className="relative w-full max-w-[460px] aspect-square">
-            <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-              <circle
-                cx="50"
-                cy="50"
-                r={r}
-                fill="none"
-                stroke="var(--rojo)"
-                strokeOpacity="0.14"
-                strokeWidth="11"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r={r}
-                fill="none"
-                stroke="var(--rojo)"
-                strokeWidth="11"
-                strokeDasharray={`${filled} ${C}`}
-                strokeLinecap="butt"
-              />
-            </svg>
-            {/* Center: 65 big, "marca" eyebrow */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[10px] md:text-[11px] tracking-[0.32em] uppercase text-rojo/60 mb-1">
-                marca
-              </span>
-              <span
-                className="font-medium leading-none text-rojo tabular-nums"
-                style={{ fontSize: "clamp(96px, 13vw, 200px)", letterSpacing: "-0.04em" }}
-              >
-                65
-              </span>
-              <span className="text-[10px] md:text-[11px] tracking-[0.28em] uppercase text-rojo/60 mt-2">
-                % de cada venta
-              </span>
-            </div>
-            {/* 35% label outside, top-right where the 35 arc sits */}
-            <div className="absolute -top-2 right-0 text-right">
-              <span className="text-[9px] md:text-[10px] tracking-[0.26em] uppercase text-rojo/55 block">
-                piso ikpali
-              </span>
-              <span
-                className="font-medium text-rojo tabular-nums leading-none"
-                style={{ fontSize: "clamp(28px, 3vw, 48px)", letterSpacing: "-0.02em" }}
-              >
-                35
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-span-12 md:col-span-6 flex flex-col gap-6 md:gap-7">
-          <h2
-            className="font-medium leading-[0.95]"
-            style={{ fontSize: "clamp(26px, 4vw, 56px)", letterSpacing: "-0.02em" }}
-          >
-            La marca conserva la propiedad. piso ikpali sostiene la operación.
-          </h2>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4 pt-2">
-            {terms.map((t) => (
-              <div
-                key={t.k}
-                className="flex flex-col gap-1 border-t border-rojo/25 pt-3"
-              >
-                <span className="text-[10px] tracking-[0.26em] uppercase text-rojo/55">
-                  {t.k}
-                </span>
-                <span
-                  className="font-medium"
-                  style={{ fontSize: "clamp(13px, 1.05vw, 16px)", letterSpacing: "-0.005em" }}
-                >
-                  {t.v}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </SlideShell>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 08 — Seis pasos (timeline, no diamonds)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function S08Pasos() {
-  const steps = [
-    { n: "01", t: "conversación", sub: "primera reunión", dur: "60 min", ic: 1 },
-    { n: "02", t: "acuerdo", sub: "términos por escrito", dur: "1 semana", ic: 8 },
-    { n: "03", t: "entrega", sub: "recibimos las piezas", dur: "1 día", ic: 4 },
-    { n: "04", t: "editorial", sub: "fotografía + ficha", dur: "2 semanas", ic: 3 },
-    { n: "05", t: "lanzamiento", sub: "al piso", dur: "1 día", ic: 6 },
-    { n: "06", t: "revisión", sub: "ajuste curatorial", dur: "a 3 meses", ic: 5 },
-  ];
-
-  return (
-    <SlideShell eyebrow="07 · cómo entrar">
-      <div className="h-full grid grid-rows-[auto_1fr_auto] gap-8 md:gap-10">
-        <h2
-          className="font-medium leading-[0.95]"
-          style={{ fontSize: "clamp(36px, 5.6vw, 88px)", letterSpacing: "-0.025em" }}
-        >
-          seis pasos.
-        </h2>
-
-        <div className="relative flex items-center">
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-rojo/30" />
-
-          <div className="relative grid grid-cols-6 gap-2 w-full">
-            {steps.map((s) => (
-              <div key={s.n} className="flex flex-col items-start">
-                <div className="flex flex-col gap-2 pb-8 md:pb-10">
-                  <img
-                    src={icoNegro(s.ic, 400)}
-                    alt=""
-                    aria-hidden
-                    className="w-10 h-10 md:w-12 md:h-12 object-contain"
-                  />
-                  <span className="text-[10px] tracking-[0.26em] uppercase text-rojo/55">
-                    {s.n}
-                  </span>
-                  <span
-                    className="font-medium leading-tight"
-                    style={{ fontSize: "clamp(14px, 1.4vw, 22px)", letterSpacing: "-0.012em" }}
-                  >
-                    {s.t}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-1 pt-8 md:pt-10">
-                  <span
-                    className="font-light text-rojo/80 leading-snug"
-                    style={{ fontSize: "clamp(11px, 0.9vw, 13px)" }}
-                  >
-                    {s.sub}
-                  </span>
-                  <span className="text-[10px] tracking-[0.22em] uppercase text-rojo/55">
-                    {s.dur}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <p
-          className="font-light text-rojo/75 max-w-[60ch]"
-          style={{ fontSize: "clamp(12px, 1vw, 15px)" }}
-        >
-          La revisión a 3 meses no es un cierre — es la primera oportunidad de ajustar la selección,
-          rotar piezas o expandir el alcance. La curaduría se mueve con el espacio.
-        </p>
-      </div>
-    </SlideShell>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 09 — Cierre — horizontal strip of white icons, captions below
-// ─────────────────────────────────────────────────────────────────────────────
-
-function S09Cierre() {
+function S07Cierre() {
   const STRIP_ICONS = [6, 4, 3, 8, 1, 5, 2];
 
   return (
     <section className="h-full w-full bg-rojo text-blanco flex flex-col">
       <div className="px-6 md:px-16 pt-16 md:pt-20">
-        <Eyebrow light>08 · la siguiente conversación</Eyebrow>
+        <Eyebrow light>06 · la siguiente conversación</Eyebrow>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center gap-6 md:gap-8 px-6 md:px-16">
         <div className="flex items-center justify-between gap-4 md:gap-8 w-full max-w-[1280px]">
@@ -804,7 +575,7 @@ function S09Cierre() {
 
         <div className="flex items-end justify-between w-full max-w-[1280px] pt-2 md:pt-4">
           <span className="text-[11px] md:text-[13px] tracking-[0.28em] uppercase text-blanco/85">
-            proponer piezas →
+            colaboremos →
           </span>
           <a
             href="mailto:hola@pisoikpali.com"
@@ -826,15 +597,13 @@ function S09Cierre() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SLIDES: Array<() => React.JSX.Element> = [
-  S01Cover,     // 0
-  S02Intro,     // 1
-  S03Equipo,    // 2 — nuestro equipo (b&w team photo)
-  S04Fayet,  // 3
-  S05Vecinos,   // 4
-  S06PorQue,    // 5 ← red
-  S07Modelo,    // 6
-  S08Pasos,     // 7
-  S09Cierre,    // 8 ← red
+  S01Cover, // 0
+  S02Intro, // 1
+  S03Equipo, // 2
+  S04Vecinos, // 3
+  S05Marcas, // 4 ← red
+  S06Suma, // 5
+  S07Cierre, // 6 ← red
 ];
 
-const RED_SLIDES = new Set([5, 8]);
+const RED_SLIDES = new Set([4, 6]);

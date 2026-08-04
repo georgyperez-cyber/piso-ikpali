@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Piso ikpali — concept room de diseño doméstico mexicano",
   description:
-    "Piso ikpali es la expresión de objeto del universo de ikpali Studio. Un concept room de diseño doméstico mexicano contemporáneo, dentro de Asamblea, Ciudad de México.",
+    "Piso ikpali es la expresión de objeto del universo de ikpali Studio. Un concept room de diseño doméstico mexicano contemporáneo, dentro de Fayet, Ciudad de México.",
 };
 
 export const viewport: Viewport = {
