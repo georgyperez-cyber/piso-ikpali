@@ -9,7 +9,7 @@ import Img from "./Img";
 // horizontal row of red hero icons sitting on a baseline.
 const ICONS = [1, 3, 6, 4, 2, 8, 5].map((n) => `/assets-optimized/hero-icono-${n}-600.webp`);
 
-const LABELS = ["disco", "torre", "cesta", "jarra", "lámpara", "tazón", "vela"];
+const LABELS = ["clutch", "tazón", "vasija", "juego", "vela", "anillo", "jarra"];
 
 export default function SectionGlosario() {
   const sectionRef = useRef<HTMLElement>(null);

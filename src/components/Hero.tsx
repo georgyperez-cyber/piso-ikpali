@@ -8,14 +8,47 @@ type Slide = { src: string; isLogo?: boolean; activeScale: number };
 
 const SEQUENCE: Slide[] = [
   { src: "/logo.svg", isLogo: true, activeScale: 0.55 }, // smaller logo
-  { src: "/assets-optimized/hero-icono-foto-1-720.webp", activeScale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-2-720.webp", activeScale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-3-720.webp", activeScale: 1.15 },
+  { src: "/assets-optimized/hero-icono-foto-23-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-15-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-35-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-26-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-40-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-7-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-14-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-36-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-8-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-13-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-10-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-24-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-34-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-3-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-39-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-11-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-28-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-20-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-17-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-30-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-31-720.webp", activeScale: 1.0 },
   { src: "/assets-optimized/hero-icono-foto-4-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-29-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-22-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-37-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-19-720.webp", activeScale: 1.0 },
   { src: "/assets-optimized/hero-icono-foto-5-720.webp", activeScale: 1.0 },
   { src: "/assets-optimized/hero-icono-foto-6-720.webp", activeScale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-7-720.webp", activeScale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-8-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-16-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-41-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-1-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-32-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-33-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-12-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-18-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-21-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-38-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-25-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-2-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-9-720.webp", activeScale: 1.0 },
+  { src: "/assets-optimized/hero-icono-foto-27-720.webp", activeScale: 1.0 },
 ];
 
 export default function Hero() {
@@ -57,7 +90,7 @@ export default function Hero() {
         return;
       }
 
-      const HOLD = 0.85;
+      const HOLD = 0.5;
       const FADE = 0.4;
       const OPEN = 0.6;
       const CLOSED_BEAT = 0.5;
@@ -140,7 +173,7 @@ export default function Hero() {
       className="relative w-full bg-blanco text-rojo overflow-hidden"
     >
       <link rel="preload" as="image" href="/logo.svg" />
-      <link rel="preload" as="image" href="/assets-optimized/hero-icono-foto-1-720.webp" />
+      <link rel="preload" as="image" href="/assets-optimized/hero-icono-foto-23-720.webp" />
 
       <div className="absolute top-5 left-5 md:top-8 md:left-10 text-[8px] tracking-[0.1em] md:text-[11px] md:tracking-[0.18em] uppercase text-rojo/80 z-10 whitespace-nowrap">
         piso ikpali · est. 2026 · cdmx
