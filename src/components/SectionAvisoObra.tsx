@@ -39,21 +39,32 @@ export default function SectionAvisoObra() {
           </div>
           <div className="md:col-span-5 md:col-start-8 flex flex-col gap-5">
             <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
-              Durante los últimos trabajos en el local se detectó un daño estructural
-              que tenemos que reparar antes de poder abrir. Es un tema del edificio,
-              completamente fuera de nuestras manos, pero preferimos resolverlo bien
-              ahora y no abrir con un pendiente de ese tamaño encima.
+              En los últimos días se presentó un siniestro estructural en la
+              propiedad que requiere atención y pausar las actividades para
+              finalizar el local. Esto se interpone con la fecha original estimada
+              de apertura al público, de principios a mediados de septiembre.
             </p>
             <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
-              Esto nos recorre la fecha un poco. El estimado con el que estamos
-              trabajando es <span className="font-medium">principios de octubre</span>,
-              y en cuanto tengamos día confirmado se los compartimos de inmediato.
+              Esta situación se encuentra fuera de nuestras manos, pero nos
+              encontramos haciendo todo lo posible, en conjunto con la
+              administración del inmueble, para darle una solución y concluir el
+              programa arquitectónico a la brevedad.
             </p>
             <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
-              En cuanto empecemos a recibir sus piezas, las vamos a mantener
-              perfectamente seguras. Todo lo demás sigue exactamente igual. Gracias
-              por la paciencia y por la confianza — sabemos que también es su
-              proyecto. Cualquier duda, aquí andamos.
+              Solicitamos su comprensión y paciencia con este retraso. Serán
+              notificados cuando hayamos concluido estas actividades.
+            </p>
+            <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
+              La entrega de inventario continuará como fue programada y los
+              productos serán almacenados en un espacio de almacén para mantener
+              su integridad y seguridad bajo nuestro cuidado.
+            </p>
+            <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
+              Agradecemos la confianza. En caso de dudas, estamos a su
+              disposición.
+            </p>
+            <p className="text-rojo font-medium text-[15px] md:text-[16px] leading-relaxed">
+              — Nathalia y Georgie
             </p>
           </div>
         </div>
