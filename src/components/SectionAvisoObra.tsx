@@ -23,20 +23,21 @@ export default function SectionAvisoObra() {
   return (
     <section className="relative w-full bg-blanco pt-28 md:pt-40 px-6 md:px-12">
       <div className="mx-auto max-w-[1400px] border-t border-rojo/20 pt-12 md:pt-16">
-        <div className="mb-14 md:mb-20">
-          <p className="text-[11px] tracking-[0.22em] uppercase text-rojo/70 mb-6">
-            aviso · agosto 2026
-          </p>
-          <h2
-            className="text-rojo font-medium leading-[0.98] mb-12 md:mb-16"
-            style={{ fontSize: "clamp(44px, 8.5vw, 132px)", letterSpacing: "-0.025em" }}
-          >
-            Una pausa antes
-            <br />
-            de abrir.
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
-            <div className="md:col-span-5 md:col-start-8 flex flex-col gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-14 md:mb-20">
+          <div className="md:col-span-6">
+            <p className="text-[11px] tracking-[0.22em] uppercase text-rojo/70 mb-4">
+              aviso · agosto 2026
+            </p>
+            <h2
+              className="text-rojo font-medium leading-[1.0]"
+              style={{ fontSize: "clamp(38px, 5.8vw, 86px)", letterSpacing: "-0.02em" }}
+            >
+              Una pausa antes
+              <br />
+              de abrir.
+            </h2>
+          </div>
+          <div className="md:col-span-5 md:col-start-8 flex flex-col gap-5">
             <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
               Durante los últimos trabajos en el local se detectó un daño estructural
               que tenemos que reparar antes de poder abrir. Es un tema del edificio,
@@ -54,7 +55,6 @@ export default function SectionAvisoObra() {
               por la paciencia y por la confianza — sabemos que también es su
               proyecto. Cualquier duda, aquí andamos.
             </p>
-            </div>
           </div>
         </div>
 
