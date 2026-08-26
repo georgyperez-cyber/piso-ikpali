@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import Hero from "@/components/Hero";
+import SectionAvisoObra from "@/components/SectionAvisoObra";
 import SectionObjeto from "@/components/SectionObjeto";
 import SectionAudiencia from "@/components/SectionAudiencia";
 import SectionGlosario from "@/components/SectionGlosario";
@@ -8,6 +9,7 @@ import SectionCuraduria from "@/components/SectionCuraduria";
 import SectionEspacios from "@/components/SectionEspacios";
 import SectionMarcas from "@/components/SectionMarcas";
 import SectionCierre from "@/components/SectionCierre";
+import SectionProductos from "@/components/SectionProductos";
 import SectionTextura from "@/components/SectionTextura";
 import Marquee from "@/components/Marquee";
 
@@ -26,6 +28,7 @@ export default function FayetPage() {
   return (
     <main className="bg-blanco text-rojo">
       <Hero />
+      <SectionAvisoObra />
       <SectionObjeto />
 
       <Marquee
@@ -63,6 +66,7 @@ export default function FayetPage() {
       <SectionTextura textura={8} iconoRojo={6} caption="el ritmo" />
 
       <SectionMarcas />
+      <SectionProductos />
       <SectionCierre />
     </main>
   );
