@@ -51,7 +51,7 @@ const SEQUENCE: Slide[] = [
   { src: "/assets-optimized/hero-icono-foto-27-720.webp", activeScale: 1.0 },
 ];
 
-export default function Hero() {
+export default function Hero({ intro = true }: { intro?: boolean } = {}) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,7 +132,14 @@ export default function Hero() {
       gsap.to(hint, { autoAlpha: 1, duration: 0.4, delay: OPEN + 0.7 });
 
       // ───────── Scroll-controlled reveal (independent) ─────────
-      gsap
+      // Sin texto introductorio (p. ej. /fayet con boletín) no hay nada que revelar:
+      // el hint solo se desvanece al hacer scroll, sin fijar el hero.
+      if (paragraphs.length === 0) {
+        gsap.to(hint, {
+          autoAlpha: 0,
+          scrollTrigger: { trigger: root, start: "top top", end: "+=10%", scrub: true },
+        });
+      } else gsap
         .timeline({
           defaults: { ease: "power2.out" },
           scrollTrigger: {
@@ -236,6 +243,7 @@ export default function Hero() {
           <span className="inline-block">ikpali</span>
         </h1>
 
+        {intro && (
         <div className="absolute left-1/2 -translate-x-1/2 max-w-[640px] w-full px-6 text-rojo" style={{ bottom: "12vh" }}>
           <p data-paragraph className="text-[13px] md:text-[14px] leading-relaxed mb-4 font-light will-change-transform">
             Piso ikpali es la expresión de objeto del universo de{" "}
@@ -254,6 +262,7 @@ export default function Hero() {
             objetos, marcas y visitantes.
           </p>
         </div>
+        )}
 
         <div data-hint className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[10px] tracking-[0.3em] uppercase text-rojo/60">
           scroll ↓

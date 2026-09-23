@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import Hero from "@/components/Hero";
 import SectionAvisoObra from "@/components/SectionAvisoObra";
+import SectionIntro from "@/components/SectionIntro";
 import SectionObjeto from "@/components/SectionObjeto";
 import SectionAudiencia from "@/components/SectionAudiencia";
 import SectionGlosario from "@/components/SectionGlosario";
@@ -27,8 +28,10 @@ export const metadata: Metadata = {
 export default function FayetPage() {
   return (
     <main className="bg-blanco text-rojo">
-      <Hero />
+      {/* De momento: boletín arriba, luego renders, luego el texto introductorio */}
+      <Hero intro={false} />
       <SectionAvisoObra />
+      <SectionIntro />
       <SectionObjeto />
 
       <Marquee

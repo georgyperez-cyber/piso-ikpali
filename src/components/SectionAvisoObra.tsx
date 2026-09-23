@@ -17,8 +17,9 @@ const RENDERS = [
   },
 ];
 
-// Aviso de recorrido de fecha por la reparación estructural del edificio.
+// Boletín informativo para las marcas: actualización sobre la apertura.
 // Va al inicio del pitch de Fayet: quien vuelve al link lo ve primero.
+// Orden: boletín, renders, y después el texto introductorio (SectionIntro).
 export default function SectionAvisoObra() {
   return (
     <section className="relative w-full bg-blanco pt-28 md:pt-40 px-6 md:px-12">
@@ -26,45 +27,47 @@ export default function SectionAvisoObra() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-14 md:mb-20">
           <div className="md:col-span-6">
             <p className="text-[11px] tracking-[0.22em] uppercase text-rojo/70 mb-4">
-              aviso · agosto 2026
+              boletín · septiembre 2026
             </p>
             <h2
               className="text-rojo font-medium leading-[1.0]"
               style={{ fontSize: "clamp(38px, 5.8vw, 86px)", letterSpacing: "-0.02em" }}
             >
-              Una pausa antes
+              Boletín informativo
               <br />
-              de abrir.
+              importante
             </h2>
+            <p className="mt-6 text-rojo/80 font-light text-[15px] md:text-[17px] leading-snug max-w-md">
+              Actualización sobre la apertura del Concept Store
+            </p>
           </div>
           <div className="md:col-span-5 md:col-start-8 flex flex-col gap-5">
             <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
-              En los últimos días se presentó un siniestro estructural en la
-              propiedad que requiere atención y pausar las actividades para
-              finalizar el local. Esto se interpone con la fecha original estimada
-              de apertura al público, de principios a mediados de septiembre.
+              Queridas marcas:
             </p>
             <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
-              Esta situación se encuentra fuera de nuestras manos, pero nos
-              encontramos haciendo todo lo posible, en conjunto con la
-              administración del inmueble, para darle una solución y concluir el
-              programa arquitectónico a la brevedad.
+              Antes que nada, gracias por su paciencia durante estas semanas.
+              Nos da gusto compartirles que la problemática estructural que
+              estábamos atendiendo en el espacio ya fue solucionada, y las
+              actividades programadas de la obra se han reanudado. Con esto,
+              estimamos comenzar actividades en tienda en aproximadamente dos
+              semanas a partir de hoy.
             </p>
             <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
-              Solicitamos su comprensión y paciencia con este retraso. Serán
-              notificados cuando hayamos concluido estas actividades.
+              La fecha del opening oficial al público, al que por supuesto estarán
+              invitadas, sigue por definir, pero nuestro objetivo es arrancar la
+              actividad en Piso Ikpali en ese plazo. Les recordamos que sus piezas
+              se encuentran resguardadas en almacén hasta que el espacio esté listo
+              para su instalación. Una vez más, gracias por su confianza; les
+              mantendremos al tanto de cualquier novedad.
             </p>
             <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
-              La entrega de inventario continuará como fue programada y los
-              productos serán almacenados en un espacio de almacén para mantener
-              su integridad y seguridad bajo nuestro cuidado.
-            </p>
-            <p className="text-rojo font-light text-[15px] md:text-[16px] leading-relaxed">
-              Agradecemos la confianza. En caso de dudas, estamos a su
-              disposición.
+              Con cariño,
             </p>
             <p className="text-rojo font-medium text-[15px] md:text-[16px] leading-relaxed">
-              — Nathalia y Georgie
+              Nathalia y Georgie
+              <br />
+              Piso Ikpali
             </p>
           </div>
         </div>
