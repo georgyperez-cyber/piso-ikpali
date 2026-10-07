@@ -22,11 +22,17 @@ export default function HolaMarca({
   marca,
   mensaje,
   etiqueta,
+  saludo = "Hola",
+  arriba,
 }: {
   marca: string;
+  /** Primera palabra del título, antes del ícono. Por defecto "Hola". */
+  saludo?: string;
+  /** Texto de la esquina superior derecha. Por defecto "para {marca}". */
+  arriba?: string;
   /** Párrafo bajo el saludo. Si no se pasa, queda el de la carta de bienvenida. */
   mensaje?: ReactNode;
-  /** Línea pequeña bajo el párrafo. Por defecto "una carta para {marca}". */
+  /** Línea pequeña bajo el párrafo. Por defecto "una carta para {marca}"; "" la oculta. */
   etiqueta?: string;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -138,16 +144,16 @@ export default function HolaMarca({
         piso ikpali · est. 2026 · cdmx
       </div>
       <div className="absolute top-5 right-5 md:top-8 md:right-10 text-[8px] tracking-[0.1em] md:text-[11px] md:tracking-[0.18em] uppercase text-rojo/80 z-10 whitespace-nowrap">
-        para {marca}
+        {arriba ?? `para ${marca}`}
       </div>
 
       <div className="relative min-h-screen w-full flex flex-col items-center justify-center px-4 py-24">
         <h1
-          aria-label={`Hola, ${marca}`}
+          aria-label={saludo === "Hola" ? `Hola, ${marca}` : `${saludo} ${marca}`}
           className="relative flex flex-col md:flex-row md:flex-wrap items-center justify-center text-center font-sans font-medium select-none leading-[1.05] will-change-transform"
           style={{ fontSize: "clamp(34px, 8vw, 116px)", letterSpacing: "-0.02em" }}
         >
-          <span className="inline-block">Hola</span>
+          <span className="inline-block">{saludo}</span>
 
           <span
             data-wrapper
@@ -195,12 +201,14 @@ export default function HolaMarca({
           )}
         </p>
 
-        <p
-          data-reveal
-          className="mt-7 text-[10px] tracking-[0.3em] uppercase text-rojo/55"
-        >
-          {etiqueta ?? `una carta para ${marca}`}
-        </p>
+        {etiqueta !== "" && (
+          <p
+            data-reveal
+            className="mt-7 text-[10px] tracking-[0.3em] uppercase text-rojo/55"
+          >
+            {etiqueta ?? `una carta para ${marca}`}
+          </p>
+        )}
       </div>
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[10px] tracking-[0.3em] uppercase text-rojo/55">

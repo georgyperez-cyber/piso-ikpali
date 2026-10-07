@@ -3,14 +3,16 @@ import HolaMarca from "@/components/HolaMarca";
 import SectionTextura from "@/components/SectionTextura";
 import Img from "@/components/Img";
 
-// Invitación al soft opening para cada marca participante.
+// Invitación al soft opening.
+// Con `marca`: la versión para cada marca participante (rutas /burro, /kmy...).
+// Sin `marca`: la invitación general, para cualquier persona (/soft-opening).
 // Sustituye a CartaMarca (la carta de bienvenida de la fase 2) en las rutas
 // por marca. CartaMarca se queda en el repo por si se necesita de nuevo.
 
 const NB = " "; // espacio duro: evita palabras cortas o viudas al final de línea
 
 const FECHA = `Sábado 17 de${NB}octubre`;
-const HORARIO = "12:00 a 14:00 h";
+const HORARIO = "14:00 a 16:00 h";
 const MAPA =
   "https://www.google.com/maps/search/?api=1&query=Lafayette+64,+Anzures,+Ciudad+de+M%C3%A9xico";
 
@@ -18,24 +20,46 @@ export function metadataInvitacion(marca: string): Metadata {
   return {
     title: `Hola, ${marca} · soft opening de piso ikpali`,
     description:
-      "Una invitación al soft opening de piso ikpali. Sábado 17 de octubre, de 12:00 a 14:00 h.",
+      "Una invitación al soft opening de piso ikpali. Sábado 17 de octubre, de 14:00 a 16:00 h.",
     robots: { index: false, follow: false },
   };
 }
 
-export default function InvitacionMarca({ marca }: { marca: string }) {
+export const metadataGeneral: Metadata = {
+  title: "Soft opening · piso ikpali",
+  description:
+    "Una invitación al soft opening de piso ikpali. Sábado 17 de octubre, de 14:00 a 16:00 h, en Fayet.",
+};
+
+export default function InvitacionMarca({ marca }: { marca?: string }) {
   return (
     <main className="bg-blanco text-rojo">
-      <HolaMarca
-        marca={marca}
-        etiqueta={`una invitación para ${marca}`}
-        mensaje={
-          <>
-            Gracias por su{NB}paciencia. Han sido meses de{NB}mucho trabajo de{NB}nuestra
-            parte y{NB}agradecemos que{NB}hayan estado a{NB}nuestro lado en este{NB}camino.
-          </>
-        }
-      />
+      {marca ? (
+        <HolaMarca
+          marca={marca}
+          etiqueta={`una invitación para ${marca}`}
+          mensaje={
+            <>
+              Gracias por su{NB}paciencia. Han sido meses de{NB}mucho trabajo de{NB}nuestra
+              parte y{NB}agradecemos que{NB}hayan estado a{NB}nuestro lado en este{NB}camino.
+            </>
+          }
+        />
+      ) : (
+        <HolaMarca
+          saludo="Soft"
+          marca="opening"
+          arriba={`sábado 17 de${NB}octubre`}
+          etiqueta=""
+          mensaje={
+            <>
+              Han sido unos meses de{NB}mucho trabajo y{NB}por fin abrimos{" "}
+              <em className="not-italic font-medium">piso{NB}ikpali</em>, un espacio
+              de diseño doméstico mexicano dentro de{NB}Fayet.
+            </>
+          }
+        />
+      )}
 
       <SectionTextura textura={2} iconoRojo={3} />
 
@@ -65,7 +89,11 @@ export default function InvitacionMarca({ marca }: { marca: string }) {
 
           <div className="mt-20 md:mt-28 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10">
             <p className="md:col-span-6 font-light text-[16px] md:text-[19px] leading-relaxed text-pretty max-w-md">
-              Vengan a{NB}conocer la tienda y{NB}a{NB}ver sus piezas ya en{NB}el{NB}piso.
+              {marca ? (
+                <>Vengan a{NB}conocer la tienda y{NB}a{NB}ver sus piezas ya en{NB}el{NB}piso.</>
+              ) : (
+                <>Vengan a{NB}conocer la tienda y{NB}las marcas que{NB}forman parte de{NB}ella.</>
+              )}
             </p>
             <a
               href={MAPA}
