@@ -1,13 +1,7 @@
-import type { Metadata } from "next";
-import CartaMarca from "@/components/CartaMarca";
+import InvitacionMarca, { metadataInvitacion } from "@/components/InvitacionMarca";
 
-export const metadata: Metadata = {
-  title: "piso ikpali — Hola, La Casa Ocho",
-  description:
-    "La Casa Ocho forma parte de la selección oficial de piso ikpali. Una carta de bienvenida y los siguientes pasos de la colaboración.",
-  robots: { index: false, follow: false },
-};
+export const metadata = metadataInvitacion("La Casa Ocho");
 
 export default function LaCasaOchoPage() {
-  return <CartaMarca marca="La Casa Ocho" />;
+  return <InvitacionMarca marca="La Casa Ocho" />;
 }

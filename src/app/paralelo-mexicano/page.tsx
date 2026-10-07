@@ -1,13 +1,7 @@
-import type { Metadata } from "next";
-import CartaMarca from "@/components/CartaMarca";
+import InvitacionMarca, { metadataInvitacion } from "@/components/InvitacionMarca";
 
-export const metadata: Metadata = {
-  title: "piso ikpali — Hola, Paralelo Mexicano",
-  description:
-    "Paralelo Mexicano forma parte de la selección oficial de piso ikpali. Una carta de bienvenida y los siguientes pasos de la colaboración.",
-  robots: { index: false, follow: false },
-};
+export const metadata = metadataInvitacion("Paralelo Mexicano");
 
 export default function ParaleloMexicanoPage() {
-  return <CartaMarca marca="Paralelo Mexicano" />;
+  return <InvitacionMarca marca="Paralelo Mexicano" />;
 }

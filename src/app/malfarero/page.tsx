@@ -1,13 +1,7 @@
-import type { Metadata } from "next";
-import CartaMarca from "@/components/CartaMarca";
+import InvitacionMarca, { metadataInvitacion } from "@/components/InvitacionMarca";
 
-export const metadata: Metadata = {
-  title: "piso ikpali — Hola, Malfarero",
-  description:
-    "Malfarero forma parte de la selección oficial de piso ikpali. Una carta de bienvenida y los siguientes pasos de la colaboración.",
-  robots: { index: false, follow: false },
-};
+export const metadata = metadataInvitacion("Malfarero");
 
 export default function MalfareroPage() {
-  return <CartaMarca marca="Malfarero" />;
+  return <InvitacionMarca marca="Malfarero" />;
 }

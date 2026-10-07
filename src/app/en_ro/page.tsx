@@ -1,13 +1,7 @@
-import type { Metadata } from "next";
-import CartaMarca from "@/components/CartaMarca";
+import InvitacionMarca, { metadataInvitacion } from "@/components/InvitacionMarca";
 
-export const metadata: Metadata = {
-  title: "piso ikpali — Hola, en_ro",
-  description:
-    "en_ro forma parte de la selección oficial de piso ikpali. Una carta de bienvenida y los siguientes pasos de la colaboración.",
-  robots: { index: false, follow: false },
-};
+export const metadata = metadataInvitacion("en_ro");
 
 export default function EnRoPage() {
-  return <CartaMarca marca="en_ro" />;
+  return <InvitacionMarca marca="en_ro" />;
 }

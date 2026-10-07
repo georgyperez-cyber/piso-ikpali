@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { gsap } from "gsap";
 
 type Slide = { src: string; scale: number };
@@ -18,7 +18,17 @@ const SEQUENCE: Slide[] = [
 
 const STAGE = "clamp(80px, 12vw, 180px)";
 
-export default function HolaMarca({ marca }: { marca: string }) {
+export default function HolaMarca({
+  marca,
+  mensaje,
+  etiqueta,
+}: {
+  marca: string;
+  /** Párrafo bajo el saludo. Si no se pasa, queda el de la carta de bienvenida. */
+  mensaje?: ReactNode;
+  /** Línea pequeña bajo el párrafo. Por defecto "una carta para {marca}". */
+  etiqueta?: string;
+}) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -174,18 +184,22 @@ export default function HolaMarca({ marca }: { marca: string }) {
 
         <p
           data-reveal
-          className="mt-10 md:mt-14 max-w-[560px] text-center text-[14px] md:text-[16px] leading-relaxed font-light text-rojo/90"
+          className="mt-10 md:mt-14 max-w-[560px] text-center text-balance text-[14px] md:text-[16px] leading-relaxed font-light text-rojo/90"
         >
-          Gracias por tu interés en participar en{" "}
-          <em className="not-italic font-medium">piso ikpali</em>. Estamos muy
-          emocionados de esta colaboración.
+          {mensaje ?? (
+            <>
+              Gracias por tu interés en participar en{" "}
+              <em className="not-italic font-medium">piso ikpali</em>. Estamos muy
+              emocionados de esta colaboración.
+            </>
+          )}
         </p>
 
         <p
           data-reveal
           className="mt-7 text-[10px] tracking-[0.3em] uppercase text-rojo/55"
         >
-          una carta para {marca}
+          {etiqueta ?? `una carta para ${marca}`}
         </p>
       </div>
 
