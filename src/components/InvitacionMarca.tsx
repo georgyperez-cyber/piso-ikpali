@@ -11,7 +11,7 @@ import Img from "@/components/Img";
 
 const NB = " "; // espacio duro: evita palabras cortas o viudas al final de línea
 
-const FECHA = `Sábado 17 de${NB}octubre`;
+const FECHA = `Sábado 24 de${NB}octubre`;
 const HORARIO = "14:00 a 16:00 h";
 const MAPA =
   "https://www.google.com/maps/search/?api=1&query=Lafayette+64,+Anzures,+Ciudad+de+M%C3%A9xico";
@@ -20,7 +20,7 @@ export function metadataInvitacion(marca: string): Metadata {
   return {
     title: `Hola, ${marca} · soft opening de piso ikpali`,
     description:
-      "Una invitación al soft opening de piso ikpali. Sábado 17 de octubre, de 14:00 a 16:00 h.",
+      "Una invitación al soft opening de piso ikpali. Sábado 24 de octubre, de 14:00 a 16:00 h.",
     robots: { index: false, follow: false },
   };
 }
@@ -28,7 +28,7 @@ export function metadataInvitacion(marca: string): Metadata {
 export const metadataGeneral: Metadata = {
   title: "Soft opening · piso ikpali",
   description:
-    "Una invitación al soft opening de piso ikpali. Sábado 17 de octubre, de 14:00 a 16:00 h, en Fayet.",
+    "Una invitación al soft opening de piso ikpali. Sábado 24 de octubre, de 14:00 a 16:00 h, en Fayet.",
 };
 
 export default function InvitacionMarca({ marca }: { marca?: string }) {
@@ -49,7 +49,7 @@ export default function InvitacionMarca({ marca }: { marca?: string }) {
         <HolaMarca
           saludo="Soft"
           marca="opening"
-          arriba={`sábado 17 de${NB}octubre`}
+          arriba={`sábado 24 de${NB}octubre`}
           etiqueta=""
           mensaje={
             <>
