@@ -3,9 +3,10 @@ import HolaMarca from "@/components/HolaMarca";
 import SectionTextura from "@/components/SectionTextura";
 import Img from "@/components/Img";
 
-// Invitación al soft opening.
+// Invitación al Comité ikpali (sábado 24 de octubre): el arranque comercial de
+// piso ikpali, abierto a las marcas para que vean el montaje y opinen.
 // Con `marca`: la versión para cada marca participante (rutas /burro, /kmy...).
-// Sin `marca`: la invitación general, para cualquier persona (/soft-opening).
+// Sin `marca`: la versión general, para todas las marcas (/soft-opening).
 // Sustituye a CartaMarca (la carta de bienvenida de la fase 2) en las rutas
 // por marca. CartaMarca se queda en el repo por si se necesita de nuevo.
 
@@ -18,18 +19,25 @@ const MAPA =
 
 export function metadataInvitacion(marca: string): Metadata {
   return {
-    title: `Hola, ${marca} · soft opening de piso ikpali`,
+    title: `Hola, ${marca} · Comité ikpali`,
     description:
-      "Una invitación al soft opening de piso ikpali. Sábado 24 de octubre, de 14:00 a 16:00 h.",
+      "Una invitación al Comité ikpali. Sábado 24 de octubre, de 14:00 a 16:00 h.",
     robots: { index: false, follow: false },
   };
 }
 
 export const metadataGeneral: Metadata = {
-  title: "Soft opening · piso ikpali",
+  title: "Comité ikpali · piso ikpali",
   description:
-    "Una invitación al soft opening de piso ikpali. Sábado 24 de octubre, de 14:00 a 16:00 h, en Fayet.",
+    "Una invitación al Comité ikpali. Sábado 24 de octubre, de 14:00 a 16:00 h, en Fayet.",
 };
+
+const GRACIAS = (
+  <>
+    Gracias por su{NB}paciencia. Han sido meses de{NB}mucho trabajo de{NB}nuestra
+    parte y{NB}agradecemos que{NB}hayan estado a{NB}nuestro lado en este{NB}camino.
+  </>
+);
 
 export default function InvitacionMarca({ marca }: { marca?: string }) {
   return (
@@ -38,26 +46,15 @@ export default function InvitacionMarca({ marca }: { marca?: string }) {
         <HolaMarca
           marca={marca}
           etiqueta={`una invitación para ${marca}`}
-          mensaje={
-            <>
-              Gracias por su{NB}paciencia. Han sido meses de{NB}mucho trabajo de{NB}nuestra
-              parte y{NB}agradecemos que{NB}hayan estado a{NB}nuestro lado en este{NB}camino.
-            </>
-          }
+          mensaje={GRACIAS}
         />
       ) : (
         <HolaMarca
-          saludo="Soft"
-          marca="opening"
+          saludo="Comité"
+          marca="ikpali"
           arriba={`sábado 24 de${NB}octubre`}
           etiqueta=""
-          mensaje={
-            <>
-              Han sido unos meses de{NB}mucho trabajo y{NB}por fin abrimos{" "}
-              <em className="not-italic font-medium">piso{NB}ikpali</em>, un espacio
-              de diseño doméstico mexicano dentro de{NB}Fayet.
-            </>
-          }
+          mensaje={GRACIAS}
         />
       )}
 
@@ -70,8 +67,8 @@ export default function InvitacionMarca({ marca }: { marca?: string }) {
             className="font-light text-pretty max-w-3xl"
             style={{ fontSize: "clamp(22px, 2.6vw, 36px)", lineHeight: 1.25, letterSpacing: "-0.01em" }}
           >
-            Es un placer invitarlos al soft{NB}opening de{" "}
-            <em className="not-italic font-medium">piso{NB}ikpali</em>.
+            Es un placer invitarlos al{" "}
+            <em className="not-italic font-medium">Comité{NB}ikpali</em>.
           </p>
 
           <h2
@@ -88,13 +85,17 @@ export default function InvitacionMarca({ marca }: { marca?: string }) {
           </p>
 
           <div className="mt-20 md:mt-28 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10">
-            <p className="md:col-span-6 font-light text-[16px] md:text-[19px] leading-relaxed text-pretty max-w-md">
-              {marca ? (
-                <>Vengan a{NB}conocer la tienda y{NB}a{NB}ver sus piezas ya en{NB}el{NB}piso.</>
-              ) : (
-                <>Vengan a{NB}conocer la tienda y{NB}las marcas que{NB}forman parte de{NB}ella.</>
-              )}
-            </p>
+            <div className="md:col-span-6 flex flex-col gap-5 font-light text-[16px] md:text-[19px] leading-relaxed text-pretty max-w-xl">
+              <p>
+                Con el Comité arranca la actividad comercial de{NB}piso{NB}ikpali: a{NB}partir
+                de{NB}ese sábado sus piezas ya están a{NB}la{NB}venta.
+              </p>
+              <p>
+                Pero lo que más nos importa es que{NB}vengan, vean cómo{NB}quedó montado
+                el espacio y{NB}nos digan qué{NB}opinan. Desde{NB}el{NB}principio hablamos de
+                hacer esto juntos, y{NB}esta es nuestra manera de{NB}escucharlos.
+              </p>
+            </div>
             <a
               href={MAPA}
               target="_blank"
