@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [{ source: "/soft-opening", destination: "/comite", permanent: false }];
   },
+  // El panel de administración (inventario, ventas, caja) corre en Railway y se
+  // sirve bajo /admin. Next no debe quitar la diagonal final: el panel la necesita.
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    const admin = "https://admin-production-6e09.up.railway.app";
+    return [
+      { source: "/admin", destination: `${admin}/admin` },
+      { source: "/admin/:path*", destination: `${admin}/admin/:path*` },
+    ];
+  },
 };
 
 export default nextConfig;
