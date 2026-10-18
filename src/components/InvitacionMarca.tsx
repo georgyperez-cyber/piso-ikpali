@@ -6,7 +6,7 @@ import Img from "@/components/Img";
 // Invitación al Comité ikpali (sábado 24 de octubre): el arranque comercial de
 // piso ikpali, abierto a las marcas para que vean el montaje y opinen.
 // Con `marca`: la versión para cada marca participante (rutas /burro, /kmy...).
-// Sin `marca`: la versión general, para todas las marcas (/soft-opening).
+// Sin `marca`: la versión general, para todas las marcas (/comite).
 // Sustituye a CartaMarca (la carta de bienvenida de la fase 2) en las rutas
 // por marca. CartaMarca se queda en el repo por si se necesita de nuevo.
 
