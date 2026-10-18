@@ -13,7 +13,7 @@ import Img from "@/components/Img";
 const NB = " "; // espacio duro: evita palabras cortas o viudas al final de línea
 
 const FECHA = `Sábado 24 de${NB}octubre`;
-const HORARIO = "14:00 a 16:00 h";
+const HORARIO = "12:30 a 14:30 h";
 const MAPA =
   "https://www.google.com/maps/search/?api=1&query=Lafayette+64,+Anzures,+Ciudad+de+M%C3%A9xico";
 
@@ -21,7 +21,7 @@ export function metadataInvitacion(marca: string): Metadata {
   return {
     title: `Hola, ${marca} · Comité ikpali`,
     description:
-      "Una invitación al Comité ikpali. Sábado 24 de octubre, de 14:00 a 16:00 h.",
+      "Una invitación al Comité ikpali. Sábado 24 de octubre, de 12:30 a 14:30 h.",
     robots: { index: false, follow: false },
   };
 }
@@ -29,7 +29,7 @@ export function metadataInvitacion(marca: string): Metadata {
 export const metadataGeneral: Metadata = {
   title: "Comité ikpali · piso ikpali",
   description:
-    "Una invitación al Comité ikpali. Sábado 24 de octubre, de 14:00 a 16:00 h, en Fayet.",
+    "Una invitación al Comité ikpali. Sábado 24 de octubre, de 12:30 a 14:30 h, en Fayet.",
 };
 
 const GRACIAS = (
@@ -87,13 +87,11 @@ export default function InvitacionMarca({ marca }: { marca?: string }) {
           <div className="mt-20 md:mt-28 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10">
             <div className="md:col-span-6 flex flex-col gap-5 font-light text-[16px] md:text-[19px] leading-relaxed text-pretty max-w-xl">
               <p>
-                Con el Comité arranca la actividad comercial de{NB}piso{NB}ikpali: a{NB}partir
-                de{NB}ese sábado sus piezas ya están a{NB}la{NB}venta.
-              </p>
-              <p>
-                Pero lo que más nos importa es que{NB}vengan, vean cómo{NB}quedó montado
-                el espacio y{NB}nos digan qué{NB}opinan. Desde{NB}el{NB}principio hablamos de
-                hacer esto juntos, y{NB}esta es nuestra manera de{NB}escucharlos.
+                Este sábado 24 de{NB}octubre queremos invitarles a{NB}conocer la tienda en{NB}su
+                primera etapa y{NB}ver por{NB}primera vez sus productos integrados al{NB}espacio.
+                Será una oportunidad para conocernos entre las{NB}marcas participantes,
+                compartir impresiones sobre el proyecto y{NB}abrir el diálogo a{NB}nuevas
+                ideas y{NB}posibles incorporaciones que{NB}enriquezcan la{NB}propuesta de{NB}Piso{NB}Ikpali.
               </p>
             </div>
             <a
@@ -139,12 +137,12 @@ export default function InvitacionMarca({ marca }: { marca?: string }) {
           <div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-rojo/60 mb-3">instagram</p>
             <a
-              href="https://instagram.com/pisoikpali"
+              href="https://instagram.com/piso.ikpali"
               target="_blank"
               rel="noreferrer"
               className="text-rojo font-medium text-[15px] hover:underline"
             >
-              @pisoikpali
+              @piso.ikpali
             </a>
           </div>
           <div>

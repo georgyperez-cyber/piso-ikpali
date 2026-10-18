@@ -179,12 +179,12 @@ export default function CartaMarca({ marca }: { marca: string }) {
           <div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-rojo/60 mb-3">instagram</p>
             <a
-              href="https://instagram.com/pisoikpali"
+              href="https://instagram.com/piso.ikpali"
               target="_blank"
               rel="noreferrer"
               className="text-rojo font-medium text-[15px] hover:underline"
             >
-              @pisoikpali
+              @piso.ikpali
             </a>
           </div>
           <div>
