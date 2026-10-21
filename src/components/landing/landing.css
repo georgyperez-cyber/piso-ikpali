@@ -190,32 +190,68 @@
 
 /* ───────── cursor ───────── */
 
-/* dos discos encimados: --a invierte lo de abajo, --b lo tiñe de rojo.
-   Sobre fondo blanco se ve un círculo rojo; lo rojo que entra al círculo
-   se vuelve blanco, cortado en el borde, como un negativo. */
+/* círculo rojo de la marca, sin blend modes. Va arriba de las piezas y abajo
+   del texto: dentro del círculo las letras se pintan blancas (degradado radial
+   recortado al texto) y las piezas se ven como silueta blanca. */
 .ld-cursor {
   position: fixed;
-  z-index: 100;
+  z-index: 24;
   top: 0;
   left: 0;
   width: 28px;
   height: 28px;
   border-radius: 50%;
+  overflow: hidden;
+  background: var(--rojo);
   pointer-events: none;
   will-change: transform, width, height;
 }
-/* seis discos iguales, solo con blend modes (Safari no mezcla sobre un
-   backdrop-filter). --a invierte lo de abajo; --s lo deja en grises;
-   --bn (color-burn) manda a negro lo que venía de un fondo claro;
-   --d1 y --d2 (color-dodge) empujan lo demás a blanco puro;
-   --b tiñe con screen: negro → rojo exacto, blanco → blanco absoluto. */
-.ld-cursor--a { background: #fff; mix-blend-mode: difference; }
-.ld-cursor--s { background: #000; mix-blend-mode: saturation; }
-.ld-cursor--bn { background: #999; mix-blend-mode: color-burn; }
-.ld-cursor--d1, .ld-cursor--d2 { background: #e6e6e6; mix-blend-mode: color-dodge; }
-.ld-cursor--b { background: var(--rojo); mix-blend-mode: screen; }
+.ld-cursor__sil { position: absolute; inset: 0; }
+.ld-cursor__img {
+  position: absolute;
+  display: none;
+  max-width: none; /* Tailwind limita las img al ancho del contenedor */
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+.ld-cursor__ico {
+  position: absolute;
+  display: none;
+  max-width: none;
+  color: var(--blanco);
+}
 @media (hover: hover) and (pointer: fine) {
   .ld, .ld * { cursor: none !important; }
+  /* texto: blanco dentro del círculo, rojo fuera, cortado en el borde */
+  .ld .ld-corner, .ld .ld-bar__btn, .ld .ld-filtro, .ld .ld-wake__val, .ld .ld-hint, .ld .ld-label-float,
+  .ld .ld-focus__marca, .ld .ld-focus__nombre, .ld .ld-focus__precio, .ld .ld-form__nota, .ld .ld-bar__panel {
+    --cr: 0px;
+    background-image: radial-gradient(
+      circle var(--cr) at var(--cx, 0px) var(--cy, 0px),
+      #fff calc(var(--cr) - 0.5px),
+      var(--rojo) var(--cr)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .ld .ld-glass {
+    --cr: 0px;
+    background-image: radial-gradient(
+      circle var(--cr) at var(--cx, 0px) var(--cy, 0px),
+      var(--rojo) calc(var(--cr) - 0.5px),
+      transparent var(--cr)
+    );
+  }
+  .ld .ld-bar__btn.is-on, .ld .ld-filtro.is-on {
+    background-image: none;
+    background-color: var(--rojo);
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: var(--blanco);
+  }
+  .ld .ld-bar__btn:hover:not(.is-on), .ld .ld-filtro:hover:not(.is-on) { background-color: transparent; }
+  .ld .ld-bar__panel a { text-decoration-color: var(--rojo); }
 }
 @media not ((hover: hover) and (pointer: fine)) {
   .ld-cursor { display: none; }
@@ -302,7 +338,7 @@
   opacity: 0.6;
   transition: background 0.25s ease, opacity 0.25s ease;
 }
-.ld-filtro:hover { opacity: 1; background: rgba(237, 52, 36, 0.08); }
+.ld-filtro:hover { opacity: 1; background-color: rgba(237, 52, 36, 0.08); }
 .ld-filtro.is-on { opacity: 1; background: var(--rojo); color: var(--blanco); }
 
 /* botón que abre y cierra los filtros */
@@ -375,6 +411,7 @@
   gap: 8px;
   font-size: 9px;
   color: rgba(237, 52, 36, 0.6);
+  opacity: 0.6;
   pointer-events: none;
 }
 @media (max-width: 767px) { .ld-hint { display: none; } }
@@ -446,7 +483,7 @@
   cursor: pointer;
   transition: background 0.25s ease, opacity 0.25s ease;
 }
-.ld-bar__btn:hover { background: rgba(237, 52, 36, 0.08); }
+.ld-bar__btn:hover { background-color: rgba(237, 52, 36, 0.08); }
 .ld-bar__btn.is-on { background: var(--rojo); color: var(--blanco); }
 .ld-bar__dot {
   width: 3px;
@@ -460,7 +497,7 @@
 .ld-focus {
   position: absolute;
   inset: 0;
-  z-index: 20;
+  z-index: 26; /* arriba del cursor, para que el texto de la pieza se vea encima */
   display: flex;
   flex-direction: column;
   align-items: center;

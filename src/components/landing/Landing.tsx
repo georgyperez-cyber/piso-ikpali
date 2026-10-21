@@ -137,11 +137,6 @@ export default function Landing() {
 
   const cloneRef = useRef<HTMLImageElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
-  const cursorBRef = useRef<HTMLDivElement>(null);
-  const cursorSRef = useRef<HTMLDivElement>(null);
-  const cursorBnRef = useRef<HTMLDivElement>(null);
-  const cursorD1Ref = useRef<HTMLDivElement>(null);
-  const cursorD2Ref = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null); // el nombre flotante de la pieza en hover
   const hoveredRef = useRef<HTMLElement | null>(null);
   const cursorR = useRef(14); // radio actual del cursor, en px
@@ -827,22 +822,26 @@ export default function Landing() {
     };
     root.addEventListener("wheel", onWheel, { passive: false });
 
-    // cursor: un círculo rojo que sigue al mouse y se encoge sobre lo clicable
-    // dos discos iguales: el primero invierte lo que tiene debajo (difference
-    // blanco) y el segundo lo tiñe de rojo (screen rojo). Sobre blanco queda
-    // rojo; sobre texto rojo queda blanco, cortado justo en el borde del círculo.
-    const cursor = [cursorRef.current!, cursorSRef.current!, cursorBnRef.current!, cursorD1Ref.current!, cursorD2Ref.current!, cursorBRef.current!];
+    // cursor: un círculo rojo de la marca que sigue al mouse y se encoge sobre lo
+    // clicable. Sin blend modes: lo que queda dentro del círculo se pinta blanco
+    // a mano. Las letras usan un degradado radial recortado al texto (blanco
+    // dentro del círculo, rojo fuera) y las piezas, una copia blanca de su
+    // silueta dentro del círculo, en la misma posición exacta.
+    const cursor = cursorRef.current!;
+    const sil = cursor.querySelector<HTMLDivElement>(".ld-cursor__sil")!;
     const fino = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    // centrados desde su centro con GSAP (no con `translate`, que Safari no siempre suma)
-    gsap.set(cursor, { xPercent: -50, yPercent: -50 });
     gsap.set(labelRef.current, { xPercent: -50 });
-    const curX = gsap.quickTo(cursor, "x", { duration: 0.18, ease: "power3" });
-    const curY = gsap.quickTo(cursor, "y", { duration: 0.18, ease: "power3" });
+    const pos = { x: -100, y: -100 };
+    const radio = { r: 14 };
+    const curX = gsap.quickTo(pos, "x", { duration: 0.18, ease: "power3" });
+    const curY = gsap.quickTo(pos, "y", { duration: 0.18, ease: "power3" });
     const SEL = "a, button, [role='button'], .ld-item__hit, .ld-wake, input, textarea";
     let cursorVisto = false;
     const tamCursor = (chico: boolean) => {
-      cursorR.current = chico ? 5 : 14;
-      gsap.to(cursor, { width: cursorR.current * 2, height: cursorR.current * 2, duration: 0.35, ease: "power3.out", overwrite: "auto" });
+      const r = chico ? 6 : 14;
+      if (r === cursorR.current) return;
+      cursorR.current = r;
+      gsap.to(radio, { r, duration: 0.35, ease: "power3.out", overwrite: "auto" });
     };
     const onMove = (e: PointerEvent) => {
       mouse.current = { x: e.clientX, y: e.clientY, activo: e.pointerType === "mouse" };
@@ -851,7 +850,8 @@ export default function Landing() {
       curY(e.clientY);
       if (!cursorVisto) {
         cursorVisto = true;
-        gsap.set(cursor, { x: e.clientX, y: e.clientY });
+        pos.x = e.clientX;
+        pos.y = e.clientY;
         gsap.to(cursor, { autoAlpha: 1, duration: 0.3 });
       }
       tamCursor(!!(e.target as HTMLElement).closest?.(SEL));
@@ -861,8 +861,85 @@ export default function Landing() {
       gsap.to(cursor, { autoAlpha: 0, duration: 0.25 });
       cursorVisto = false;
     };
-    const onDown = () => fino && gsap.to(cursor, { scale: 0.8, duration: 0.15 });
-    const onUp = () => fino && gsap.to(cursor, { scale: 1, duration: 0.3, ease: "back.out(2)" });
+    const onDown = () => fino && gsap.to(radio, { r: cursorR.current * 0.8, duration: 0.15, overwrite: "auto" });
+    const onUp = () => fino && gsap.to(radio, { r: cursorR.current, duration: 0.3, ease: "back.out(2)", overwrite: "auto" });
+
+    // copias blancas de las piezas que pisa el círculo (hasta 6 a la vez)
+    const pool: HTMLImageElement[] = Array.from({ length: 6 }, () => {
+      const im = document.createElement("img");
+      im.alt = "";
+      im.className = "ld-cursor__img";
+      sil.appendChild(im);
+      return im;
+    });
+    // los iconos laterales, también como silueta
+    const iconos = Array.from(root.querySelectorAll<HTMLElement>(".ld-side")).map((el) => {
+      const c = el.firstElementChild!.cloneNode(true) as HTMLElement;
+      c.classList.add("ld-cursor__ico");
+      sil.appendChild(c);
+      return { el, c };
+    });
+    const TEXTOS = ".ld-glass, .ld-corner, .ld-bar__btn, .ld-filtro, .ld-wake__val, .ld-hint, .ld-label-float, .ld-focus__marca, .ld-focus__nombre, .ld-focus__precio, .ld-form__nota, .ld-bar__panel";
+    const pintarCursor = () => {
+      if (!fino) return;
+      const R = radio.r;
+      const cx = pos.x;
+      const cy = pos.y;
+      gsap.set(cursor, { x: cx - R, y: cy - R, width: R * 2, height: R * 2 });
+      // texto: cada caja recibe la posición del círculo en sus propias coordenadas
+      root.querySelectorAll<HTMLElement>(TEXTOS).forEach((el) => {
+        const b = el.getBoundingClientRect();
+        const toca = b.width && !(b.right < cx - R || b.left > cx + R || b.bottom < cy - R || b.top > cy + R);
+        if (toca) {
+          el.style.setProperty("--cx", `${(cx - b.left).toFixed(1)}px`);
+          el.style.setProperty("--cy", `${(cy - b.top).toFixed(1)}px`);
+          el.style.setProperty("--cr", `${R.toFixed(2)}px`);
+          el.dataset.cur = "1";
+        } else if (el.dataset.cur) {
+          el.style.setProperty("--cr", "0px");
+          delete el.dataset.cur;
+        }
+      });
+      // piezas bajo el círculo: se muestrean 9 puntos (centro y orilla)
+      const vistas = new Set<HTMLImageElement>();
+      for (let k = 0; k < 9; k++) {
+        const a = (k / 8) * Math.PI * 2;
+        const px = k === 8 ? cx : cx + Math.cos(a) * R * 0.9;
+        const py = k === 8 ? cy : cy + Math.sin(a) * R * 0.9;
+        document.elementsFromPoint(px, py).forEach((el) => {
+          const it = (el as HTMLElement).closest?.(".ld-item");
+          const im = it?.querySelector("img");
+          if (im && (it as HTMLElement).style.visibility !== "hidden") vistas.add(im);
+        });
+      }
+      if (cloneRef.current && faseRef.current === "foco") vistas.add(cloneRef.current);
+      const lista = Array.from(vistas).slice(0, pool.length);
+      pool.forEach((p, k) => {
+        const src = lista[k];
+        if (!src) {
+          if (p.style.display !== "none") p.style.display = "none";
+          return;
+        }
+        const b = src.getBoundingClientRect();
+        if (p.getAttribute("src") !== src.getAttribute("src")) p.src = src.getAttribute("src")!;
+        p.style.display = "block";
+        p.style.left = `${b.left - (cx - R)}px`;
+        p.style.top = `${b.top - (cy - R)}px`;
+        p.style.width = `${b.width}px`;
+        p.style.height = `${b.height}px`;
+      });
+      iconos.forEach(({ el, c }) => {
+        const svg = el.firstElementChild as HTMLElement;
+        const b = svg.getBoundingClientRect();
+        const toca = !(b.right < cx - R || b.left > cx + R || b.bottom < cy - R || b.top > cy + R);
+        c.style.display = toca ? "block" : "none";
+        if (toca) {
+          c.style.left = `${b.left - (cx - R)}px`;
+          c.style.top = `${b.top - (cy - R)}px`;
+        }
+      });
+    };
+    gsap.ticker.add(pintarCursor);
     root.addEventListener("pointermove", onMove);
     root.addEventListener("pointerleave", onLeave);
     root.addEventListener("pointerdown", onDown);
@@ -910,6 +987,7 @@ export default function Landing() {
       html.style.overflow = prevOverflow;
       root.removeEventListener("wheel", onWheel);
       root.removeEventListener("pointermove", onMove);
+      gsap.ticker.remove(pintarCursor);
       root.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerup", onUp);
       root.removeEventListener("pointerover", onOver);
@@ -1247,12 +1325,9 @@ export default function Landing() {
       <GlassBar visible={fase !== "intro"} />
 
       <div ref={labelRef} className="ld-label-float" aria-hidden />
-      <div ref={cursorRef} className="ld-cursor ld-cursor--a" aria-hidden style={{ opacity: 0 }} />
-      <div ref={cursorSRef} className="ld-cursor ld-cursor--s" aria-hidden style={{ opacity: 0 }} />
-      <div ref={cursorBnRef} className="ld-cursor ld-cursor--bn" aria-hidden style={{ opacity: 0 }} />
-      <div ref={cursorD1Ref} className="ld-cursor ld-cursor--d1" aria-hidden style={{ opacity: 0 }} />
-      <div ref={cursorD2Ref} className="ld-cursor ld-cursor--d2" aria-hidden style={{ opacity: 0 }} />
-      <div ref={cursorBRef} className="ld-cursor ld-cursor--b" aria-hidden style={{ opacity: 0 }} />
+      <div ref={cursorRef} className="ld-cursor" aria-hidden style={{ opacity: 0 }}>
+        <div className="ld-cursor__sil" />
+      </div>
 
       {/* intro */}
       <div ref={introRef} className="ld-intro" aria-hidden>
