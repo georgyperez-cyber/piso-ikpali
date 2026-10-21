@@ -134,7 +134,7 @@ export default function GlassBar({ visible = true }: { visible?: boolean }) {
                 onClick={() => toggle(k)}
                 aria-expanded={abierto === k}
               >
-                <Adapt>{label}</Adapt>
+                <span className="ld-btn-tx"><Adapt>{label}</Adapt></span>
               </button>
             </span>
           ))}

@@ -879,7 +879,7 @@ export default function Landing() {
       sil.appendChild(c);
       return { el, c };
     });
-    const TEXTOS = ".ld-glass, .ld-corner, .ld-bar__btn, .ld-filtro, .ld-wake__val, .ld-hint, .ld-label-float, .ld-focus__marca, .ld-focus__nombre, .ld-focus__precio, .ld-form__nota, .ld-bar__panel";
+    const TEXTOS = ".ld-glass, .ld-corner, .ld-bar__btn, .ld-filtro, .ld-wake__val, .ld-hint, .ld-label-float, .ld-focus__marca, .ld-focus__nombre, .ld-focus__precio, .ld-form__nota, .ld-bar__panel, .ld-focus__cta, .ld-btn-tx";
     const pintarCursor = () => {
       if (!fino) return;
       const R = radio.r;
@@ -1209,7 +1209,7 @@ export default function Landing() {
                     className={`ld-filtro${filtro.categoria === c ? " is-on" : ""}`}
                     onClick={() => filtrar({ ...filtro, categoria: c })}
                   >
-                    <Adapt>{c.toLowerCase()}</Adapt>
+                    <span className="ld-btn-tx"><Adapt>{c.toLowerCase()}</Adapt></span>
                   </button>
                 ))}
               </div>
@@ -1225,7 +1225,7 @@ export default function Landing() {
                   className={`ld-filtro${filtro.marca === m ? " is-on" : ""}`}
                   onClick={() => filtrar({ ...filtro, marca: m })}
                 >
-                  <Adapt>{m.toLowerCase()}</Adapt>
+                  <span className="ld-btn-tx"><Adapt>{m.toLowerCase()}</Adapt></span>
                 </button>
               ))}
             </div>
@@ -1278,7 +1278,7 @@ export default function Landing() {
               <div style={{ opacity: 0 }}>
                 {!formAbierto ? (
                   <button type="button" className="ld-focus__cta" onClick={() => setFormAbierto(true)}>
-                    me interesa <span className="arrow">→</span>
+                    <span className="ld-btn-tx">me interesa <span className="arrow">→</span></span>
                   </button>
                 ) : (
                   <form className="ld-form" onSubmit={enviar}>
@@ -1288,7 +1288,7 @@ export default function Landing() {
                     <div className="ld-form__row">
                       <span className="ld-form__nota">te contestamos nosotros</span>
                       <button type="submit" className="ld-focus__cta" style={{ marginTop: 0 }}>
-                        enviar <span className="arrow">→</span>
+                        <span className="ld-btn-tx">enviar <span className="arrow">→</span></span>
                       </button>
                     </div>
                   </form>
