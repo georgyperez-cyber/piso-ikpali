@@ -50,9 +50,9 @@
   will-change: transform;
   /* sombra: corta, poco difuminada; el mouse la empuja como si fuera la luz */
   --sx: 0px;
-  --sy: 8px;
-  --sb: 4px;
-  --sa: 0.2;
+  --sy: 5px;
+  --sb: 3px;
+  --sa: 0.09;
 }
 .ld-item__hit {
   position: relative;
@@ -441,7 +441,7 @@
   z-index: 21;
   object-fit: contain;
   pointer-events: none;
-  filter: drop-shadow(0 18px 10px rgba(0, 0, 0, 0.14));
+  filter: drop-shadow(0 10px 6px rgba(0, 0, 0, 0.08));
   will-change: transform, width, height, left, top;
 }
 .ld-focus__info {

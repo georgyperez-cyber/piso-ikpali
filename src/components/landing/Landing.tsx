@@ -380,16 +380,16 @@ export default function Landing() {
       // la sombra huye del mouse (la luz) y se encoge cuando la pieza se levanta
       const ux = d > 1 ? (ox - mx) / d : 0;
       const uy = d > 1 ? (oy - my) / d : 1;
-      const largo = 8 + 10 * cerca;
+      const largo = 5 + 4 * cerca;
       const sombra = {
-        "--sx": `${(ux * largo * (1 - 0.35 * cerca)).toFixed(1)}px`,
-        "--sy": `${((cerca > 0 ? uy * largo : 8) * (1 - 0.35 * cerca)).toFixed(1)}px`,
-        "--sb": `${(4 + 4 * cerca).toFixed(1)}px`,
-        "--sa": (0.2 - 0.08 * cerca).toFixed(3),
+        "--sx": `${(ux * largo * (1 - 0.3 * cerca)).toFixed(1)}px`,
+        "--sy": `${((cerca > 0 ? uy * largo : 5) * (1 - 0.3 * cerca)).toFixed(1)}px`,
+        "--sb": `${(3 + 2 * cerca).toFixed(1)}px`,
+        "--sa": (0.09 - 0.03 * cerca).toFixed(3),
       };
       if (Math.abs(actual - objetivo) < 0.004 && cerca === 0 && el.dataset.lejos === "1") return;
       el.dataset.lejos = cerca === 0 ? "1" : "0";
-      gsap.to(el, { scale: objetivo, ...sombra, duration: 0.6, ease: "power3.out", overwrite: "auto" });
+      gsap.to(el, { scale: objetivo, ...sombra, duration: 0.8, ease: "power2.out", overwrite: "auto" });
     });
   }, [todos]);
 
