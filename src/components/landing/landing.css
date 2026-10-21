@@ -206,7 +206,13 @@
   pointer-events: none;
   will-change: transform, width, height;
 }
-.ld-cursor--a { background: #fff; mix-blend-mode: difference; }
+/* --a: lo de abajo se vuelve blanco y negro puro (umbral) y se invierte:
+   fondo claro → negro, texto rojo → blanco. --b lo tiñe de rojo con screen:
+   negro → rojo, blanco → blanco absoluto. */
+.ld-cursor--a {
+  -webkit-backdrop-filter: grayscale(1) contrast(100) invert(1);
+  backdrop-filter: grayscale(1) contrast(100) invert(1);
+}
 .ld-cursor--b { background: var(--rojo); mix-blend-mode: screen; }
 @media (hover: hover) and (pointer: fine) {
   .ld, .ld * { cursor: none !important; }

@@ -724,6 +724,10 @@ export default function Landing() {
         const fuente = faseRef.current === "grid" ? gridElsRef.current : todos();
         revisarContraste(root, fuente);
       }
+      if (frame % 3 === 0 && mouse.current.activo && (faseRef.current === "tablero" || faseRef.current === "grid")) {
+        const bajo = document.elementFromPoint(mouse.current.x, mouse.current.y) as HTMLElement | null;
+        setHover(bajo?.closest<HTMLElement>(".ld-item") ?? null);
+      }
       // el nombre flotante sigue a la pieza en hover (el tablero se mueve debajo)
       const hov = hoveredRef.current;
       if (hov) {
@@ -765,14 +769,19 @@ export default function Landing() {
     const GLIFOS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·/—";
     let scrambleRaf = 0;
     const flot = labelRef.current!;
-    const onOver = (e: PointerEvent) => {
-      const item = (e.target as HTMLElement).closest<HTMLElement>(".ld-item");
-      if (!item || item === hoveredRef.current) return;
+    // qué pieza está bajo el mouse se revisa cada pocos frames con elementFromPoint,
+    // no con eventos: el tablero se mueve debajo del cursor y los eventos no lo avisan
+    const setHover = (item: HTMLElement | null) => {
+      if (item === hoveredRef.current) return;
       hoveredRef.current = item;
+      cancelAnimationFrame(scrambleRaf);
+      if (!item) {
+        flot.classList.remove("is-on");
+        return;
+      }
       const real = PRODUCTOS[Number(item.dataset.i)]?.nombre || "";
       let k = 0;
       let t0 = performance.now();
-      cancelAnimationFrame(scrambleRaf);
       flot.classList.add("is-on");
       const paso = (t: number) => {
         if (hoveredRef.current !== item) return;
@@ -787,13 +796,10 @@ export default function Landing() {
       };
       scrambleRaf = requestAnimationFrame(paso);
     };
+    const onOver = (e: PointerEvent) => setHover((e.target as HTMLElement).closest<HTMLElement>(".ld-item"));
     const onOut = (e: PointerEvent) => {
-      const item = (e.target as HTMLElement).closest<HTMLElement>(".ld-item");
-      if (!item || item !== hoveredRef.current) return;
       const to = e.relatedTarget as HTMLElement | null;
-      if (to && item.contains(to)) return;
-      hoveredRef.current = null;
-      flot.classList.remove("is-on");
+      if (!to || !to.closest(".ld-item")) setHover(null);
     };
     root.addEventListener("pointerover", onOver);
     root.addEventListener("pointerout", onOut);
