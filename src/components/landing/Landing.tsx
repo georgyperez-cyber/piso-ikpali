@@ -384,7 +384,7 @@ export default function Landing() {
       const sombra = {
         "--sx": `${(ux * largo * (1 - 0.3 * cerca)).toFixed(1)}px`,
         "--sy": `${((cerca > 0 ? uy * largo : 5) * (1 - 0.3 * cerca)).toFixed(1)}px`,
-        "--sb": `${(3 + 2 * cerca).toFixed(1)}px`,
+        "--sb": `${(1.5 + 1 * cerca).toFixed(1)}px`,
         "--sa": (0.09 - 0.03 * cerca).toFixed(3),
       };
       if (Math.abs(actual - objetivo) < 0.004 && cerca === 0 && el.dataset.lejos === "1") return;
