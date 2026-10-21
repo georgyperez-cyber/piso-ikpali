@@ -48,6 +48,11 @@
 .ld-item {
   position: absolute;
   will-change: transform;
+  /* sombra: corta, poco difuminada; el mouse la empuja como si fuera la luz */
+  --sx: 0px;
+  --sy: 8px;
+  --sb: 4px;
+  --sa: 0.2;
 }
 .ld-item__hit {
   position: relative;
@@ -61,8 +66,7 @@
   height: 100%;
   object-fit: contain;
   pointer-events: none;
-  /* la sombra que apenas se ve */
-  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.07));
+  filter: drop-shadow(var(--sx) var(--sy) var(--sb) rgba(0, 0, 0, var(--sa)));
   transition: transform 0.6s var(--ease-out);
 }
 .ld-item__label {
@@ -80,7 +84,6 @@
   pointer-events: none;
 }
 @media (hover: hover) {
-  .ld:not(.is-focus) .ld-wrap:not(.is-moving) .ld-item__hit:hover .ld-item__img,
   .ld:not(.is-focus) .ld-gridwrap .ld-item__hit:hover .ld-item__img {
     transform: scale(1.12);
   }
@@ -139,8 +142,7 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.7),
     inset 0 -1px 0 rgba(237, 52, 36, 0.05),
-    0 0 0 1px var(--glass-line),
-    0 18px 50px -24px rgba(237, 52, 36, 0.4);
+    0 0 0 1px var(--glass-line);
 }
 /* reborde de refracción: dos brillos que sugieren el grosor del vidrio */
 .ld-glass::before {
@@ -158,9 +160,7 @@
 /* ───────── eyebrows: Martian Mono, mayúsculas ───────── */
 
 .ld-mono,
-.ld-corner,
 .ld-focus__marca,
-.ld-bar__btn,
 .ld-filtro,
 .ld-hint,
 .ld-wake__val,
@@ -184,13 +184,15 @@
   position: absolute;
   z-index: 30;
   display: none;
-  font-size: 8px;
-  color: rgba(237, 52, 36, 0.8);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--rojo);
   white-space: nowrap;
   pointer-events: none;
 }
 @media (min-width: 768px) {
-  .ld-corner { display: block; font-size: 10px; }
+  .ld-corner { display: block; font-size: 13px; }
 }
 
 .ld-top {
@@ -259,6 +261,33 @@
 }
 .ld-filtro:hover { opacity: 1; background: rgba(237, 52, 36, 0.08); }
 .ld-filtro.is-on { opacity: 1; background: var(--rojo); color: var(--blanco); }
+
+/* botón que abre y cierra los filtros */
+.ld-filtro--toggle { opacity: 0.85; }
+.ld-filtro--toggle.is-open { opacity: 1; }
+
+/* botones laterales: instagram a la izquierda, el logo a la derecha */
+.ld-side {
+  position: absolute;
+  z-index: 30;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--rojo);
+  opacity: 0.75;
+  transition: opacity 0.25s ease;
+}
+.ld-side:hover { opacity: 1; }
+.ld-side--izq { left: 14px; }
+.ld-side--der { right: 14px; }
+.ld-side img { display: block; width: 16px; height: 16px; }
+@media (min-width: 768px) {
+  .ld-side--izq { left: 24px; }
+  .ld-side--der { right: 24px; }
+}
 
 /* wake slider */
 .ld-wake {
@@ -363,7 +392,9 @@
   height: 28px;
   padding: 0 12px;
   border-radius: var(--radio);
-  font-size: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
   color: var(--rojo);
   white-space: nowrap;
   cursor: pointer;
@@ -399,12 +430,18 @@
 @media (min-width: 768px) {
   .ld-focus__box { width: min(64vw, 58vh); }
 }
+/* con el formulario abierto todo sube para que la barra no lo tape */
+.ld-focus.is-form { padding-bottom: 150px; }
+.ld-focus.is-form .ld-focus__box { width: min(60vw, 42vh); }
+@media (min-width: 768px) {
+  .ld-focus.is-form .ld-focus__box { width: min(50vw, 44vh); }
+}
 .ld-focus__clone {
   position: fixed;
   z-index: 21;
   object-fit: contain;
   pointer-events: none;
-  filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.08));
+  filter: drop-shadow(0 18px 10px rgba(0, 0, 0, 0.14));
   will-change: transform, width, height, left, top;
 }
 .ld-focus__info {

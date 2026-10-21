@@ -24,7 +24,9 @@ export default function GlassBar({ visible = true }: { visible?: boolean }) {
     const o = outer.current!;
     const inn = inner.current!;
     const vw = window.innerWidth;
-    const navW = nav.current!.scrollWidth;
+    // ancho natural de la fila de nombres (sin que la ensanche el panel)
+    inn.style.setProperty("--bar-w", "max-content");
+    const navW = Math.ceil(nav.current!.getBoundingClientRect().width);
     const targetW = abierto ? Math.min(abierto === "privacidad" ? 600 : 560, vw - 32) : navW;
     inn.style.setProperty("--bar-w", `${targetW}px`);
     const targetH = inn.offsetHeight;
