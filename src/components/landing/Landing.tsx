@@ -1,33 +1,39 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Draggable } from "gsap/Draggable";
 import { InertiaPlugin } from "gsap/InertiaPlugin";
 import { Flip } from "gsap/Flip";
+import Lenis from "lenis";
 import { PRODUCTOS, SITIO, formatoPrecio, type Producto } from "./productos";
 import WakeSlider from "./WakeSlider";
 import GlassBar from "./GlassBar";
+import { Adapt, revisarContraste } from "./contraste";
 import "./landing.css";
 
 gsap.registerPlugin(Draggable, InertiaPlugin, Flip);
 
 /* ───────────────────────── tablero: geometría ───────────────────────── */
 
-const ZOOM_MIN = 0.55;
-const ZOOM_MAX = 1.6;
+const ZOOM_MIN = 0.7;
+const ZOOM_MAX = 1.7;
 const zoomDeValor = (v: number) => ZOOM_MIN + v * (ZOOM_MAX - ZOOM_MIN);
 const valorDeZoom = (z: number) => (z - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN);
+
+// El tablero es un bloque que se repite en las dos direcciones (3 × 3 copias);
+// al arrastrar, el desplazamiento se envuelve dentro del bloque y nunca se acaba.
+const TILES = [-1, 0, 1].flatMap((ty) => [-1, 0, 1].map((tx) => ({ tx, ty })));
+const TILE_CENTRO = 4;
 
 type Layout = {
   cell: number;
   cols: number;
-  W: number;
-  H: number;
+  BW: number; // ancho del bloque
+  BH: number; // alto del bloque
   pos: { x: number; y: number; w: number }[];
 };
 
-// ruido determinista en [-1, 1): la misma pieza siempre cae en el mismo lugar
 const ruido = (i: number, k: number) => {
   const s = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
   return (s - Math.floor(s)) * 2 - 1;
@@ -36,43 +42,33 @@ const ruido = (i: number, k: number) => {
 function calcularTablero(items: Producto[], vw: number, vh: number): Layout {
   const n = items.length;
   const movil = vw < 768;
-  const cell = movil ? Math.round(vw * 0.36) : Math.round(gsap.utils.clamp(170, 250, vw * 0.15));
-  const gap = Math.round(cell * 0.42);
-  const step = cell + gap;
+  const cell = movil ? Math.round(vw * 0.38) : Math.round(gsap.utils.clamp(180, 260, vw * 0.16));
+  let step = cell + Math.round(cell * 0.42);
 
-  // columnas: la proporción del bloque se acerca a la del viewport
   let cols = 1;
   let mejor = Infinity;
   for (let c = 1; c <= n; c++) {
     const r = Math.ceil(n / c);
-    const d = Math.abs((c * step) / (r * step) - vw / vh);
+    const d = Math.abs(c / r - vw / vh);
     if (d < mejor) {
       mejor = d;
       cols = c;
     }
   }
   const rows = Math.ceil(n / cols);
-  const padX = vw * 0.5;
-  const padY = vh * 0.5;
+  // el bloque tiene que cubrir la pantalla aun con el zoom mínimo
+  step = Math.max(step, Math.ceil(vw / (cols * ZOOM_MIN)) + 1, Math.ceil(vh / (rows * ZOOM_MIN)) + 1);
 
   const pos = items.map((p, i) => {
     const c = i % cols;
     const r = Math.floor(i / cols);
-    const x = padX + c * step + step / 2 + ruido(i, 1) * step * 0.08;
-    const y = padY + r * step + step / 2 + (c % 2 ? step * 0.5 : 0) + ruido(i, 2) * step * 0.08;
+    const x = c * step + step / 2 + ruido(i, 1) * step * 0.08;
+    const y = r * step + step / 2 + (c % 2 ? step * 0.5 : 0) + ruido(i, 2) * step * 0.08;
     return { x, y, w: Math.round(cell * p.tam) };
   });
 
-  return {
-    cell,
-    cols,
-    W: padX * 2 + cols * step,
-    H: padY * 2 + rows * step + step / 2,
-    pos,
-  };
+  return { cell, cols, BW: cols * step, BH: rows * step, pos };
 }
-
-/* ───────────────────────── intro: la secuencia del pitch ───────────────────────── */
 
 const INTRO_FOTOS = [23, 15, 35, 26, 40, 7, 14, 36, 8, 13, 10, 24].map(
   (n) => `/assets-optimized/hero-icono-foto-${n}-720.webp`
@@ -80,11 +76,47 @@ const INTRO_FOTOS = [23, 15, 35, 26, 40, 7, 14, 36, 8, 13, 10, 24].map(
 
 type Fase = "intro" | "tablero" | "foco" | "grid";
 
+const CATEGORIAS = ["todo", ...Array.from(new Set(PRODUCTOS.map((p) => p.categoria)))];
+const MARCAS = ["todas", ...Array.from(new Set(PRODUCTOS.map((p) => p.marca)))];
+
+type PiezaProps = {
+  p: Producto;
+  i: number;
+  t?: number;
+  registrar: (el: HTMLDivElement | null, i: number, t?: number) => void;
+  onClick?: (i: number, el: HTMLElement) => void;
+};
+
+// Una pieza del tablero (t = copia del bloque) o del grid (sin t).
+const Pieza = memo(function Pieza({ p, i, t, registrar, onClick }: PiezaProps) {
+  return (
+    <div
+      ref={(el) => registrar(el, i, t)}
+      className="ld-item"
+      data-i={i}
+      data-flip-id={t === undefined ? `p${i}` : undefined}
+      onClick={onClick ? (e) => onClick(i, e.currentTarget) : undefined}
+    >
+      <div className="ld-item__hit" role="button" tabIndex={-1} aria-label={p.nombre}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="ld-item__img" src={p.src} alt={p.nombre} draggable={false} loading="lazy" decoding="async" />
+        <span className="ld-item__label" style={t === undefined ? undefined : { top: `${(p.fondo ?? 1) * 100}%` }}>
+          {p.nombre}
+        </span>
+      </div>
+    </div>
+  );
+});
+
 export default function Landing() {
   const rootRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
-  const itemsRef = useRef<HTMLDivElement[]>([]);
+  const proxyRef = useRef<HTMLDivElement>(null);
+  const gridWrapRef = useRef<HTMLDivElement>(null);
+  const gridBoxRef = useRef<HTMLDivElement>(null);
+  const elsRef = useRef<HTMLDivElement[][]>(TILES.map(() => [])); // [tile][i]
+  const gridElsRef = useRef<HTMLDivElement[]>([]);
   const introRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
@@ -97,63 +129,70 @@ export default function Landing() {
 
   const layoutRef = useRef<Layout | null>(null);
   const dragRef = useRef<Draggable | null>(null);
+  const lenisRef = useRef<Lenis | null>(null);
   const zoomRef = useRef(1);
   const faseRef = useRef<Fase>("intro");
-  const reveladoRef = useRef<Set<number>>(new Set());
+  const faseAntesRef = useRef<Fase>("tablero");
+  const reveladoRef = useRef<Set<HTMLElement>>(new Set());
   const observerRef = useRef<IntersectionObserver | null>(null);
   const origenRef = useRef<DOMRect | null>(null);
+  const origenElRef = useRef<HTMLElement | null>(null);
   const introTl = useRef<gsap.core.Timeline | null>(null);
-  const wheelRaf = useRef(0);
-  const wheelDelta = useRef({ x: 0, y: 0 });
   const hintVisto = useRef(false);
-
-  // refs a las últimas versiones de los callbacks para los listeners globales
+  const elegidosRef = useRef<HTMLDivElement[]>([]); // instancias que viajan al grid
   const cerrarFocoRef = useRef<() => void>(() => {});
   const terminarIntroRef = useRef<() => void>(() => {});
+
+  // desplazamiento suave del tablero (la rueda acumula; cada frame se acerca)
+  const scrollObjetivo = useRef({ x: 0, y: 0 });
+  const scrollActual = useRef({ x: 0, y: 0 });
+  const mouse = useRef({ x: -9999, y: -9999, activo: false });
 
   const [fase, setFaseState] = useState<Fase>("intro");
   const [zoomVal, setZoomVal] = useState(valorDeZoom(1));
   const [foco, setFoco] = useState<{ p: Producto; i: number } | null>(null);
   const [formAbierto, setFormAbierto] = useState(false);
+  const [filtro, setFiltro] = useState({ categoria: "todo", marca: "todas" });
 
   const setFase = (f: Fase) => {
     faseRef.current = f;
     setFaseState(f);
   };
 
-  /* ───────── límites y posición del tablero ───────── */
+  const todos = useCallback(() => elsRef.current.flat(), []);
 
-  const limites = useCallback((z: number) => {
-    const L = layoutRef.current!;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const bw = L.W * z;
-    const bh = L.H * z;
-    const minX = bw > vw ? vw - bw : (vw - bw) / 2;
-    const maxX = bw > vw ? 0 : (vw - bw) / 2;
-    const minY = bh > vh ? vh - bh : (vh - bh) / 2;
-    const maxY = bh > vh ? 0 : (vh - bh) / 2;
-    return { minX, maxX, minY, maxY };
-  }, []);
+  /* ───────── posición del tablero (infinito) ───────── */
 
   const colocarItems = useCallback(() => {
     const L = layoutRef.current!;
-    itemsRef.current.forEach((el, i) => {
-      const p = L.pos[i];
-      gsap.set(el, { left: p.x - p.w / 2, top: p.y - p.w / 2, width: p.w, height: p.w });
+    elsRef.current.forEach((lista, t) => {
+      const { tx, ty } = TILES[t];
+      lista.forEach((el, i) => {
+        const p = L.pos[i];
+        gsap.set(el, {
+          left: tx * L.BW + p.x - p.w / 2,
+          top: ty * L.BH + p.y - p.w / 2,
+          width: p.w,
+          height: p.w,
+        });
+      });
     });
   }, []);
 
-  const centrar = useCallback(() => {
+  // lleva el tablero a (x, y) envolviendo dentro del bloque
+  const pintar = useCallback((x: number, y: number) => {
     const L = layoutRef.current!;
     const z = zoomRef.current;
-    gsap.set(boardRef.current, {
-      x: (window.innerWidth - L.W * z) / 2,
-      y: (window.innerHeight - L.H * z) / 2,
-      scale: z,
-    });
-    dragRef.current?.applyBounds(limites(z));
-  }, [limites]);
+    const bx = gsap.utils.wrap(-L.BW * z, 0, x);
+    const by = gsap.utils.wrap(-L.BH * z, 0, y);
+    gsap.set(boardRef.current, { x: bx, y: by, scale: z });
+    return { bx, by };
+  }, []);
+
+  const posActual = useCallback(() => {
+    const b = boardRef.current!;
+    return { x: gsap.getProperty(b, "x") as number, y: gsap.getProperty(b, "y") as number };
+  }, []);
 
   /* ───────── zoom alrededor del centro de la pantalla ───────── */
 
@@ -163,27 +202,29 @@ export default function Landing() {
       const z1 = zoomDeValor(gsap.utils.clamp(0, 1, v));
       const z0 = zoomRef.current;
       if (Math.abs(z1 - z0) < 0.0005) return;
-      const b = boardRef.current!;
       const cx = window.innerWidth / 2;
       const cy = window.innerHeight / 2;
-      const x0 = gsap.getProperty(b, "x") as number;
-      const y0 = gsap.getProperty(b, "y") as number;
-      const lim = limites(z1);
-      const x1 = gsap.utils.clamp(lim.minX, lim.maxX, cx - ((cx - x0) / z0) * z1);
-      const y1 = gsap.utils.clamp(lim.minY, lim.maxY, cy - ((cy - y0) / z0) * z1);
-      zoomRef.current = z1;
-      dragRef.current?.applyBounds(lim);
-      gsap.to(b, {
-        x: x1,
-        y: y1,
-        scale: z1,
-        duration: animar ? 0.45 : 0,
+      const { x: x0, y: y0 } = posActual();
+      // punto del tablero que está bajo el centro: se queda quieto
+      const px = (cx - x0) / z0;
+      const py = (cy - y0) / z0;
+      const estado = { z: z0 };
+      gsap.to(estado, {
+        z: z1,
+        duration: animar ? 0.5 : 0,
         ease: "power3.out",
         overwrite: "auto",
-        onUpdate: () => dragRef.current?.update(),
+        onUpdate: () => {
+          zoomRef.current = estado.z;
+          const { bx, by } = pintar(cx - px * estado.z, cy - py * estado.z);
+          gsap.set(proxyRef.current, { x: bx, y: by });
+          scrollObjetivo.current = { x: bx, y: by };
+          scrollActual.current = { x: bx, y: by };
+          dragRef.current?.update();
+        },
       });
     },
-    [limites]
+    [pintar, posActual]
   );
 
   const onZoom = useCallback(
@@ -194,7 +235,7 @@ export default function Landing() {
     [aplicarZoom]
   );
 
-  /* ───────── revelado: las piezas aparecen al entrar a la pantalla ───────── */
+  /* ───────── revelado ───────── */
 
   const marcarMovimiento = useCallback((on: boolean) => {
     wrapRef.current?.classList.toggle("is-moving", on);
@@ -206,91 +247,113 @@ export default function Landing() {
     gsap.to(hintRef.current, { autoAlpha: 0, duration: 0.5, delay: 0.3 });
   }, []);
 
-  const revelar = useCallback((i: number, delay = 0) => {
-    if (reveladoRef.current.has(i)) return;
-    reveladoRef.current.add(i);
-    gsap.to(itemsRef.current[i], {
-      scale: 1,
-      duration: 0.7,
-      delay,
-      ease: "back.out(1.5)",
-      overwrite: "auto",
-    });
+  const revelar = useCallback((el: HTMLElement, delay = 0) => {
+    if (reveladoRef.current.has(el)) return;
+    reveladoRef.current.add(el);
+    gsap.to(el, { scale: 1, duration: 0.7, delay, ease: "back.out(1.5)", overwrite: "auto" });
   }, []);
 
   const iniciarRevelado = useCallback(() => {
-    // Primera tanda: del centro hacia afuera, con un ritmo que se sienta.
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const cx = vw / 2;
     const cy = vh / 2;
-    const visibles: { i: number; d: number }[] = [];
-    itemsRef.current.forEach((el, i) => {
+    const visibles: { el: HTMLElement; d: number }[] = [];
+    todos().forEach((el) => {
       const r = el.getBoundingClientRect();
       const ex = r.left + r.width / 2;
       const ey = r.top + r.height / 2;
       if (ex > -r.width && ex < vw + r.width && ey > -r.height && ey < vh + r.height) {
-        visibles.push({ i, d: Math.hypot(ex - cx, ey - cy) });
+        visibles.push({ el, d: Math.hypot(ex - cx, ey - cy) });
       }
     });
     const maxD = Math.max(1, ...visibles.map((v) => v.d));
-    visibles.forEach((v) => revelar(v.i, (v.d / maxD) * 0.9));
+    visibles.forEach((v) => revelar(v.el, (v.d / maxD) * 0.9));
 
-    // Después, lo que vaya entrando al arrastrar.
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (!e.isIntersecting) return;
-          const i = Number((e.target as HTMLElement).dataset.i);
-          revelar(i, 0.05);
+          revelar(e.target as HTMLElement, 0.05);
           obs.unobserve(e.target);
         });
       },
       { rootMargin: "12%" }
     );
-    itemsRef.current.forEach((el, i) => {
-      if (!reveladoRef.current.has(i)) obs.observe(el);
+    todos().forEach((el) => {
+      if (!reveladoRef.current.has(el)) obs.observe(el);
     });
     observerRef.current = obs;
-  }, [revelar]);
+  }, [revelar, todos]);
+
+  /* ───────── proximidad del mouse: las piezas cercanas crecen ───────── */
+
+  const proximidad = useCallback(() => {
+    if (faseRef.current !== "tablero" || !mouse.current.activo) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const RADIO = Math.min(360, vw * 0.3);
+    const { x: mx, y: my } = mouse.current;
+    todos().forEach((el) => {
+      if (!reveladoRef.current.has(el)) return;
+      const r = el.getBoundingClientRect();
+      if (r.right < -RADIO || r.left > vw + RADIO || r.bottom < -RADIO || r.top > vh + RADIO) return;
+      const d = Math.hypot(mx - (r.left + r.width / 2), my - (r.top + r.height / 2));
+      const objetivo = d < RADIO ? 1 + (1 - d / RADIO) * 0.22 : 1;
+      const actual = (gsap.getProperty(el, "scale") as number) || 1;
+      if (actual < 0.95 && gsap.isTweening(el)) return; // todavía está apareciendo
+      if (Math.abs(actual - objetivo) < 0.004) return;
+      gsap.to(el, { scale: objetivo, duration: 0.6, ease: "power3.out", overwrite: "auto" });
+    });
+  }, [todos]);
 
   /* ───────── pieza enfocada ───────── */
 
-  const abrirFoco = useCallback((i: number) => {
-    if (faseRef.current !== "tablero") return;
-    const el = itemsRef.current[i];
+  const abrirFoco = useCallback((i: number, el: HTMLElement) => {
+    if (faseRef.current !== "tablero" && faseRef.current !== "grid") return;
+    faseAntesRef.current = faseRef.current;
     const img = el.querySelector("img")!;
     origenRef.current = img.getBoundingClientRect();
+    origenElRef.current = el;
     setFase("foco");
     dragRef.current?.disable();
-    wrapRef.current?.classList.add("is-focus");
+    lenisRef.current?.stop();
+    rootRef.current?.classList.add("is-focus");
     setFormAbierto(false);
     setFoco({ p: PRODUCTOS[i], i });
   }, []);
 
-  const ordenDesde = useCallback((i: number) => {
-    // orden de las demás piezas por distancia a la pieza i (en pantalla)
-    const r0 = itemsRef.current[i].getBoundingClientRect();
-    const cx = r0.left + r0.width / 2;
-    const cy = r0.top + r0.height / 2;
-    const otros = itemsRef.current
-      .map((el, j) => {
-        const r = el.getBoundingClientRect();
-        return { el, j, d: Math.hypot(r.left + r.width / 2 - cx, r.top + r.height / 2 - cy) };
-      })
-      .filter((o) => o.j !== i)
-      .sort((a, b) => a.d - b.d);
-    return otros;
-  }, []);
+  // las demás piezas visibles, ordenadas por cercanía a la enfocada
+  const ordenDesde = useCallback(
+    (el: HTMLElement) => {
+      const r0 = el.getBoundingClientRect();
+      const cx = r0.left + r0.width / 2;
+      const cy = r0.top + r0.height / 2;
+      const fuente = faseAntesRef.current === "grid" ? gridElsRef.current : todos();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      return fuente
+        .filter((e) => e !== el && getComputedStyle(e).display !== "none")
+        .map((e) => {
+          const r = e.getBoundingClientRect();
+          const ex = r.left + r.width / 2;
+          const ey = r.top + r.height / 2;
+          const fuera = ex < -vw * 0.5 || ex > vw * 1.5 || ey < -vh * 0.5 || ey > vh * 1.5;
+          return { el: e, d: Math.hypot(ex - cx, ey - cy), fuera };
+        })
+        .filter((o) => !o.fuera)
+        .sort((a, b) => a.d - b.d);
+    },
+    [todos]
+  );
 
   useLayoutEffect(() => {
     if (!foco) return;
-    const { i } = foco;
     const clone = cloneRef.current!;
     const box = boxRef.current!.getBoundingClientRect();
     const r = origenRef.current!;
-    const original = itemsRef.current[i];
-    const otros = ordenDesde(i);
+    const original = origenElRef.current!;
+    const otros = ordenDesde(original);
 
     gsap.set(clone, { left: r.left, top: r.top, width: r.width, height: r.height, autoAlpha: 1 });
     gsap.set(original, { visibility: "hidden" });
@@ -327,19 +390,19 @@ export default function Landing() {
 
   const cerrarFoco = useCallback(() => {
     if (faseRef.current !== "foco" || !foco) return;
-    const { i } = foco;
     const clone = cloneRef.current!;
     const r = origenRef.current!;
-    const original = itemsRef.current[i];
-    const otros = ordenDesde(i);
-    otros.forEach((o) => reveladoRef.current.add(o.j));
+    const original = origenElRef.current!;
+    const otros = ordenDesde(original);
+    const regresaA = faseAntesRef.current;
 
     const tl = gsap.timeline({
       onComplete: () => {
         setFoco(null);
-        setFase("tablero");
-        wrapRef.current?.classList.remove("is-focus");
-        dragRef.current?.enable();
+        setFase(regresaA);
+        rootRef.current?.classList.remove("is-focus");
+        if (regresaA === "tablero") dragRef.current?.enable();
+        else lenisRef.current?.start();
       },
     });
     tl.to(infoRef.current!.children, { autoAlpha: 0, y: 10, duration: 0.3, ease: "power2.in", stagger: 0.03 }, 0);
@@ -360,85 +423,145 @@ export default function Landing() {
     );
     tl.to([topRef.current, cornersRef.current[1]], { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out" }, 1);
   }, [foco, ordenDesde]);
+  cerrarFocoRef.current = cerrarFoco;
 
   /* ───────── modo grid ───────── */
 
+  const flipVars = useMemo(
+    () => ({ duration: 0.95, ease: "expo.inOut", absolute: true, scale: true, stagger: { amount: 0.22, from: "start" as const } }),
+    []
+  );
+
   const toggleGrid = useCallback(() => {
-    const wrap = wrapRef.current!;
     const board = boardRef.current!;
-    const items = itemsRef.current;
-    const L = layoutRef.current!;
-    const flipVars = {
-      duration: 0.95,
-      ease: "expo.inOut",
-      absolute: true,
-      scale: true,
-      stagger: { amount: 0.22, from: "start" as const },
-    };
+    const gridWrap = gridWrapRef.current!;
+    const gridEls = gridElsRef.current;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cx = vw / 2;
+    const cy = vh / 2;
 
     if (faseRef.current === "tablero") {
       setFase("grid");
       dragRef.current?.disable();
       observerRef.current?.disconnect();
-      items.forEach((_, i) => reveladoRef.current.add(i));
-      const state = Flip.getState(items);
-      const vw = window.innerWidth;
-      board.style.setProperty("--grid-cols", String(vw < 768 ? 3 : vw < 1200 ? 5 : 7));
-      wrap.classList.add("is-grid");
-      wrap.scrollTop = 0;
-      gsap.set(board, { clearProps: "transform,width,height" });
-      items.forEach((el) => gsap.set(el, { clearProps: "left,top,width,height" }));
-      gsap.set(items, { scale: 1 });
-      gsap.to(hintRef.current, { autoAlpha: 0, duration: 0.3 });
-      Flip.from(state, flipVars);
-    } else if (faseRef.current === "grid") {
-      const state = Flip.getState(items);
-      wrap.classList.remove("is-grid");
-      wrap.scrollTop = 0;
-      colocarItems();
-      // el tablero regresa centrado en el zoom actual
-      const z = zoomRef.current;
-      gsap.set(board, {
-        width: L.W,
-        height: L.H,
-        x: (window.innerWidth - L.W * z) / 2,
-        y: (window.innerHeight - L.H * z) / 2,
-        scale: z,
+      // de cada pieza viaja la copia más cercana al centro de la pantalla
+      const elegidos = PRODUCTOS.map((_, i) => {
+        let mejor = elsRef.current[TILE_CENTRO][i];
+        let dm = Infinity;
+        elsRef.current.forEach((lista) => {
+          const r = lista[i].getBoundingClientRect();
+          const d = Math.hypot(r.left + r.width / 2 - cx, r.top + r.height / 2 - cy);
+          if (d < dm) {
+            dm = d;
+            mejor = lista[i];
+          }
+        });
+        return mejor;
       });
+      elegidosRef.current = elegidos;
+      todos().forEach((el) => el.removeAttribute("data-flip-id"));
+      elegidos.forEach((el, i) => el.setAttribute("data-flip-id", `p${i}`));
+      const state = Flip.getState(elegidos);
+      const resto = todos().filter((el) => !elegidos.includes(el));
+      gsap.to(resto, { scale: 0, duration: 0.4, ease: "back.in(1.3)", stagger: { amount: 0.15 }, overwrite: "auto" });
+      gsap.set(elegidos, { visibility: "hidden" });
+      gsap.to(hintRef.current, { autoAlpha: 0, duration: 0.3 });
+
+      gsap.set(gridWrap, { display: "block" });
+      gridWrap.scrollTop = 0;
+      gsap.set(gridEls, { clearProps: "transform", display: "block" });
+      lenisRef.current?.resize();
       Flip.from(state, {
         ...flipVars,
+        targets: gridEls,
         onComplete: () => {
+          gsap.set(board, { autoAlpha: 0 });
+          lenisRef.current?.start();
+        },
+      });
+    } else if (faseRef.current === "grid") {
+      lenisRef.current?.stop();
+      lenisRef.current?.scrollTo(0, { immediate: true });
+      gridWrap.scrollTop = 0;
+      // el filtro se limpia: todas las piezas regresan al tablero
+      setFiltro({ categoria: "todo", marca: "todas" });
+      gsap.set(gridEls, { display: "block", clearProps: "transform" });
+      const state = Flip.getState(gridEls);
+      const elegidos = elegidosRef.current;
+      gsap.set(board, { autoAlpha: 1 });
+      gsap.set(elegidos, { visibility: "visible", scale: 1 });
+      Flip.from(state, {
+        ...flipVars,
+        targets: elegidos,
+        onComplete: () => {
+          gsap.set(gridWrap, { display: "none" });
+          const resto = todos().filter((el) => !elegidos.includes(el));
+          resto.forEach((el) => reveladoRef.current.add(el));
+          gsap.to(resto, { scale: 1, duration: 0.6, ease: "back.out(1.5)", stagger: { amount: 0.25 }, overwrite: "auto" });
           setFase("tablero");
-          dragRef.current?.applyBounds(limites(z));
-          dragRef.current?.update();
           dragRef.current?.enable();
         },
       });
     }
-  }, [colocarItems, limites]);
+  }, [flipVars, todos]);
 
-  /* ───────── montaje: layout, drag, wheel, resize ───────── */
+  // filtro del grid con Flip: lo que no coincide se va, lo demás se reacomoda
+  const filtrar = useCallback((f: { categoria: string; marca: string }) => {
+    setFiltro(f);
+    const gridEls = gridElsRef.current;
+    const state = Flip.getState(gridEls);
+    gridEls.forEach((el, i) => {
+      const p = PRODUCTOS[i];
+      const ok = (f.categoria === "todo" || p.categoria === f.categoria) && (f.marca === "todas" || p.marca === f.marca);
+      el.style.display = ok ? "block" : "none";
+    });
+    lenisRef.current?.scrollTo(0, { duration: 0.8 });
+    Flip.from(state, {
+      duration: 0.8,
+      ease: "expo.inOut",
+      absolute: true,
+      scale: true,
+      stagger: { amount: 0.12 },
+      onEnter: (els) => gsap.fromTo(els, { scale: 0 }, { scale: 1, duration: 0.6, ease: "back.out(1.5)", stagger: 0.02 }),
+      onLeave: (els) => gsap.to(els, { scale: 0, duration: 0.35, ease: "back.in(1.3)" }),
+      onComplete: () => lenisRef.current?.resize(),
+    });
+  }, []);
+
+  /* ───────── montaje ───────── */
 
   useEffect(() => {
     const root = rootRef.current!;
     const wrap = wrapRef.current!;
     const board = boardRef.current!;
+    const proxy = proxyRef.current!;
     const html = document.documentElement;
     const prevOverflow = html.style.overflow;
     html.style.overflow = "hidden";
 
-    layoutRef.current = calcularTablero(PRODUCTOS, window.innerWidth, window.innerHeight);
-    gsap.set(board, { width: layoutRef.current.W, height: layoutRef.current.H });
+    const L = (layoutRef.current = calcularTablero(PRODUCTOS, window.innerWidth, window.innerHeight));
+    gsap.set(board, { width: L.BW, height: L.BH });
     colocarItems();
-    gsap.set(itemsRef.current, { scale: 0 });
-    centrar();
+    gsap.set(todos(), { scale: 0 });
+    const ini = pintar((window.innerWidth - L.BW) / 2, (window.innerHeight - L.BH) / 2);
+    gsap.set(proxy, { x: ini.bx, y: ini.by });
+    scrollObjetivo.current = { x: ini.bx, y: ini.by };
+    scrollActual.current = { x: ini.bx, y: ini.by };
 
-    const drag = Draggable.create(board, {
+    // arrastre sobre un proxy invisible; el tablero se pinta envuelto
+    const render = () => {
+      const x = gsap.getProperty(proxy, "x") as number;
+      const y = gsap.getProperty(proxy, "y") as number;
+      pintar(x, y);
+      scrollObjetivo.current = { x, y };
+      scrollActual.current = { x, y };
+    };
+    const drag = Draggable.create(proxy, {
       type: "x,y",
+      trigger: wrap,
       inertia: true,
-      bounds: limites(zoomRef.current),
-      edgeResistance: 0.85,
-      throwResistance: 2500,
+      throwResistance: 2000,
       minimumMovement: 3,
       dragClickables: true,
       zIndexBoost: false,
@@ -447,55 +570,91 @@ export default function Landing() {
         marcarMovimiento(true);
         esconderHint();
       },
+      onDrag: render,
+      onThrowUpdate: render,
       onRelease: () => wrap.classList.remove("is-dragging"),
       onDragEnd: () => {
         if (!dragRef.current?.isThrowing) marcarMovimiento(false);
       },
       onThrowComplete: () => marcarMovimiento(false),
       onClick: (e: PointerEvent) => {
-        const hit = (e.target as HTMLElement).closest<HTMLElement>("[data-i]");
-        if (hit && faseRef.current === "tablero") abrirFoco(Number(hit.dataset.i));
+        const hit = (e.target as HTMLElement).closest<HTMLElement>(".ld-item");
+        if (hit && faseRef.current === "tablero") abrirFoco(Number(hit.dataset.i), hit);
       },
     })[0];
     drag.disable();
     dragRef.current = drag;
 
-    // rueda y trackpad: desplaza el tablero; con ctrl (pinch) hace zoom
-    const onWheel = (e: WheelEvent) => {
-      if (faseRef.current === "grid") return;
-      if (faseRef.current !== "tablero") {
-        e.preventDefault();
-        return;
+    // rueda: acumula y se acerca suave cada frame (sin tirones)
+    let moviendo = false;
+    let quieto = 0;
+    let frame = 0;
+    const tick = () => {
+      if (++frame % 6 === 0) {
+        const fuente = faseRef.current === "grid" ? gridElsRef.current : todos();
+        revisarContraste(root, fuente);
       }
+      if (faseRef.current !== "tablero") return;
+      const o = scrollObjetivo.current;
+      const a = scrollActual.current;
+      const dx = o.x - a.x;
+      const dy = o.y - a.y;
+      if (Math.abs(dx) < 0.05 && Math.abs(dy) < 0.05) {
+        if (moviendo && ++quieto > 8) {
+          moviendo = false;
+          marcarMovimiento(false);
+        }
+      } else {
+        quieto = 0;
+        a.x += dx * 0.12;
+        a.y += dy * 0.12;
+        gsap.set(proxy, { x: a.x, y: a.y });
+        pintar(a.x, a.y);
+        drag.update();
+      }
+      proximidad();
+    };
+    gsap.ticker.add(tick);
+
+    const onWheel = (e: WheelEvent) => {
+      if (faseRef.current === "grid") return; // lo maneja Lenis
       e.preventDefault();
+      if (faseRef.current !== "tablero") return;
       if (e.ctrlKey) {
         const v = gsap.utils.clamp(0, 1, valorDeZoom(zoomRef.current) - e.deltaY * 0.004);
         setZoomVal(v);
         aplicarZoom(v, false);
         return;
       }
-      wheelDelta.current.x += e.deltaX;
-      wheelDelta.current.y += e.deltaY;
-      esconderHint();
+      if (drag.isDragging || drag.isThrowing) return;
+      scrollObjetivo.current.x -= e.deltaX;
+      scrollObjetivo.current.y -= e.deltaY;
+      moviendo = true;
       marcarMovimiento(true);
-      cancelAnimationFrame(wheelRaf.current);
-      wheelRaf.current = requestAnimationFrame(() => {
-        const lim = limites(zoomRef.current);
-        const x = gsap.utils.clamp(lim.minX, lim.maxX, drag.x - wheelDelta.current.x);
-        const y = gsap.utils.clamp(lim.minY, lim.maxY, drag.y - wheelDelta.current.y);
-        wheelDelta.current = { x: 0, y: 0 };
-        gsap.to(board, {
-          x,
-          y,
-          duration: 0.6,
-          ease: "power3.out",
-          overwrite: "auto",
-          onUpdate: () => drag.update(),
-          onComplete: () => marcarMovimiento(false),
-        });
-      });
+      esconderHint();
     };
     root.addEventListener("wheel", onWheel, { passive: false });
+
+    const onMove = (e: PointerEvent) => {
+      mouse.current = { x: e.clientX, y: e.clientY, activo: e.pointerType === "mouse" };
+    };
+    const onLeave = () => {
+      mouse.current = { x: -9999, y: -9999, activo: true };
+    };
+    root.addEventListener("pointermove", onMove);
+    root.addEventListener("pointerleave", onLeave);
+
+    // scroll suave del grid
+    const lenis = new Lenis({
+      wrapper: gridWrapRef.current!,
+      content: gridBoxRef.current!,
+      lerp: 0.1,
+      smoothWheel: true,
+    });
+    lenis.stop();
+    const lenisTick = (t: number) => lenis.raf(t * 1000);
+    gsap.ticker.add(lenisTick);
+    lenisRef.current = lenis;
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -510,15 +669,14 @@ export default function Landing() {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         if (faseRef.current === "foco") return;
-        layoutRef.current = calcularTablero(PRODUCTOS, window.innerWidth, window.innerHeight);
-        gsap.set(board, { width: layoutRef.current.W, height: layoutRef.current.H });
-        if (faseRef.current !== "grid") {
-          colocarItems();
-          centrar();
-        } else {
-          const vw = window.innerWidth;
-          board.style.setProperty("--grid-cols", String(vw < 768 ? 3 : vw < 1200 ? 5 : 7));
-        }
+        const L2 = (layoutRef.current = calcularTablero(PRODUCTOS, window.innerWidth, window.innerHeight));
+        gsap.set(board, { width: L2.BW, height: L2.BH });
+        colocarItems();
+        const p = pintar((window.innerWidth - L2.BW * zoomRef.current) / 2, (window.innerHeight - L2.BH * zoomRef.current) / 2);
+        gsap.set(proxy, { x: p.bx, y: p.by });
+        scrollObjetivo.current = { x: p.bx, y: p.by };
+        scrollActual.current = { x: p.bx, y: p.by };
+        lenis.resize();
       });
     };
     window.addEventListener("resize", onResize);
@@ -526,16 +684,19 @@ export default function Landing() {
     return () => {
       html.style.overflow = prevOverflow;
       root.removeEventListener("wheel", onWheel);
+      root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onResize);
+      gsap.ticker.remove(tick);
+      gsap.ticker.remove(lenisTick);
+      lenis.destroy();
       observerRef.current?.disconnect();
       drag.kill();
       introTl.current?.kill();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  cerrarFocoRef.current = cerrarFoco;
 
   /* ───────── intro ───────── */
 
@@ -572,7 +733,6 @@ export default function Landing() {
 
     gsap.set(wrapper, { width: 0 });
     gsap.set(slides, { autoAlpha: 0, scale: 0.9 });
-
     const medir = () => {
       gsap.set(wrapper, { width: "auto" });
       const w = wrapper.getBoundingClientRect().width;
@@ -605,7 +765,6 @@ export default function Landing() {
       });
     introTl.current = tl;
 
-    // cualquier gesto salta al final
     const terminar = () => {
       if (faseRef.current !== "intro" || !tl.isActive()) return;
       tl.kill();
@@ -624,7 +783,6 @@ export default function Landing() {
     const onGesto = () => terminar();
     window.addEventListener("pointerdown", onGesto);
     window.addEventListener("wheel", onGesto, { passive: true });
-
     return () => {
       window.removeEventListener("pointerdown", onGesto);
       window.removeEventListener("wheel", onGesto);
@@ -654,11 +812,17 @@ export default function Landing() {
     }
   };
 
-  const esGrid = fase === "grid";
+  const esGrid = fase === "grid" || (fase === "foco" && faseAntesRef.current === "grid");
+
+  const registrar = useCallback((el: HTMLDivElement | null, i: number, t?: number) => {
+    if (!el) return;
+    if (t === undefined) gridElsRef.current[i] = el;
+    else elsRef.current[t][i] = el;
+  }, []);
+  const clickGrid = useCallback((i: number, el: HTMLElement) => abrirFoco(i, el), [abrirFoco]);
 
   return (
     <div ref={rootRef} className="ld">
-      {/* esquinas, como en el pitch */}
       <div
         ref={(el) => {
           if (el) cornersRef.current[0] = el;
@@ -666,7 +830,7 @@ export default function Landing() {
         className="ld-corner top-5 left-5 md:top-8 md:left-10"
         style={{ opacity: 0 }}
       >
-        piso ikpali · est. 2026 · cdmx
+        <Adapt>piso ikpali · est. 2026 · cdmx</Adapt>
       </div>
       <div
         ref={(el) => {
@@ -675,70 +839,101 @@ export default function Landing() {
         className="ld-corner top-5 right-5 md:top-8 md:right-10"
         style={{ opacity: 0 }}
       >
-        dentro de fayet
+        <Adapt>dentro de fayet</Adapt>
       </div>
 
-      {/* zoom + grid */}
-      <div ref={topRef} className="ld-glass ld-top" style={{ opacity: 0 }}>
-        {!esGrid && (
-          <>
-            <WakeSlider value={zoomVal} onChange={onZoom} bars={30} label={(v) => `${Math.round(zoomDeValor(v) * 100)}`} />
-            <span className="ld-top__sep" aria-hidden />
-          </>
-        )}
-        <button
-          type="button"
-          className="ld-iconbtn"
-          onClick={toggleGrid}
-          aria-label={esGrid ? "Ver tablero" : "Ver en cuadrícula"}
-          aria-pressed={esGrid}
-          title={esGrid ? "tablero" : "cuadrícula"}
-        >
-          {esGrid ? (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-              <circle cx="3" cy="4" r="1.6" />
-              <circle cx="10.5" cy="2.8" r="1.6" />
-              <circle cx="7" cy="8.2" r="1.6" />
-              <circle cx="2.6" cy="11.4" r="1.6" />
-              <circle cx="11.2" cy="10.6" r="1.6" />
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-              <rect x="1" y="1" width="4.5" height="4.5" rx="0.8" />
-              <rect x="8.5" y="1" width="4.5" height="4.5" rx="0.8" />
-              <rect x="1" y="8.5" width="4.5" height="4.5" rx="0.8" />
-              <rect x="8.5" y="8.5" width="4.5" height="4.5" rx="0.8" />
-            </svg>
+      {/* zoom + grid (+ filtros en grid) */}
+      <div ref={topRef} className={`ld-glass ld-top${esGrid ? " is-grid" : ""}`} style={{ opacity: 0 }}>
+        <div className="ld-top__row">
+          {!esGrid && (
+            <>
+              <WakeSlider value={zoomVal} onChange={onZoom} bars={30} label={(v) => `${Math.round(zoomDeValor(v) * 100)}`} />
+              <span className="ld-top__sep" aria-hidden />
+            </>
           )}
-        </button>
+          <button
+            type="button"
+            className="ld-iconbtn"
+            onClick={toggleGrid}
+            aria-label={esGrid ? "Ver tablero" : "Ver en cuadrícula"}
+            aria-pressed={esGrid}
+            title={esGrid ? "tablero" : "cuadrícula"}
+          >
+            {esGrid ? (
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                <circle cx="3" cy="4" r="1.6" />
+                <circle cx="10.5" cy="2.8" r="1.6" />
+                <circle cx="7" cy="8.2" r="1.6" />
+                <circle cx="2.6" cy="11.4" r="1.6" />
+                <circle cx="11.2" cy="10.6" r="1.6" />
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                <rect x="1" y="1" width="4.5" height="4.5" rx="0.8" />
+                <rect x="8.5" y="1" width="4.5" height="4.5" rx="0.8" />
+                <rect x="1" y="8.5" width="4.5" height="4.5" rx="0.8" />
+                <rect x="8.5" y="8.5" width="4.5" height="4.5" rx="0.8" />
+              </svg>
+            )}
+          </button>
+          {esGrid && (
+            <>
+              <span className="ld-top__sep" aria-hidden />
+              <div className="ld-filtros" role="group" aria-label="Filtrar por categoría">
+                {CATEGORIAS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`ld-filtro${filtro.categoria === c ? " is-on" : ""}`}
+                    onClick={() => filtrar({ ...filtro, categoria: c })}
+                  >
+                    <Adapt>{c.toLowerCase()}</Adapt>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        {esGrid && (
+          <div className="ld-top__row ld-top__row--marcas">
+            <div className="ld-filtros" role="group" aria-label="Filtrar por marca">
+              {MARCAS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className={`ld-filtro${filtro.marca === m ? " is-on" : ""}`}
+                  onClick={() => filtrar({ ...filtro, marca: m })}
+                >
+                  <Adapt>{m.toLowerCase()}</Adapt>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* tablero */}
+      {/* tablero infinito */}
+      <div ref={wrapRef} className="ld-wrap" onClick={(e) => {
+        if (faseRef.current === "foco" && !(e.target as HTMLElement).closest(".ld-item")) cerrarFoco();
+      }}>
+        <div ref={proxyRef} className="ld-proxy" aria-hidden />
+        <div ref={boardRef} className="ld-board">
+          {TILES.map((_, t) => PRODUCTOS.map((p, i) => <Pieza key={`${t}-${p.id}`} p={p} i={i} t={t} registrar={registrar} />))}
+        </div>
+      </div>
+
+      {/* grid con scroll suave */}
       <div
-        ref={wrapRef}
-        className="ld-wrap"
+        ref={gridWrapRef}
+        className="ld-gridwrap"
+        style={{ display: "none" }}
         onClick={(e) => {
           if (faseRef.current === "foco" && !(e.target as HTMLElement).closest(".ld-item")) cerrarFoco();
         }}
       >
-        <div ref={boardRef} className="ld-board">
+        <div ref={gridBoxRef} className="ld-gridbox">
           {PRODUCTOS.map((p, i) => (
-            <div
-              key={p.id}
-              ref={(el) => {
-                if (el) itemsRef.current[i] = el;
-              }}
-              className="ld-item"
-              data-i={i}
-            >
-              <div className="ld-item__hit" role="button" tabIndex={-1} aria-label={p.nombre}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="ld-item__img" src={p.src} alt={p.nombre} draggable={false} loading="lazy" decoding="async" />
-                <span className="ld-item__label" style={{ top: `${(p.fondo ?? 1) * 100}%` }}>
-                  {p.nombre}
-                </span>
-              </div>
-            </div>
+            <Pieza key={p.id} p={p} i={i} registrar={registrar} onClick={clickGrid} />
           ))}
         </div>
       </div>
@@ -765,9 +960,7 @@ export default function Landing() {
                     <input name="contacto" placeholder="correo o whatsapp" autoComplete="email" required />
                     <textarea name="mensaje" placeholder="¿algo que quieras preguntar?" rows={2} />
                     <div className="ld-form__row">
-                      <span className="ld-form__nota">
-                        te contestamos nosotros · <a href="/landing/privacidad">privacidad</a>
-                      </span>
+                      <span className="ld-form__nota">te contestamos nosotros</span>
                       <button type="submit" className="ld-focus__cta" style={{ marginTop: 0 }}>
                         enviar <span className="arrow">→</span>
                       </button>
@@ -790,7 +983,7 @@ export default function Landing() {
 
       <GlassBar visible={fase !== "intro"} />
 
-      {/* intro: la misma secuencia del pitch, una sola vez */}
+      {/* intro */}
       <div ref={introRef} className="ld-intro" aria-hidden>
         <link rel="preload" as="image" href="/logo.svg" />
         <link rel="preload" as="image" href={INTRO_FOTOS[0]} />

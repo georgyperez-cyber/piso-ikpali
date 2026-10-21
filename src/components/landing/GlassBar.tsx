@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { SITIO } from "./productos";
+import { AVISO } from "./aviso";
+import { Adapt } from "./contraste";
 
 // Barra de cristal al pie. Tres nombres: ubicación, contacto, privacidad.
-// Ubicación y contacto expanden la misma barra (morph) y muestran un texto
-// corto; privacidad lleva a su página.
+// Los tres expanden la misma barra (morph) y muestran su texto.
 
-type Panel = "ubicacion" | "contacto" | null;
+type Panel = "ubicacion" | "contacto" | "privacidad" | null;
 
 export default function GlassBar({ visible = true }: { visible?: boolean }) {
   const [abierto, setAbierto] = useState<Panel>(null);
@@ -20,13 +20,12 @@ export default function GlassBar({ visible = true }: { visible?: boolean }) {
   const panel = useRef<HTMLDivElement>(null);
   const size = useRef<{ w: number; h: number } | null>(null);
 
-  // Mide el tamaño natural del contenido y lleva la barra ahí con un morph.
   useLayoutEffect(() => {
     const o = outer.current!;
     const inn = inner.current!;
     const vw = window.innerWidth;
     const navW = nav.current!.scrollWidth;
-    const targetW = abierto ? Math.min(560, vw - 32) : navW;
+    const targetW = abierto ? Math.min(abierto === "privacidad" ? 600 : 560, vw - 32) : navW;
     inn.style.setProperty("--bar-w", `${targetW}px`);
     const targetH = inn.offsetHeight;
 
@@ -54,7 +53,7 @@ export default function GlassBar({ visible = true }: { visible?: boolean }) {
   useLayoutEffect(() => {
     const onResize = () => {
       size.current = null;
-      setMedida((m) => m + 1); // fuerza re-medición
+      setMedida((m) => m + 1);
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -75,14 +74,20 @@ export default function GlassBar({ visible = true }: { visible?: boolean }) {
     <div ref={outer} className="ld-glass ld-bar" role="navigation" aria-label="Información">
       <div ref={inner} className="ld-bar__inner">
         {abierto && (
-          <div ref={panel} className="ld-bar__panel" key={abierto}>
-            {abierto === "ubicacion" ? (
+          <div
+            ref={panel}
+            className={`ld-bar__panel${abierto === "privacidad" ? " ld-bar__panel--aviso" : ""}`}
+            key={abierto}
+            data-lenis-prevent
+          >
+            {abierto === "ubicacion" && (
               <p>
                 <em>{SITIO.direccion}</em>, {SITIO.ciudad}. {SITIO.dentroDe}.
                 <br />
                 {SITIO.horario}
               </p>
-            ) : (
+            )}
+            {abierto === "contacto" && (
               <p>
                 <a href={`mailto:${SITIO.email}`}>{SITIO.email}</a>
                 <br />
@@ -99,30 +104,38 @@ export default function GlassBar({ visible = true }: { visible?: boolean }) {
                 )}
               </p>
             )}
+            {abierto === "privacidad" && (
+              <div className="ld-bar__aviso">
+                {AVISO.map(([titulo, cuerpo]) => (
+                  <div key={titulo}>
+                    <h3>{titulo}</h3>
+                    <p>{cuerpo}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         <div ref={nav} className="ld-bar__nav">
-          <button
-            type="button"
-            className={`ld-bar__btn${abierto === "ubicacion" ? " is-on" : ""}`}
-            onClick={() => toggle("ubicacion")}
-            aria-expanded={abierto === "ubicacion"}
-          >
-            ubicación
-          </button>
-          <span className="ld-bar__dot" aria-hidden />
-          <button
-            type="button"
-            className={`ld-bar__btn${abierto === "contacto" ? " is-on" : ""}`}
-            onClick={() => toggle("contacto")}
-            aria-expanded={abierto === "contacto"}
-          >
-            contacto
-          </button>
-          <span className="ld-bar__dot" aria-hidden />
-          <Link href="/landing/privacidad" className="ld-bar__btn">
-            privacidad
-          </Link>
+          {(
+            [
+              ["ubicacion", "ubicación"],
+              ["contacto", "contacto"],
+              ["privacidad", "privacidad"],
+            ] as [Exclude<Panel, null>, string][]
+          ).map(([k, label], idx) => (
+            <span key={k} style={{ display: "contents" }}>
+              {idx > 0 && <span className="ld-bar__dot" aria-hidden />}
+              <button
+                type="button"
+                className={`ld-bar__btn${abierto === k ? " is-on" : ""}`}
+                onClick={() => toggle(k)}
+                aria-expanded={abierto === k}
+              >
+                <Adapt>{label}</Adapt>
+              </button>
+            </span>
+          ))}
         </div>
       </div>
     </div>
