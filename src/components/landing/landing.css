@@ -96,7 +96,6 @@
   z-index: 36;
   top: 0;
   left: 0;
-  translate: -50% 0;
   font-size: 11px;
   letter-spacing: 0.08em;
   line-height: 1.2;
@@ -202,17 +201,18 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  translate: -50% -50%;
   pointer-events: none;
   will-change: transform, width, height;
 }
-/* --a: lo de abajo se vuelve blanco y negro puro (umbral) y se invierte:
-   fondo claro → negro, texto rojo → blanco. --b lo tiñe de rojo con screen:
-   negro → rojo, blanco → blanco absoluto. */
-.ld-cursor--a {
-  -webkit-backdrop-filter: grayscale(1) contrast(100) invert(1);
-  backdrop-filter: grayscale(1) contrast(100) invert(1);
-}
+/* seis discos iguales, solo con blend modes (Safari no mezcla sobre un
+   backdrop-filter). --a invierte lo de abajo; --s lo deja en grises;
+   --bn (color-burn) manda a negro lo que venía de un fondo claro;
+   --d1 y --d2 (color-dodge) empujan lo demás a blanco puro;
+   --b tiñe con screen: negro → rojo exacto, blanco → blanco absoluto. */
+.ld-cursor--a { background: #fff; mix-blend-mode: difference; }
+.ld-cursor--s { background: #000; mix-blend-mode: saturation; }
+.ld-cursor--bn { background: #999; mix-blend-mode: color-burn; }
+.ld-cursor--d1, .ld-cursor--d2 { background: #e6e6e6; mix-blend-mode: color-dodge; }
 .ld-cursor--b { background: var(--rojo); mix-blend-mode: screen; }
 @media (hover: hover) and (pointer: fine) {
   .ld, .ld * { cursor: none !important; }

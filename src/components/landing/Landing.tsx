@@ -138,6 +138,10 @@ export default function Landing() {
   const cloneRef = useRef<HTMLImageElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const cursorBRef = useRef<HTMLDivElement>(null);
+  const cursorSRef = useRef<HTMLDivElement>(null);
+  const cursorBnRef = useRef<HTMLDivElement>(null);
+  const cursorD1Ref = useRef<HTMLDivElement>(null);
+  const cursorD2Ref = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null); // el nombre flotante de la pieza en hover
   const hoveredRef = useRef<HTMLElement | null>(null);
   const cursorR = useRef(14); // radio actual del cursor, en px
@@ -827,8 +831,11 @@ export default function Landing() {
     // dos discos iguales: el primero invierte lo que tiene debajo (difference
     // blanco) y el segundo lo tiñe de rojo (screen rojo). Sobre blanco queda
     // rojo; sobre texto rojo queda blanco, cortado justo en el borde del círculo.
-    const cursor = [cursorRef.current!, cursorBRef.current!];
+    const cursor = [cursorRef.current!, cursorSRef.current!, cursorBnRef.current!, cursorD1Ref.current!, cursorD2Ref.current!, cursorBRef.current!];
     const fino = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    // centrados desde su centro con GSAP (no con `translate`, que Safari no siempre suma)
+    gsap.set(cursor, { xPercent: -50, yPercent: -50 });
+    gsap.set(labelRef.current, { xPercent: -50 });
     const curX = gsap.quickTo(cursor, "x", { duration: 0.18, ease: "power3" });
     const curY = gsap.quickTo(cursor, "y", { duration: 0.18, ease: "power3" });
     const SEL = "a, button, [role='button'], .ld-item__hit, .ld-wake, input, textarea";
@@ -1241,6 +1248,10 @@ export default function Landing() {
 
       <div ref={labelRef} className="ld-label-float" aria-hidden />
       <div ref={cursorRef} className="ld-cursor ld-cursor--a" aria-hidden style={{ opacity: 0 }} />
+      <div ref={cursorSRef} className="ld-cursor ld-cursor--s" aria-hidden style={{ opacity: 0 }} />
+      <div ref={cursorBnRef} className="ld-cursor ld-cursor--bn" aria-hidden style={{ opacity: 0 }} />
+      <div ref={cursorD1Ref} className="ld-cursor ld-cursor--d1" aria-hidden style={{ opacity: 0 }} />
+      <div ref={cursorD2Ref} className="ld-cursor ld-cursor--d2" aria-hidden style={{ opacity: 0 }} />
       <div ref={cursorBRef} className="ld-cursor ld-cursor--b" aria-hidden style={{ opacity: 0 }} />
 
       {/* intro */}
