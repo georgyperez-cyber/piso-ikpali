@@ -154,6 +154,7 @@ export default function Landing() {
   const introTl = useRef<gsap.core.Timeline | null>(null);
   const hintVisto = useRef(false);
   const elegidosRef = useRef<HTMLDivElement[]>([]); // instancias que viajan al grid
+  const transRef = useRef(false); // hay un Flip tablero ↔ grid en curso
   const cerrarFocoRef = useRef<() => void>(() => {});
   const terminarIntroRef = useRef<() => void>(() => {});
 
@@ -537,6 +538,8 @@ export default function Landing() {
 
   const toggleGrid = useCallback(() => {
     const board = boardRef.current!;
+    if (transRef.current || (faseRef.current !== "tablero" && faseRef.current !== "grid")) return;
+    transRef.current = true;
     if (iconoRef.current) {
       gsap.to(iconoRef.current, {
         morphSVG: { shape: faseRef.current === "grid" ? ICONO_GRID : ICONO_TABLERO, shapeIndex: "auto" },
@@ -589,29 +592,39 @@ export default function Landing() {
         onComplete: () => {
           gsap.set(board, { autoAlpha: 0 });
           lenisRef.current?.start();
+          transRef.current = false;
         },
       });
     } else if (faseRef.current === "grid") {
       lenisRef.current?.stop();
-      lenisRef.current?.scrollTo(0, { immediate: true });
-      gridWrap.scrollTop = 0;
-      // el filtro se limpia: todas las piezas regresan al tablero
-      setFiltro({ categoria: "todo", marca: "todas" });
-      gsap.set(gridEls, { display: "block", clearProps: "transform" });
-      const state = Flip.getState(gridEls);
+      setFiltrosAbiertos(false);
       const elegidos = elegidosRef.current;
+      // solo viajan las piezas que se ven en el grid (las filtradas aparecen al final)
+      const visibles = gridEls.filter((el) => el.style.display !== "none");
+      const objetivos = visibles.map((el) => elegidos[Number(el.dataset.i)]);
+      const state = Flip.getState(visibles);
+      // desde aquí mandan las copias del tablero; el grid se esconde ya
+      gsap.set(visibles, { visibility: "hidden" });
       gsap.set(board, { autoAlpha: 1 });
-      gsap.set(elegidos, { visibility: "visible", scale: 1 });
+      gsap.set(objetivos, { visibility: "visible", scale: 1 });
       Flip.from(state, {
         ...flipVars,
-        targets: elegidos,
+        targets: objetivos,
         onComplete: () => {
           gsap.set(gridWrap, { display: "none" });
-          const resto = todos().filter((el) => !elegidos.includes(el));
+          gridWrap.scrollTop = 0;
+          lenisRef.current?.scrollTo(0, { immediate: true, force: true });
+          gsap.set(gridEls, { clearProps: "visibility,display,transform" });
+          setFiltro({ categoria: "todo", marca: "todas" });
+          setFiltrosAbiertos(false);
+          const faltan = elegidos.filter((el) => !objetivos.includes(el));
+          gsap.set(faltan, { visibility: "visible", scale: 0 });
+          const resto = todos().filter((el) => !objetivos.includes(el));
           resto.forEach((el) => reveladoRef.current.add(el));
           gsap.to(resto, { scale: 1, duration: 0.6, ease: "back.out(1.5)", stagger: { amount: 0.25 }, overwrite: "auto" });
           setFase("tablero");
           dragRef.current?.enable();
+          transRef.current = false;
         },
       });
     }
@@ -619,6 +632,7 @@ export default function Landing() {
 
   // filtro del grid con Flip: lo que no coincide se va, lo demás se reacomoda
   const filtrar = useCallback((f: { categoria: string; marca: string }) => {
+    if (transRef.current || faseRef.current !== "grid") return;
     setFiltro(f);
     const gridEls = gridElsRef.current;
     const state = Flip.getState(gridEls);

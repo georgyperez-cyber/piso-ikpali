@@ -347,10 +347,13 @@
   will-change: width, height;
 }
 @media (min-width: 768px) { .ld-bar { bottom: 28px; } }
+/* el contenido se ancla al centro inferior: los tres nombres no se mueven,
+   la caja crece alrededor de ellos */
 .ld-bar__inner {
   position: absolute;
-  left: 0;
+  left: 50%;
   bottom: 0;
+  transform: translateX(-50%);
   width: var(--bar-w);
   display: flex;
   flex-direction: column;
