@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { Draggable } from "gsap/Draggable";
 import { InertiaPlugin } from "gsap/InertiaPlugin";
 import { Flip } from "gsap/Flip";
+import { MorphSVGPlugin } from "gsap/MorphSVGPlugin";
 import Lenis from "lenis";
 import { PRODUCTOS, SITIO, formatoPrecio, type Producto } from "./productos";
 import WakeSlider from "./WakeSlider";
@@ -12,7 +13,12 @@ import GlassBar from "./GlassBar";
 import { Adapt, revisarContraste } from "./contraste";
 import "./landing.css";
 
-gsap.registerPlugin(Draggable, InertiaPlugin, Flip);
+gsap.registerPlugin(Draggable, InertiaPlugin, Flip, MorphSVGPlugin);
+
+// iconos del botón grid / tablero (un solo path, para el morph)
+const ICONO_GRID = "M1 1h4.5v4.5H1zM8.5 1h4.5v4.5H8.5zM1 8.5h4.5V13H1zM8.5 8.5h4.5V13H8.5z";
+const circ = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
+const ICONO_TABLERO = circ(3, 4, 1.6) + circ(10.5, 2.8, 1.6) + circ(7, 8.2, 1.6) + circ(2.6, 11.4, 1.6) + circ(11.2, 10.6, 1.6);
 
 /* ───────────────────────── tablero: geometría ───────────────────────── */
 
@@ -24,14 +30,15 @@ const valorDeZoom = (z: number) => (z - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN);
 // El tablero es un bloque que se repite en las dos direcciones (3 × 3 copias);
 // al arrastrar, el desplazamiento se envuelve dentro del bloque y nunca se acaba.
 const TILES = [-1, 0, 1].flatMap((ty) => [-1, 0, 1].map((tx) => ({ tx, ty })));
-const TILE_CENTRO = 4;
 
 type Layout = {
   cell: number;
   cols: number;
+  step: number;
+  celdas: number; // cols × rows; si sobran celdas se repiten piezas para no dejar huecos
   BW: number; // ancho del bloque
   BH: number; // alto del bloque
-  pos: { x: number; y: number; w: number }[];
+  pos: { x: number; y: number; w: number }[]; // una por celda
 };
 
 const ruido = (i: number, k: number) => {
@@ -43,7 +50,7 @@ function calcularTablero(items: Producto[], vw: number, vh: number): Layout {
   const n = items.length;
   const movil = vw < 768;
   const cell = movil ? Math.round(vw * 0.38) : Math.round(gsap.utils.clamp(180, 260, vw * 0.16));
-  let step = cell + Math.round(cell * 0.42);
+  let step = cell + Math.round(cell * 0.3);
 
   let cols = 1;
   let mejor = Infinity;
@@ -59,20 +66,24 @@ function calcularTablero(items: Producto[], vw: number, vh: number): Layout {
   // el bloque tiene que cubrir la pantalla aun con el zoom mínimo
   step = Math.max(step, Math.ceil(vw / (cols * ZOOM_MIN)) + 1, Math.ceil(vh / (rows * ZOOM_MIN)) + 1);
 
-  const pos = items.map((p, i) => {
-    const c = i % cols;
-    const r = Math.floor(i / cols);
-    const x = c * step + step / 2 + ruido(i, 1) * step * 0.08;
-    const y = r * step + step / 2 + (c % 2 ? step * 0.5 : 0) + ruido(i, 2) * step * 0.08;
+  const celdas = cols * rows;
+  const pos = Array.from({ length: celdas }, (_, k) => {
+    const p = items[k % n];
+    const c = k % cols;
+    const r = Math.floor(k / cols);
+    const x = c * step + step / 2 + ruido(k, 1) * step * 0.08;
+    const y = r * step + step / 2 + (c % 2 ? step * 0.5 : 0) + ruido(k, 2) * step * 0.08;
     return { x, y, w: Math.round(cell * p.tam) };
   });
 
-  return { cell, cols, BW: cols * step, BH: rows * step, pos };
+  return { cell, cols, step, celdas, BW: cols * step, BH: rows * step, pos };
 }
 
-const INTRO_FOTOS = [23, 15, 35, 26, 40, 7, 14, 36, 8, 13, 10, 24].map(
-  (n) => `/assets-optimized/hero-icono-foto-${n}-720.webp`
-);
+// la intro enseña 4 piezas al azar, distintas en cada carga
+const elegirIntro = () => {
+  const idx = PRODUCTOS.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 4);
+  return idx.map((i) => PRODUCTOS[i].src);
+};
 
 type Fase = "intro" | "tablero" | "foco" | "grid";
 
@@ -81,17 +92,18 @@ const MARCAS = ["todas", ...Array.from(new Set(PRODUCTOS.map((p) => p.marca)))];
 
 type PiezaProps = {
   p: Producto;
-  i: number;
-  t?: number;
+  i: number; // producto
+  k?: number; // celda del bloque (solo tablero)
+  t?: number; // tile
   registrar: (el: HTMLDivElement | null, i: number, t?: number) => void;
   onClick?: (i: number, el: HTMLElement) => void;
 };
 
 // Una pieza del tablero (t = copia del bloque) o del grid (sin t).
-const Pieza = memo(function Pieza({ p, i, t, registrar, onClick }: PiezaProps) {
+const Pieza = memo(function Pieza({ p, i, k, t, registrar, onClick }: PiezaProps) {
   return (
     <div
-      ref={(el) => registrar(el, i, t)}
+      ref={(el) => registrar(el, t === undefined ? i : (k as number), t)}
       className="ld-item"
       data-i={i}
       data-flip-id={t === undefined ? `p${i}` : undefined}
@@ -115,7 +127,8 @@ export default function Landing() {
   const proxyRef = useRef<HTMLDivElement>(null);
   const gridWrapRef = useRef<HTMLDivElement>(null);
   const gridBoxRef = useRef<HTMLDivElement>(null);
-  const elsRef = useRef<HTMLDivElement[][]>(TILES.map(() => [])); // [tile][i]
+  const elsRef = useRef<HTMLDivElement[][]>(TILES.map(() => [])); // [tile][celda]
+  const iconoRef = useRef<SVGPathElement>(null);
   const gridElsRef = useRef<HTMLDivElement[]>([]);
   const introRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
@@ -130,7 +143,8 @@ export default function Landing() {
   const layoutRef = useRef<Layout | null>(null);
   const dragRef = useRef<Draggable | null>(null);
   const lenisRef = useRef<Lenis | null>(null);
-  const zoomRef = useRef(1);
+  const zoomRef = useRef(0.88);
+  const shiftRef = useRef({ x: 0, y: 0 });
   const faseRef = useRef<Fase>("intro");
   const faseAntesRef = useRef<Fase>("tablero");
   const reveladoRef = useRef<Set<HTMLElement>>(new Set());
@@ -149,7 +163,10 @@ export default function Landing() {
   const mouse = useRef({ x: -9999, y: -9999, activo: false });
 
   const [fase, setFaseState] = useState<Fase>("intro");
-  const [zoomVal, setZoomVal] = useState(valorDeZoom(1));
+  const [zoomVal, setZoomVal] = useState(valorDeZoom(0.88));
+  const [celdas, setCeldas] = useState(0);
+  const [introFotos, setIntroFotos] = useState<string[]>([]);
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const [foco, setFoco] = useState<{ p: Producto; i: number } | null>(null);
   const [formAbierto, setFormAbierto] = useState(false);
   const [filtro, setFiltro] = useState({ categoria: "todo", marca: "todas" });
@@ -159,7 +176,9 @@ export default function Landing() {
     setFaseState(f);
   };
 
-  const todos = useCallback(() => elsRef.current.flat(), []);
+  const todos = useCallback(() => elsRef.current.flat().filter(Boolean), []);
+  // todas las copias (en todas las celdas y tiles) de un producto
+  const copiasDe = useCallback((i: number) => todos().filter((el) => Number(el.dataset.i) === i), [todos]);
 
   /* ───────── posición del tablero (infinito) ───────── */
 
@@ -167,8 +186,9 @@ export default function Landing() {
     const L = layoutRef.current!;
     elsRef.current.forEach((lista, t) => {
       const { tx, ty } = TILES[t];
-      lista.forEach((el, i) => {
-        const p = L.pos[i];
+      lista.forEach((el, k) => {
+        if (!el) return;
+        const p = L.pos[k];
         gsap.set(el, {
           left: tx * L.BW + p.x - p.w / 2,
           top: ty * L.BH + p.y - p.w / 2,
@@ -185,9 +205,48 @@ export default function Landing() {
     const z = zoomRef.current;
     const bx = gsap.utils.wrap(-L.BW * z, 0, x);
     const by = gsap.utils.wrap(-L.BH * z, 0, y);
+    // ¿cambió el bloque que está en pantalla? Entonces la copia que entra
+    // hereda el tamaño de la que sale, para que no se note el salto.
+    const sx = Math.round((bx - x) / (L.BW * z));
+    const sy = Math.round((by - y) / (L.BH * z));
+    const dx = sx - shiftRef.current.x;
+    const dy = sy - shiftRef.current.y;
+    if (dx || dy) {
+      shiftRef.current = { x: sx, y: sy };
+      transferir(dx, dy);
+    }
     gsap.set(boardRef.current, { x: bx, y: by, scale: z });
     return { bx, by };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // copia las escalas entre tiles cuando el tablero se envuelve.
+  // dx = +1: el contenido se movió un bloque a la derecha, new(tx) = old(tx+1).
+  const transferir = (dx: number, dy: number) => {
+    const L = layoutRef.current!;
+    const idx = (tx: number, ty: number) => (ty + 1) * 3 + (tx + 1);
+    const leer = () => elsRef.current.map((lista) => lista.map((el) => (el ? ((gsap.getProperty(el, "scale") as number) || 1) : 1)));
+    const paso = (ax: number, ay: number) => {
+      const esc = leer();
+      for (let ty = -1; ty <= 1; ty++) {
+        for (let tx = -1; tx <= 1; tx++) {
+          const sx = tx + ax;
+          const sy = ty + ay;
+          if (sx < -1 || sx > 1 || sy < -1 || sy > 1) continue;
+          const dest = elsRef.current[idx(tx, ty)];
+          const src = esc[idx(sx, sy)];
+          for (let k = 0; k < L.celdas; k++) {
+            const el = dest[k];
+            if (!el) continue;
+            gsap.killTweensOf(el, "scale");
+            gsap.set(el, { scale: src[k] });
+          }
+        }
+      }
+    };
+    if (dx) paso(Math.sign(dx), 0);
+    if (dy) paso(0, Math.sign(dy));
+  };
 
   const posActual = useCallback(() => {
     const b = boardRef.current!;
@@ -247,11 +306,21 @@ export default function Landing() {
     gsap.to(hintRef.current, { autoAlpha: 0, duration: 0.5, delay: 0.3 });
   }, []);
 
-  const revelar = useCallback((el: HTMLElement, delay = 0) => {
-    if (reveladoRef.current.has(el)) return;
-    reveladoRef.current.add(el);
-    gsap.to(el, { scale: 1, duration: 0.7, delay, ease: "back.out(1.5)", overwrite: "auto" });
-  }, []);
+  const revelar = useCallback(
+    (el: HTMLElement, delay = 0) => {
+      if (reveladoRef.current.has(el)) return;
+      // se revela la pieza, no la copia: sus copias en los otros bloques
+      // quedan listas en silencio para que el envolvimiento no las delate
+      copiasDe(Number(el.dataset.i)).forEach((c) => {
+        if (c === el || reveladoRef.current.has(c)) return;
+        reveladoRef.current.add(c);
+        gsap.set(c, { scale: 1 });
+      });
+      reveladoRef.current.add(el);
+      gsap.to(el, { scale: 1, duration: 0.7, delay, ease: "back.out(1.5)", overwrite: "auto" });
+    },
+    [copiasDe]
+  );
 
   const iniciarRevelado = useCallback(() => {
     const vw = window.innerWidth;
@@ -292,18 +361,35 @@ export default function Landing() {
     if (faseRef.current !== "tablero" || !mouse.current.activo) return;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const RADIO = Math.min(360, vw * 0.3);
+    const L = layoutRef.current!;
+    // alcanza dos anillos de vecinas; la que está bajo el mouse es la más grande
+    const RADIO = L.step * zoomRef.current * 1.9;
+    const PICO = 0.38;
     const { x: mx, y: my } = mouse.current;
     todos().forEach((el) => {
       if (!reveladoRef.current.has(el)) return;
       const r = el.getBoundingClientRect();
       if (r.right < -RADIO || r.left > vw + RADIO || r.bottom < -RADIO || r.top > vh + RADIO) return;
-      const d = Math.hypot(mx - (r.left + r.width / 2), my - (r.top + r.height / 2));
-      const objetivo = d < RADIO ? 1 + (1 - d / RADIO) * 0.22 : 1;
+      const ox = r.left + r.width / 2;
+      const oy = r.top + r.height / 2;
+      const d = Math.hypot(mx - ox, my - oy);
+      const cerca = d < RADIO ? 0.5 + 0.5 * Math.cos((Math.PI * d) / RADIO) : 0; // 1 bajo el mouse, 0 lejos
+      const objetivo = 1 + PICO * cerca;
       const actual = (gsap.getProperty(el, "scale") as number) || 1;
       if (actual < 0.95 && gsap.isTweening(el)) return; // todavía está apareciendo
-      if (Math.abs(actual - objetivo) < 0.004) return;
-      gsap.to(el, { scale: objetivo, duration: 0.6, ease: "power3.out", overwrite: "auto" });
+      // la sombra huye del mouse (la luz) y se encoge cuando la pieza se levanta
+      const ux = d > 1 ? (ox - mx) / d : 0;
+      const uy = d > 1 ? (oy - my) / d : 1;
+      const largo = 8 + 10 * cerca;
+      const sombra = {
+        "--sx": `${(ux * largo * (1 - 0.35 * cerca)).toFixed(1)}px`,
+        "--sy": `${((cerca > 0 ? uy * largo : 8) * (1 - 0.35 * cerca)).toFixed(1)}px`,
+        "--sb": `${(4 + 4 * cerca).toFixed(1)}px`,
+        "--sa": (0.2 - 0.08 * cerca).toFixed(3),
+      };
+      if (Math.abs(actual - objetivo) < 0.004 && cerca === 0 && el.dataset.lejos === "1") return;
+      el.dataset.lejos = cerca === 0 ? "1" : "0";
+      gsap.to(el, { scale: objetivo, ...sombra, duration: 0.6, ease: "power3.out", overwrite: "auto" });
     });
   }, [todos]);
 
@@ -388,6 +474,23 @@ export default function Landing() {
     };
   }, [foco, ordenDesde]);
 
+  // al abrir el formulario la caja de la pieza cambia de tamaño: la copia la sigue
+  useLayoutEffect(() => {
+    if (!foco || !boxRef.current || !cloneRef.current) return;
+    const box = boxRef.current.getBoundingClientRect();
+    gsap.to(cloneRef.current, {
+      left: box.left,
+      top: box.top,
+      width: box.width,
+      height: box.height,
+      duration: 0.7,
+      ease: "expo.inOut",
+      delay: 0.05,
+      overwrite: "auto",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formAbierto]);
+
   const cerrarFoco = useCallback(() => {
     if (faseRef.current !== "foco" || !foco) return;
     const clone = cloneRef.current!;
@@ -434,6 +537,13 @@ export default function Landing() {
 
   const toggleGrid = useCallback(() => {
     const board = boardRef.current!;
+    if (iconoRef.current) {
+      gsap.to(iconoRef.current, {
+        morphSVG: { shape: faseRef.current === "grid" ? ICONO_GRID : ICONO_TABLERO, shapeIndex: "auto" },
+        duration: 0.7,
+        ease: "expo.inOut",
+      });
+    }
     const gridWrap = gridWrapRef.current!;
     const gridEls = gridElsRef.current;
     const vw = window.innerWidth;
@@ -447,14 +557,15 @@ export default function Landing() {
       observerRef.current?.disconnect();
       // de cada pieza viaja la copia más cercana al centro de la pantalla
       const elegidos = PRODUCTOS.map((_, i) => {
-        let mejor = elsRef.current[TILE_CENTRO][i];
+        const copias = copiasDe(i);
+        let mejor = copias[0];
         let dm = Infinity;
-        elsRef.current.forEach((lista) => {
-          const r = lista[i].getBoundingClientRect();
+        copias.forEach((el) => {
+          const r = el.getBoundingClientRect();
           const d = Math.hypot(r.left + r.width / 2 - cx, r.top + r.height / 2 - cy);
           if (d < dm) {
             dm = d;
-            mejor = lista[i];
+            mejor = el;
           }
         });
         return mejor;
@@ -504,7 +615,7 @@ export default function Landing() {
         },
       });
     }
-  }, [flipVars, todos]);
+  }, [flipVars, todos, copiasDe]);
 
   // filtro del grid con Flip: lo que no coincide se va, lo demás se reacomoda
   const filtrar = useCallback((f: { categoria: string; marca: string }) => {
@@ -541,9 +652,9 @@ export default function Landing() {
     html.style.overflow = "hidden";
 
     const L = (layoutRef.current = calcularTablero(PRODUCTOS, window.innerWidth, window.innerHeight));
+    setCeldas(L.celdas);
+    setIntroFotos(elegirIntro());
     gsap.set(board, { width: L.BW, height: L.BH });
-    colocarItems();
-    gsap.set(todos(), { scale: 0 });
     const ini = pintar((window.innerWidth - L.BW) / 2, (window.innerHeight - L.BH) / 2);
     gsap.set(proxy, { x: ini.bx, y: ini.by });
     scrollObjetivo.current = { x: ini.bx, y: ini.by };
@@ -612,9 +723,48 @@ export default function Landing() {
         pintar(a.x, a.y);
         drag.update();
       }
-      proximidad();
+      if (frame % 2 === 0) proximidad();
     };
     gsap.ticker.add(tick);
+
+    // nombre en hover: aparece letra por letra, con un parpadeo de glifos
+    const GLIFOS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·/—";
+    let scrambleRaf = 0;
+    let hovered: HTMLElement | null = null;
+    const onOver = (e: PointerEvent) => {
+      const item = (e.target as HTMLElement).closest<HTMLElement>(".ld-item");
+      if (!item || item === hovered) return;
+      hovered = item;
+      const label = item.querySelector<HTMLElement>(".ld-item__label");
+      if (!label) return;
+      const real = label.dataset.t || (label.dataset.t = label.textContent || "");
+      let k = 0;
+      let t0 = performance.now();
+      cancelAnimationFrame(scrambleRaf);
+      const paso = (t: number) => {
+        if (hovered !== item) return;
+        if (t - t0 > 22) {
+          t0 = t;
+          k++;
+        }
+        const ruidoTxt = k < real.length ? GLIFOS[Math.floor(Math.random() * GLIFOS.length)] : "";
+        label.textContent = real.slice(0, k) + ruidoTxt;
+        if (k < real.length) scrambleRaf = requestAnimationFrame(paso);
+        else label.textContent = real;
+      };
+      scrambleRaf = requestAnimationFrame(paso);
+    };
+    const onOut = (e: PointerEvent) => {
+      const item = (e.target as HTMLElement).closest<HTMLElement>(".ld-item");
+      if (!item || item !== hovered) return;
+      const to = e.relatedTarget as HTMLElement | null;
+      if (to && item.contains(to)) return;
+      hovered = null;
+      const label = item.querySelector<HTMLElement>(".ld-item__label");
+      if (label && label.dataset.t) label.textContent = label.dataset.t;
+    };
+    root.addEventListener("pointerover", onOver);
+    root.addEventListener("pointerout", onOut);
 
     const onWheel = (e: WheelEvent) => {
       if (faseRef.current === "grid") return; // lo maneja Lenis
@@ -672,6 +822,7 @@ export default function Landing() {
         const L2 = (layoutRef.current = calcularTablero(PRODUCTOS, window.innerWidth, window.innerHeight));
         gsap.set(board, { width: L2.BW, height: L2.BH });
         colocarItems();
+        shiftRef.current = { x: 0, y: 0 };
         const p = pintar((window.innerWidth - L2.BW * zoomRef.current) / 2, (window.innerHeight - L2.BH * zoomRef.current) / 2);
         gsap.set(proxy, { x: p.bx, y: p.by });
         scrollObjetivo.current = { x: p.bx, y: p.by };
@@ -685,6 +836,9 @@ export default function Landing() {
       html.style.overflow = prevOverflow;
       root.removeEventListener("wheel", onWheel);
       root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointerover", onOver);
+      root.removeEventListener("pointerout", onOut);
+      cancelAnimationFrame(scrambleRaf);
       root.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onResize);
@@ -698,21 +852,31 @@ export default function Landing() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // las celdas existen hasta el segundo render: entonces se colocan y se esconden
+  useLayoutEffect(() => {
+    if (!celdas) return;
+    colocarItems();
+    gsap.set(todos(), { scale: 0 });
+    const L = layoutRef.current!;
+    const z = zoomRef.current;
+    shiftRef.current = { x: 0, y: 0 };
+    const ini = pintar((window.innerWidth - L.BW * z) / 2, (window.innerHeight - L.BH * z) / 2);
+    gsap.set(proxyRef.current, { x: ini.bx, y: ini.by });
+    scrollObjetivo.current = { x: ini.bx, y: ini.by };
+    scrollActual.current = { x: ini.bx, y: ini.by };
+    dragRef.current?.update();
+  }, [celdas, colocarItems, pintar, todos]);
+
   /* ───────── intro ───────── */
 
   useEffect(() => {
+    if (!celdas || introFotos.length < 4) return;
     const intro = introRef.current!;
     const wrapper = intro.querySelector<HTMLElement>("[data-wrapper]")!;
     const slides = gsap.utils.toArray<HTMLElement>("[data-slide]", intro);
     const title = intro.querySelector<HTMLElement>("[data-title]")!;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const yaVisto = (() => {
-      try {
-        return sessionStorage.getItem("pi-landing-intro") === "1";
-      } catch {
-        return false;
-      }
-    })();
+    const yaVisto = false; // la intro corre en cada carga
 
     const arrancarTablero = () => {
       gsap.set(intro, { display: "none" });
@@ -741,9 +905,21 @@ export default function Landing() {
     };
     const natural = medir();
 
-    const HOLD = 0.34;
+    const HOLD = 0.42;
     const OPEN = 0.6;
-    const tl = gsap.timeline({ defaults: { ease: "power2.inOut" }, delay: 0.35 });
+    const tl = gsap.timeline({ defaults: { ease: "power2.inOut" }, delay: 0.35, paused: true });
+    // arranca cuando las 4 fotos ya cargaron (o a los 1.5 s, lo que pase primero)
+    const imgs = slides.slice(1) as HTMLImageElement[];
+    const listo = Promise.all(imgs.map((im) => (im.complete ? null : new Promise((r) => (im.onload = im.onerror = r)))));
+    let arrancado = false;
+    const arrancar = () => {
+      if (!arrancado) {
+        arrancado = true;
+        tl.play();
+      }
+    };
+    listo.then(arrancar);
+    const tope = setTimeout(arrancar, 1500);
     tl.to(wrapper, { width: natural, duration: OPEN, ease: "power3.inOut" }, "open")
       .to(slides[0], { autoAlpha: 1, scale: 0.55, duration: 0.4, ease: "power2.out" }, "open+=0.25")
       .to({}, { duration: 0.6 });
@@ -757,27 +933,18 @@ export default function Landing() {
       .to(wrapper, { width: 0, duration: OPEN, ease: "power3.inOut" }, "close+=0.05")
       .to({}, { duration: 0.35 })
       .to(title, { autoAlpha: 0, scale: 0.96, duration: 0.6, ease: "power2.inOut" }, "fade")
-      .add(() => {
-        try {
-          sessionStorage.setItem("pi-landing-intro", "1");
-        } catch {}
-        arrancarTablero();
-      });
+      .add(() => arrancarTablero());
     introTl.current = tl;
 
     const terminar = () => {
-      if (faseRef.current !== "intro" || !tl.isActive()) return;
+      if (faseRef.current !== "intro" || (!tl.isActive() && !tl.paused())) return;
+      clearTimeout(tope);
       tl.kill();
       gsap.timeline()
         .to(slides, { autoAlpha: 0, duration: 0.2, overwrite: true }, 0)
         .to(wrapper, { width: 0, duration: 0.45, ease: "power3.inOut" }, 0)
         .to(title, { autoAlpha: 0, scale: 0.96, duration: 0.45, ease: "power2.inOut" }, 0.2)
-        .add(() => {
-          try {
-            sessionStorage.setItem("pi-landing-intro", "1");
-          } catch {}
-          arrancarTablero();
-        });
+        .add(() => arrancarTablero());
     };
     terminarIntroRef.current = terminar;
     const onGesto = () => terminar();
@@ -786,10 +953,11 @@ export default function Landing() {
     return () => {
       window.removeEventListener("pointerdown", onGesto);
       window.removeEventListener("wheel", onGesto);
+      clearTimeout(tope);
       tl.kill();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [celdas, introFotos]);
 
   /* ───────── formulario ───────── */
 
@@ -830,7 +998,7 @@ export default function Landing() {
         className="ld-corner top-5 left-5 md:top-8 md:left-10"
         style={{ opacity: 0 }}
       >
-        <Adapt>piso ikpali · est. 2026 · cdmx</Adapt>
+        <Adapt>piso ikpali</Adapt>
       </div>
       <div
         ref={(el) => {
@@ -839,7 +1007,7 @@ export default function Landing() {
         className="ld-corner top-5 right-5 md:top-8 md:right-10"
         style={{ opacity: 0 }}
       >
-        <Adapt>dentro de fayet</Adapt>
+        <Adapt>CDMX</Adapt>
       </div>
 
       {/* zoom + grid (+ filtros en grid) */}
@@ -859,26 +1027,26 @@ export default function Landing() {
             aria-pressed={esGrid}
             title={esGrid ? "tablero" : "cuadrícula"}
           >
-            {esGrid ? (
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-                <circle cx="3" cy="4" r="1.6" />
-                <circle cx="10.5" cy="2.8" r="1.6" />
-                <circle cx="7" cy="8.2" r="1.6" />
-                <circle cx="2.6" cy="11.4" r="1.6" />
-                <circle cx="11.2" cy="10.6" r="1.6" />
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-                <rect x="1" y="1" width="4.5" height="4.5" rx="0.8" />
-                <rect x="8.5" y="1" width="4.5" height="4.5" rx="0.8" />
-                <rect x="1" y="8.5" width="4.5" height="4.5" rx="0.8" />
-                <rect x="8.5" y="8.5" width="4.5" height="4.5" rx="0.8" />
-              </svg>
-            )}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+              <path ref={iconoRef} d={ICONO_GRID} />
+            </svg>
           </button>
           {esGrid && (
             <>
               <span className="ld-top__sep" aria-hidden />
+              <button
+                type="button"
+                className={`ld-filtro ld-filtro--toggle${filtrosAbiertos ? " is-open" : ""}`}
+                onClick={() => setFiltrosAbiertos((v) => !v)}
+                aria-expanded={filtrosAbiertos}
+              >
+                <Adapt>{filtrosAbiertos ? "cerrar" : "filtrar"}</Adapt>
+              </button>
+            </>
+          )}
+        </div>
+        {esGrid && filtrosAbiertos && (
+          <div className="ld-top__row ld-top__row--marcas">
               <div className="ld-filtros" role="group" aria-label="Filtrar por categoría">
                 {CATEGORIAS.map((c) => (
                   <button
@@ -891,10 +1059,9 @@ export default function Landing() {
                   </button>
                 ))}
               </div>
-            </>
-          )}
-        </div>
-        {esGrid && (
+          </div>
+        )}
+        {esGrid && filtrosAbiertos && (
           <div className="ld-top__row ld-top__row--marcas">
             <div className="ld-filtros" role="group" aria-label="Filtrar por marca">
               {MARCAS.map((m) => (
@@ -918,7 +1085,12 @@ export default function Landing() {
       }}>
         <div ref={proxyRef} className="ld-proxy" aria-hidden />
         <div ref={boardRef} className="ld-board">
-          {TILES.map((_, t) => PRODUCTOS.map((p, i) => <Pieza key={`${t}-${p.id}`} p={p} i={i} t={t} registrar={registrar} />))}
+          {celdas > 0 &&
+            TILES.map((_, t) =>
+              Array.from({ length: celdas }, (_, k) => (
+                <Pieza key={`${t}-${k}`} p={PRODUCTOS[k % PRODUCTOS.length]} i={k % PRODUCTOS.length} k={k} t={t} registrar={registrar} />
+              ))
+            )}
         </div>
       </div>
 
@@ -943,7 +1115,7 @@ export default function Landing() {
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img ref={cloneRef} className="ld-focus__clone" src={foco.p.src} alt="" aria-hidden style={{ opacity: 0 }} />
-          <div className="ld-focus">
+          <div className={`ld-focus${formAbierto ? " is-form" : ""}`}>
             <div ref={boxRef} className="ld-focus__box" aria-hidden />
             <div ref={infoRef} className="ld-focus__info">
               <p className="ld-focus__marca" style={{ opacity: 0 }}>{foco.p.marca}</p>
@@ -974,6 +1146,18 @@ export default function Landing() {
         </>
       )}
 
+      <a className="ld-side ld-side--izq" href={`https://instagram.com/${SITIO.instagram}`} target="_blank" rel="noreferrer" aria-label="Instagram">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+          <rect x="3" y="3" width="18" height="18" rx="5" />
+          <circle cx="12" cy="12" r="4" />
+          <circle cx="17.4" cy="6.6" r="0.9" fill="currentColor" stroke="none" />
+        </svg>
+      </a>
+      <a className="ld-side ld-side--der" href="/" aria-label="Piso ikpali">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.svg" alt="" width="16" height="16" />
+      </a>
+
       <div ref={hintRef} className="ld-hint" style={{ opacity: 0 }} aria-hidden>
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
           <path d="M6 1v10M1 6h10M4 2.5 6 1l2 1.5M4 9.5 6 11l2-1.5M2.5 4 1 6l1.5 2M9.5 4 11 6l-1.5 2" />
@@ -986,7 +1170,6 @@ export default function Landing() {
       {/* intro */}
       <div ref={introRef} className="ld-intro" aria-hidden>
         <link rel="preload" as="image" href="/logo.svg" />
-        <link rel="preload" as="image" href={INTRO_FOTOS[0]} />
         <h1
           data-title
           className="relative flex items-center justify-center font-sans font-medium select-none whitespace-nowrap leading-none will-change-transform"
@@ -1003,7 +1186,7 @@ export default function Landing() {
               className="relative inline-flex items-center justify-center"
               style={{ width: "clamp(100px, 14vw, 210px)", height: "clamp(100px, 14vw, 210px)", flex: "0 0 auto" }}
             >
-              {["/logo.svg", ...INTRO_FOTOS].map((src, i) => (
+              {["/logo.svg", ...introFotos].map((src, i) => (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={src}
