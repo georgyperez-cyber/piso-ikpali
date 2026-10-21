@@ -1007,7 +1007,7 @@ export default function Landing() {
         className="ld-corner top-5 right-5 md:top-8 md:right-10"
         style={{ opacity: 0 }}
       >
-        <Adapt>CDMX</Adapt>
+        <Adapt>cdmx</Adapt>
       </div>
 
       {/* zoom + grid (+ filtros en grid) */}
@@ -1146,16 +1146,19 @@ export default function Landing() {
         </>
       )}
 
-      <a className="ld-side ld-side--izq" href={`https://instagram.com/${SITIO.instagram}`} target="_blank" rel="noreferrer" aria-label="Instagram">
+      <a className="ld-side ld-side--izq ad" href={`https://instagram.com/${SITIO.instagram}`} target="_blank" rel="noreferrer" aria-label="Instagram">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
           <rect x="3" y="3" width="18" height="18" rx="5" />
           <circle cx="12" cy="12" r="4" />
           <circle cx="17.4" cy="6.6" r="0.9" fill="currentColor" stroke="none" />
         </svg>
       </a>
-      <a className="ld-side ld-side--der" href="/" aria-label="Piso ikpali">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.svg" alt="" width="16" height="16" />
+      <a className="ld-side ld-side--der ad" href="/" aria-label="Piso ikpali">
+        <svg width="16" height="16" viewBox="0 0 123.66 116.93" fill="currentColor" aria-hidden>
+          <path d="M110.14,86.06c-1.66,0-3.13-1.07-3.64-2.64l-5.94-18.26s-1.82-5.08-2.76-7.7c-.32-.91-1.19-1.49-2.16-1.43-6.22.36-36.39,1.67-52.47,2.6-1.17.07-2.17-.8-2.28-1.96l-4.29-39.41c-.11-1.11-1.04-1.97-2.16-1.97h-9.34c-1.12,0-2.06.85-2.16,1.97l-6.56,65.33c-.18,1.97-1.83,3.47-3.81,3.47h-7.2c-2.11,0-3.83,1.71-3.83,3.83v2.82c0,2.11,1.71,3.83,3.83,3.83h112.91c2.11,0,3.83-1.71,3.83-3.83v-2.82c0-2.11-1.71-3.83-3.83-3.83h-8.15ZM43.47,74.15c-.12-1.32.96-2.45,2.29-2.37l31.16,1.43c1.45.08,2.41,1.53,1.92,2.9l-2.1,7.2c-.48,1.63-1.97,2.76-3.67,2.76h-25.11c-1.99,0-3.65-1.53-3.81-3.52l-.67-8.39Z" />
+          <circle cx="83.11" cy="14.25" r="14.25" />
+          <rect y="106.46" width="123.66" height="10.47" rx="3.51" ry="3.51" />
+        </svg>
       </a>
 
       <div ref={hintRef} className="ld-hint" style={{ opacity: 0 }} aria-hidden>

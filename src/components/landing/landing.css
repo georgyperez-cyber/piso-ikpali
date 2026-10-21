@@ -283,7 +283,7 @@
 .ld-side:hover { opacity: 1; }
 .ld-side--izq { left: 14px; }
 .ld-side--der { right: 14px; }
-.ld-side img { display: block; width: 16px; height: 16px; }
+.ld-side svg { display: block; }
 @media (min-width: 768px) {
   .ld-side--izq { left: 24px; }
   .ld-side--der { right: 24px; }
