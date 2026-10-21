@@ -87,11 +87,27 @@
   .ld:not(.is-focus) .ld-gridwrap .ld-item__hit:hover .ld-item__img {
     transform: scale(1.12);
   }
-  .ld:not(.is-focus) .ld-wrap:not(.is-moving) .ld-item__hit:hover .ld-item__label,
-  .ld:not(.is-focus) .ld-gridwrap .ld-item__hit:hover .ld-item__label {
-    opacity: 1;
-  }
 }
+.ld-item__label { display: none; }
+
+/* el nombre flota fuera del tablero para quedar encima del cursor */
+.ld-label-float {
+  position: fixed;
+  z-index: 36;
+  top: 0;
+  left: 0;
+  translate: -50% 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--rojo);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.ld-label-float.is-on { opacity: 1; }
+.ld.is-focus .ld-label-float { opacity: 0; }
 
 /* ───────── grid ───────── */
 
@@ -120,11 +136,6 @@
   aspect-ratio: 1 / 1;
   padding: 6%;
   box-sizing: border-box;
-}
-/* en el grid el nombre va siempre en la misma línea, debajo de la celda */
-.ld-gridbox .ld-item__label {
-  top: 100%;
-  transform: translate(-50%, 4px);
 }
 @media (max-width: 767px) {
   .ld-gridbox { gap: 48px 14px; padding: 140px 16px 150px; }
@@ -177,6 +188,32 @@
 .ad { transition: color 0.15s ease; }
 .ad.is-neg { color: var(--blanco); }
 .is-on .ad.is-neg { color: var(--blanco); }
+
+/* ───────── cursor ───────── */
+
+/* dos discos encimados: --a invierte lo de abajo, --b lo tiñe de rojo.
+   Sobre fondo blanco se ve un círculo rojo; lo rojo que entra al círculo
+   se vuelve blanco, cortado en el borde, como un negativo. */
+.ld-cursor {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  translate: -50% -50%;
+  pointer-events: none;
+  will-change: transform, width, height;
+}
+.ld-cursor--a { background: #fff; mix-blend-mode: difference; }
+.ld-cursor--b { background: var(--rojo); mix-blend-mode: screen; }
+@media (hover: hover) and (pointer: fine) {
+  .ld, .ld * { cursor: none !important; }
+}
+@media not ((hover: hover) and (pointer: fine)) {
+  .ld-cursor { display: none; }
+}
 
 /* ───────── chrome ───────── */
 

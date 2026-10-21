@@ -136,6 +136,11 @@ export default function Landing() {
   const cornersRef = useRef<HTMLDivElement[]>([]);
 
   const cloneRef = useRef<HTMLImageElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const cursorBRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null); // el nombre flotante de la pieza en hover
+  const hoveredRef = useRef<HTMLElement | null>(null);
+  const cursorR = useRef(14); // radio actual del cursor, en px
   const boxRef = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -719,6 +724,21 @@ export default function Landing() {
         const fuente = faseRef.current === "grid" ? gridElsRef.current : todos();
         revisarContraste(root, fuente);
       }
+      // el nombre flotante sigue a la pieza en hover (el tablero se mueve debajo)
+      const hov = hoveredRef.current;
+      if (hov) {
+        const visible = (faseRef.current === "tablero" && !wrap.classList.contains("is-moving")) || faseRef.current === "grid";
+        flot.classList.toggle("is-on", visible);
+        if (visible) {
+          const img = hov.querySelector("img")!;
+          const r = img.getBoundingClientRect();
+          const p = PRODUCTOS[Number(hov.dataset.i)];
+          const enGrid = faseRef.current === "grid";
+          const y = enGrid ? hov.getBoundingClientRect().bottom + 4 : r.top + r.height * (p?.fondo ?? 1) + 18;
+          gsap.set(flot, { x: r.left + r.width / 2, y });
+        }
+      } else flot.classList.remove("is-on");
+
       if (faseRef.current !== "tablero") return;
       const o = scrollObjetivo.current;
       const a = scrollActual.current;
@@ -744,38 +764,36 @@ export default function Landing() {
     // nombre en hover: aparece letra por letra, con un parpadeo de glifos
     const GLIFOS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·/—";
     let scrambleRaf = 0;
-    let hovered: HTMLElement | null = null;
+    const flot = labelRef.current!;
     const onOver = (e: PointerEvent) => {
       const item = (e.target as HTMLElement).closest<HTMLElement>(".ld-item");
-      if (!item || item === hovered) return;
-      hovered = item;
-      const label = item.querySelector<HTMLElement>(".ld-item__label");
-      if (!label) return;
-      const real = label.dataset.t || (label.dataset.t = label.textContent || "");
+      if (!item || item === hoveredRef.current) return;
+      hoveredRef.current = item;
+      const real = PRODUCTOS[Number(item.dataset.i)]?.nombre || "";
       let k = 0;
       let t0 = performance.now();
       cancelAnimationFrame(scrambleRaf);
+      flot.classList.add("is-on");
       const paso = (t: number) => {
-        if (hovered !== item) return;
+        if (hoveredRef.current !== item) return;
         if (t - t0 > 22) {
           t0 = t;
           k++;
         }
         const ruidoTxt = k < real.length ? GLIFOS[Math.floor(Math.random() * GLIFOS.length)] : "";
-        label.textContent = real.slice(0, k) + ruidoTxt;
+        flot.textContent = real.slice(0, k) + ruidoTxt;
         if (k < real.length) scrambleRaf = requestAnimationFrame(paso);
-        else label.textContent = real;
+        else flot.textContent = real;
       };
       scrambleRaf = requestAnimationFrame(paso);
     };
     const onOut = (e: PointerEvent) => {
       const item = (e.target as HTMLElement).closest<HTMLElement>(".ld-item");
-      if (!item || item !== hovered) return;
+      if (!item || item !== hoveredRef.current) return;
       const to = e.relatedTarget as HTMLElement | null;
       if (to && item.contains(to)) return;
-      hovered = null;
-      const label = item.querySelector<HTMLElement>(".ld-item__label");
-      if (label && label.dataset.t) label.textContent = label.dataset.t;
+      hoveredRef.current = null;
+      flot.classList.remove("is-on");
     };
     root.addEventListener("pointerover", onOver);
     root.addEventListener("pointerout", onOut);
@@ -799,14 +817,43 @@ export default function Landing() {
     };
     root.addEventListener("wheel", onWheel, { passive: false });
 
+    // cursor: un círculo rojo que sigue al mouse y se encoge sobre lo clicable
+    // dos discos iguales: el primero invierte lo que tiene debajo (difference
+    // blanco) y el segundo lo tiñe de rojo (screen rojo). Sobre blanco queda
+    // rojo; sobre texto rojo queda blanco, cortado justo en el borde del círculo.
+    const cursor = [cursorRef.current!, cursorBRef.current!];
+    const fino = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const curX = gsap.quickTo(cursor, "x", { duration: 0.18, ease: "power3" });
+    const curY = gsap.quickTo(cursor, "y", { duration: 0.18, ease: "power3" });
+    const SEL = "a, button, [role='button'], .ld-item__hit, .ld-wake, input, textarea";
+    let cursorVisto = false;
+    const tamCursor = (chico: boolean) => {
+      cursorR.current = chico ? 5 : 14;
+      gsap.to(cursor, { width: cursorR.current * 2, height: cursorR.current * 2, duration: 0.35, ease: "power3.out", overwrite: "auto" });
+    };
     const onMove = (e: PointerEvent) => {
       mouse.current = { x: e.clientX, y: e.clientY, activo: e.pointerType === "mouse" };
+      if (!fino || e.pointerType !== "mouse") return;
+      curX(e.clientX);
+      curY(e.clientY);
+      if (!cursorVisto) {
+        cursorVisto = true;
+        gsap.set(cursor, { x: e.clientX, y: e.clientY });
+        gsap.to(cursor, { autoAlpha: 1, duration: 0.3 });
+      }
+      tamCursor(!!(e.target as HTMLElement).closest?.(SEL));
     };
     const onLeave = () => {
       mouse.current = { x: -9999, y: -9999, activo: true };
+      gsap.to(cursor, { autoAlpha: 0, duration: 0.25 });
+      cursorVisto = false;
     };
+    const onDown = () => fino && gsap.to(cursor, { scale: 0.8, duration: 0.15 });
+    const onUp = () => fino && gsap.to(cursor, { scale: 1, duration: 0.3, ease: "back.out(2)" });
     root.addEventListener("pointermove", onMove);
     root.addEventListener("pointerleave", onLeave);
+    root.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerup", onUp);
 
     // scroll suave del grid
     const lenis = new Lenis({
@@ -850,6 +897,8 @@ export default function Landing() {
       html.style.overflow = prevOverflow;
       root.removeEventListener("wheel", onWheel);
       root.removeEventListener("pointermove", onMove);
+      root.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup", onUp);
       root.removeEventListener("pointerover", onOver);
       root.removeEventListener("pointerout", onOut);
       cancelAnimationFrame(scrambleRaf);
@@ -1183,6 +1232,10 @@ export default function Landing() {
       </div>
 
       <GlassBar visible={fase !== "intro"} />
+
+      <div ref={labelRef} className="ld-label-float" aria-hidden />
+      <div ref={cursorRef} className="ld-cursor ld-cursor--a" aria-hidden style={{ opacity: 0 }} />
+      <div ref={cursorBRef} className="ld-cursor ld-cursor--b" aria-hidden style={{ opacity: 0 }} />
 
       {/* intro */}
       <div ref={introRef} className="ld-intro" aria-hidden>
