@@ -1,25 +1,25 @@
 import Img from "./Img";
 
-const RENDERS = [
+const FOTOS = [
   {
-    src: "/assets-optimized/render-tienda-1-1400.webp",
+    src: "/assets-optimized/foto-tienda-1-1086.webp",
     srcSet:
-      "/assets-optimized/render-tienda-1-800.webp 800w, /assets-optimized/render-tienda-1-1400.webp 1400w",
-    alt: "Render del local: exhibición con vista a la calle",
-    caption: "render 01 · el local",
+      "/assets-optimized/foto-tienda-1-720.webp 720w, /assets-optimized/foto-tienda-1-1086.webp 1086w",
+    alt: "Fachada de Piso ikpali: ventana con el nombre y el interior iluminado",
+    caption: "foto · la fachada",
   },
   {
-    src: "/assets-optimized/render-tienda-2-1400.webp",
+    src: "/assets-optimized/foto-tienda-2-1086.webp",
     srcSet:
-      "/assets-optimized/render-tienda-2-800.webp 800w, /assets-optimized/render-tienda-2-1400.webp 1400w",
-    alt: "Render del local: muro de madera, mesa y obra colgada",
-    caption: "render 02 · el local",
+      "/assets-optimized/foto-tienda-2-720.webp 720w, /assets-optimized/foto-tienda-2-1086.webp 1086w",
+    alt: "Interior de Piso ikpali: repisas con piezas, mesa verde y silla de madera",
+    caption: "foto · el interior",
   },
 ];
 
 // Boletín informativo para las marcas: actualización sobre la apertura.
 // Va al inicio del pitch de Fayet: quien vuelve al link lo ve primero.
-// Orden: boletín, renders, y después el texto introductorio (SectionIntro).
+// Orden: boletín, fotos de la tienda, y después el texto introductorio (SectionIntro).
 export default function SectionAvisoObra() {
   return (
     <section className="relative w-full bg-blanco pt-28 md:pt-40 px-6 md:px-12">
@@ -73,9 +73,9 @@ export default function SectionAvisoObra() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 pb-4">
-          {RENDERS.map((r) => (
+          {FOTOS.map((r) => (
             <figure key={r.src} className="flex flex-col">
-              <div className="relative w-full aspect-[5/4] overflow-hidden">
+              <div className="relative w-full aspect-[3/4] overflow-hidden">
                 <Img
                   src={r.src}
                   srcSet={r.srcSet}
