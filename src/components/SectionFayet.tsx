@@ -23,6 +23,23 @@ const BLOQUES = [
   },
 ];
 
+const FOTOS = [
+  {
+    src: "/assets-optimized/foto-tienda-1-1086.webp",
+    srcSet:
+      "/assets-optimized/foto-tienda-1-720.webp 720w, /assets-optimized/foto-tienda-1-1086.webp 1086w",
+    alt: "Fachada de Piso ikpali: ventana con el nombre y el interior iluminado",
+    caption: "foto · la fachada",
+  },
+  {
+    src: "/assets-optimized/foto-tienda-2-1086.webp",
+    srcSet:
+      "/assets-optimized/foto-tienda-2-720.webp 720w, /assets-optimized/foto-tienda-2-1086.webp 1086w",
+    alt: "Interior de Piso ikpali: repisas con piezas, mesa verde y silla de madera",
+    caption: "foto · el interior",
+  },
+];
+
 export default function SectionFayet() {
   return (
     <section className="relative w-full bg-blanco py-44 md:py-60 px-6 md:px-12">
@@ -46,36 +63,40 @@ export default function SectionFayet() {
           </div>
         </div>
 
-        {/* Turntable on the left, 4 bloques in a 2×2 grid on the right */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-14 items-center">
-          <figure className="md:col-span-7 flex flex-col">
-            <div className="relative w-full aspect-square">
-              <Img
-                src="/sketch-turntable.gif"
-                alt="Vista isométrica del espacio en rotación"
-                className="absolute inset-0 w-full h-full object-contain"
-              />
-            </div>
-            <figcaption className="mt-4 text-[10px] tracking-[0.22em] uppercase text-rojo/55">
-              boceto · vista en rotación
-            </figcaption>
-          </figure>
+        {/* Fotos del espacio (fachada e interior) y abajo los 4 bloques en una fila */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-16 md:mb-20">
+          {FOTOS.map((f) => (
+            <figure key={f.src} className="flex flex-col">
+              <div className="relative w-full aspect-[3/4] overflow-hidden">
+                <Img
+                  src={f.src}
+                  srcSet={f.srcSet}
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  alt={f.alt}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+              <figcaption className="mt-4 text-[10px] tracking-[0.22em] uppercase text-rojo/55">
+                {f.caption}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
 
-          <div className="md:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 md:gap-y-12">
-            {BLOQUES.map((b, i) => (
-              <article key={b.titulo} className="flex flex-col gap-2">
-                <span className="text-[11px] tracking-[0.22em] uppercase text-rojo/60 tabular-nums">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <h3 className="text-rojo font-medium text-[17px] md:text-[19px] tracking-tight leading-tight">
-                  {b.titulo}
-                </h3>
-                <p className="text-rojo/80 font-light text-[13px] md:text-[14px] leading-snug">
-                  {b.texto}
-                </p>
-              </article>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-10 md:gap-y-12">
+          {BLOQUES.map((b, i) => (
+            <article key={b.titulo} className="flex flex-col gap-2">
+              <span className="text-[11px] tracking-[0.22em] uppercase text-rojo/60 tabular-nums">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <h3 className="text-rojo font-medium text-[17px] md:text-[19px] tracking-tight leading-tight">
+                {b.titulo}
+              </h3>
+              <p className="text-rojo/80 font-light text-[13px] md:text-[14px] leading-snug">
+                {b.texto}
+              </p>
+            </article>
+          ))}
         </div>
       </div>
     </section>
