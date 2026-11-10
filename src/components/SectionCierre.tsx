@@ -33,7 +33,15 @@ const WORDS = [
   "mano.",
 ];
 
-export default function SectionCierre() {
+// WhatsApp de Georgy para "colabora con nosotros" en /fayet.
+const WHATSAPP =
+  "https://wa.me/525519654061?text=" +
+  encodeURIComponent("Hola, me interesa colaborar con Piso ikpali.");
+
+export default function SectionCierre({
+  variant = "vende",
+}: { variant?: "vende" | "colabora" } = {}) {
+  const colabora = variant === "colabora";
   const slotRef = useRef<HTMLSpanElement>(null);
   const wordRef = useRef<HTMLSpanElement>(null);
   const [iconIdx, setIconIdx] = useState(0);
@@ -80,7 +88,7 @@ export default function SectionCierre() {
             className="font-medium leading-[1.05] mb-12 tracking-tight pb-2"
             style={{ fontSize: "clamp(44px, 9.5vw, 156px)", letterSpacing: "-0.025em" }}
           >
-            vende
+            {colabora ? "colabora" : "vende"}
             <span className="inline-flex items-center align-middle mx-3 md:mx-5">
               <span aria-hidden className="opacity-90">(</span>
               <span
@@ -102,28 +110,50 @@ export default function SectionCierre() {
               <span aria-hidden className="opacity-90">)</span>
             </span>
             <br />
-            tu{" "}
-            <span
-              ref={wordRef}
-              className="italic font-light inline-block align-baseline"
-              style={{ minWidth: "8ch", paddingRight: "0.15em", paddingBottom: "0.12em" }}
-            >
-              {WORDS[wordIdx]}
-            </span>
+            {colabora ? (
+              "con nosotros."
+            ) : (
+              <>
+                tu{" "}
+                <span
+                  ref={wordRef}
+                  className="italic font-light inline-block align-baseline"
+                  style={{ minWidth: "8ch", paddingRight: "0.15em", paddingBottom: "0.12em" }}
+                >
+                  {WORDS[wordIdx]}
+                </span>
+              </>
+            )}
           </h2>
 
-          <p className="font-light text-[15px] md:text-[18px] leading-relaxed max-w-2xl mb-14 text-blanco/95">
-            Junto a este documento llega una selección específica de piezas que nos interesan
-            de tu catálogo. No es definitiva: es el punto de partida de una conversación.
-            Estamos abiertos a que nos propongas piezas adicionales si consideras que encajan
-            con el imaginario del espacio.
+          <p className="font-light text-[15px] md:text-[18px] leading-relaxed max-w-2xl mb-14 text-blanco/95 text-pretty">
+            {colabora ? (
+              <>
+                Si tienes una marca, un taller o un proyecto que dialogue con el imaginario de
+                Piso ikpali, escríbenos. Nos interesa conversar sobre piezas, colaboraciones y
+                activaciones dentro de Fayet.
+              </>
+            ) : (
+              <>
+                Junto a este documento llega una selección específica de piezas que nos interesan
+                de tu catálogo. No es definitiva: es el punto de partida de una conversación.
+                Estamos abiertos a que nos propongas piezas adicionales si consideras que encajan
+                con el imaginario del espacio.
+              </>
+            )}
           </p>
 
           <a
-            href="mailto:hola@pisoikpali.com?subject=Propuesta%20de%20piezas%20para%20Piso%20ikpali"
+            href={
+              colabora
+                ? WHATSAPP
+                : "mailto:hola@pisoikpali.com?subject=Propuesta%20de%20piezas%20para%20Piso%20ikpali"
+            }
+            target={colabora ? "_blank" : undefined}
+            rel={colabora ? "noreferrer" : undefined}
             className="inline-flex items-center gap-4 bg-blanco text-rojo px-8 py-5 text-[15px] tracking-tight font-medium hover:bg-blanco/90 transition-colors group"
           >
-            proponer piezas
+            {colabora ? "escríbenos por WhatsApp" : "proponer piezas"}
             <span
               aria-hidden
               className="text-[20px] leading-none group-hover:translate-x-1 transition-transform"

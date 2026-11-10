@@ -9,7 +9,7 @@ const MARCAS = [
   "kmy",
   "MOT studio",
   "Paralelo Mexicano",
-  "Malfarero",
+  "Laguna Cyprien",
   "La Casa Ocho",
 ];
 
@@ -55,8 +55,8 @@ export default function SectionMarcas() {
         </div>
 
         <p className="mt-16 md:mt-24 font-light text-[15px] md:text-[18px] leading-relaxed max-w-2xl text-blanco/90">
-          Doce estudios y autores que hoy conviven dentro del imaginario de Piso ikpali —
-          la selección con la que llegamos a la casa.
+          Doce estudios y autores que hoy conviven dentro del imaginario de Piso ikpali:
+          la&nbsp;selección con la que llegamos a la casa.
         </p>
       </div>
     </section>

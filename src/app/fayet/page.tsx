@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import Hero from "@/components/Hero";
-import SectionAvisoObra from "@/components/SectionAvisoObra";
-import SectionIntro from "@/components/SectionIntro";
+import SectionProyecto from "@/components/SectionProyecto";
+import SectionSoftOpening from "@/components/SectionSoftOpening";
 import SectionObjeto from "@/components/SectionObjeto";
 import SectionAudiencia from "@/components/SectionAudiencia";
 import SectionGlosario from "@/components/SectionGlosario";
@@ -28,10 +28,10 @@ export const metadata: Metadata = {
 export default function FayetPage() {
   return (
     <main className="bg-blanco text-rojo">
-      {/* De momento: boletín arriba, luego renders, luego el texto introductorio */}
+      {/* El proyecto (texto, agradecimiento, fachada y renders), el soft opening y el manifiesto */}
       <Hero intro={false} />
-      <SectionAvisoObra />
-      <SectionIntro />
+      <SectionProyecto />
+      <SectionSoftOpening />
       <SectionObjeto />
 
       <Marquee
@@ -70,7 +70,7 @@ export default function FayetPage() {
 
       <SectionMarcas />
       <SectionProductos />
-      <SectionCierre />
+      <SectionCierre variant="colabora" />
     </main>
   );
 }
