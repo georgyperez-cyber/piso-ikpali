@@ -12,7 +12,7 @@ type Proyecto = { nombre: string; nota: string; logo?: string; alto?: number };
 const PROYECTOS: Proyecto[] = [
   { nombre: "Goya Taller", nota: "cocina · panadería · comedor", logo: "/fayet-logos/goya-taller.svg", alto: 76 },
   { nombre: "Com Com Com", nota: "sound bar", logo: "/fayet-logos/com-com-com.svg", alto: 32 },
-  { nombre: "Galería Ajena", nota: "galería de diseño", logo: "/fayet-logos/galeria-ajena.svg", alto: 54 },
+  { nombre: "Galería Ajena", nota: "galería", logo: "/fayet-logos/galeria-ajena.svg", alto: 54 },
   { nombre: "Punto Ácido", nota: "showroom editorial", logo: "/fayet-logos/punto-acido.svg", alto: 28 },
   { nombre: "Román de Castro", nota: "estudio creativo" },
 ];
