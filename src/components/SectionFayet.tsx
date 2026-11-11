@@ -40,6 +40,10 @@ const FOTOS = [
   },
 ];
 
+// Nota de M de Milenio sobre la casa (10 nov 2026).
+const NOTA_MILENIO =
+  "https://mrevistademilenio.com/ffaayyeett-espacio-cultural-anzures-cdmx/";
+
 export default function SectionFayet() {
   return (
     <section className="relative w-full bg-blanco py-44 md:py-60 px-6 md:px-12">
@@ -56,10 +60,19 @@ export default function SectionFayet() {
               Piso ikpali.
             </h2>
           </div>
-          <div className="md:col-span-7 md:col-start-6 flex items-end">
+          <div className="md:col-span-7 md:col-start-6 flex flex-col justify-end items-start gap-6">
             <p className="text-rojo font-light text-[16px] md:text-[19px] leading-relaxed max-w-xl">
               Piso ikpali opera dentro de <em className="not-italic font-medium">Fayet</em>, un hub creativo en la Ciudad de México encabezado por Goya Taller. El espacio no define la marca, pero la amplifica: una audiencia que ya existe, una agenda que ya pasa, un contexto que ninguna tienda independiente puede fabricar sola.
             </p>
+            <a
+              href={NOTA_MILENIO}
+              target="_blank"
+              rel="noreferrer"
+              className="self-start inline-flex items-center gap-2 text-rojo font-medium text-[14px] md:text-[15px] underline underline-offset-4 decoration-rojo/40 hover:decoration-rojo transition-colors"
+            >
+              ffaayyeett en M de Milenio
+              <span aria-hidden className="inline-block">↗</span>
+            </a>
           </div>
         </div>
 

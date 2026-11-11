@@ -57,6 +57,10 @@ function Figura({ f, sizes, className = "" }: { f: Foto; sizes: string; classNam
   );
 }
 
+// Nota de M de Milenio sobre la casa (10 nov 2026).
+const NOTA_MILENIO =
+  "https://mrevistademilenio.com/ffaayyeett-espacio-cultural-anzures-cdmx/";
+
 const P = "text-rojo font-light text-[16px] md:text-[19px] leading-relaxed text-pretty";
 
 export default function SectionProyecto() {
@@ -94,6 +98,15 @@ export default function SectionProyecto() {
               conforme el espacio se habita, las piezas rotan y aparecen nuevas conversaciones entre
               objetos, marcas y visitantes.
             </p>
+            <a
+              href={NOTA_MILENIO}
+              target="_blank"
+              rel="noreferrer"
+              className="self-start inline-flex items-center gap-2 text-rojo font-medium text-[14px] md:text-[15px] underline underline-offset-4 decoration-rojo/40 hover:decoration-rojo transition-colors"
+            >
+              ffaayyeett en M de Milenio
+              <span aria-hidden className="inline-block">↗</span>
+            </a>
           </div>
         </div>
 
