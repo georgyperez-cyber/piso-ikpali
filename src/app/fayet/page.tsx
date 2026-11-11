@@ -15,9 +15,9 @@ import SectionTextura from "@/components/SectionTextura";
 import Marquee from "@/components/Marquee";
 
 export const metadata: Metadata = {
-  title: "piso ikpali — para fayet",
+  title: "piso ikpali — para ffaayyeett",
   description:
-    "Piso ikpali presentado a la comunidad de Fayet: qué es, a quién le habla, cómo cura, y las marcas que trae al espacio.",
+    "Piso ikpali presentado a la comunidad de ffaayyeett: qué es, a quién le habla, cómo cura, y las marcas que trae al espacio.",
   robots: { index: false, follow: false },
 };
 
@@ -29,7 +29,7 @@ export default function FayetPage() {
   return (
     <main className="bg-blanco text-rojo">
       {/* El proyecto (texto, agradecimiento, fachada y renders), el soft opening y el manifiesto */}
-      <Hero intro={false} />
+      <Hero intro={false} casa="ffaayyeett" />
       <SectionProyecto />
       <SectionSoftOpening />
       <SectionObjeto />
@@ -41,7 +41,7 @@ export default function FayetPage() {
           "concept room",
           "diseño doméstico mexicano",
           "ikpali studio",
-          "fayet cdmx",
+          "ffaayyeett cdmx",
           "objeto curado",
           "selección como garantía",
         ]}

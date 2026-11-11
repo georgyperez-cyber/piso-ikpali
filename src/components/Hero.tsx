@@ -51,7 +51,10 @@ const SEQUENCE: Slide[] = [
   { src: "/assets-optimized/hero-icono-foto-27-720.webp", activeScale: 1.0 },
 ];
 
-export default function Hero({ intro = true }: { intro?: boolean } = {}) {
+export default function Hero({
+  intro = true,
+  casa = "fayet",
+}: { intro?: boolean; casa?: string } = {}) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -186,7 +189,7 @@ export default function Hero({ intro = true }: { intro?: boolean } = {}) {
         piso ikpali · est. 2026 · cdmx
       </div>
       <div className="absolute top-5 right-5 md:top-8 md:right-10 text-[8px] tracking-[0.1em] md:text-[11px] md:tracking-[0.18em] uppercase text-rojo/80 z-10 whitespace-nowrap">
-        dentro de fayet
+        dentro de {casa}
       </div>
 
       <div className="relative h-screen w-full flex flex-col items-center justify-center px-4">

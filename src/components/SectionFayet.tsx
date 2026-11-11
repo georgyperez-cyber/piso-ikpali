@@ -25,9 +25,9 @@ const BLOQUES = [
 
 const FOTOS = [
   {
-    src: "/assets-optimized/foto-tienda-1-1086.webp",
+    src: "/assets-optimized/fachada-1200.webp",
     srcSet:
-      "/assets-optimized/foto-tienda-1-720.webp 720w, /assets-optimized/foto-tienda-1-1086.webp 1086w",
+      "/assets-optimized/fachada-720.webp 720w, /assets-optimized/fachada-1200.webp 1200w, /assets-optimized/fachada-1800.webp 1800w",
     alt: "Fachada de Piso ikpali: ventana con el nombre y el interior iluminado",
     caption: "foto · la fachada",
   },

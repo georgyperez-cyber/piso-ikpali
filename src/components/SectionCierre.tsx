@@ -131,7 +131,7 @@ export default function SectionCierre({
               <>
                 Si tienes una marca, un taller o un proyecto que dialogue con el imaginario de
                 Piso ikpali, escríbenos. Nos interesa conversar sobre piezas, colaboraciones y
-                activaciones dentro de Fayet.
+                activaciones dentro de ffaayyeett.
               </>
             ) : (
               <>
@@ -177,20 +177,31 @@ export default function SectionCierre({
           </div>
           <div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-rojo/60 mb-3">instagram</p>
-            <a
-              href="https://instagram.com/piso.ikpali"
-              target="_blank"
-              rel="noreferrer"
-              className="text-rojo font-medium text-[15px] hover:underline"
-            >
-              @piso.ikpali
-            </a>
+            <div className="flex flex-col gap-1">
+              {(colabora ? ["piso.ikpali", "ikpali.studio", "ffaayyeett"] : ["piso.ikpali"]).map((h) => (
+                <a
+                  key={h}
+                  href={`https://instagram.com/${h}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-rojo font-medium text-[15px] hover:underline"
+                >
+                  @{h}
+                </a>
+              ))}
+            </div>
           </div>
           <div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-rojo/60 mb-3">ubicación</p>
             <p className="text-rojo font-medium text-[15px]">
-              Fayet
+              {colabora ? "ffaayyeett" : "Fayet"}
               <br />
+              {colabora ? (
+                <>
+                  Lafayette 64, Anzures
+                  <br />
+                </>
+              ) : null}
               Ciudad de México
             </p>
           </div>

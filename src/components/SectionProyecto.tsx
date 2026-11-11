@@ -1,7 +1,7 @@
 import Img from "./Img";
 
-// /fayet · el proyecto. Texto de presentación de Piso ikpali, cierre con el
-// agradecimiento y, abajo, la fachada con los dos renders del local.
+// /fayet · el proyecto. Texto de presentación de Piso ikpali y, abajo, la
+// fachada con los dos renders del local.
 // Las tres imágenes van en el mismo formato (cuadrado): la fachada grande a la
 // izquierda y los renders apilados a la derecha. El ancho de la columna derecha
 // se calcula para que la fachada y el segundo render terminen a la misma altura:
@@ -10,9 +10,9 @@ import Img from "./Img";
 type Foto = { src: string; srcSet: string; alt: string; caption: string; pos: string };
 
 const FACHADA: Foto = {
-  src: "/assets-optimized/foto-tienda-1-1086.webp",
+  src: "/assets-optimized/fachada-1200.webp",
   srcSet:
-    "/assets-optimized/foto-tienda-1-720.webp 720w, /assets-optimized/foto-tienda-1-1086.webp 1086w",
+    "/assets-optimized/fachada-720.webp 720w, /assets-optimized/fachada-1200.webp 1200w, /assets-optimized/fachada-1800.webp 1800w",
   alt: "Fachada de Piso ikpali: ventana con el nombre y el interior iluminado",
   caption: "foto · la fachada",
   pos: "center 75%",
@@ -85,7 +85,7 @@ export default function SectionProyecto() {
               habitarse, no&nbsp;para exhibirse.
             </p>
             <p className={P}>
-              Opera dentro de <em className="not-italic font-medium">Fayet</em>, un hub creativo en
+              Opera dentro de <em className="not-italic font-medium">ffaayyeett</em>, un hub creativo en
               la Ciudad de México. Cada objeto en el espacio puede comprarse. El cliente no necesita
               investigar ni conocer todas las marcas: la selección es la garantía.
             </p>
@@ -93,13 +93,6 @@ export default function SectionProyecto() {
               La curaduría no está cerrada ni congelada. La selección crece, se ajusta y evoluciona
               conforme el espacio se habita, las piezas rotan y aparecen nuevas conversaciones entre
               objetos, marcas y visitantes.
-            </p>
-            <p className={P}>Gracias por acompañarnos en este proyecto.</p>
-            <p className={P}>Con cariño,</p>
-            <p className="text-rojo font-medium text-[16px] md:text-[19px] leading-relaxed">
-              Nathalia y Georgy
-              <br />
-              Piso ikpali
             </p>
           </div>
         </div>
