@@ -1,15 +1,16 @@
 import Img from "./Img";
+import ProyectosCasa from "./ProyectosCasa";
 
 const BLOQUES = [
   {
-    titulo: "Fayet como contexto",
+    titulo: "ffaayyeett como contexto",
     texto:
-      "Fayet reúne moda, joyería, perfumería, arquitectura, gastronomía y diseño bajo un mismo techo. Piso ikpali entra en esa conversación como la voz del objeto doméstico contemporáneo.",
+      "ffaayyeett reúne moda, joyería, perfumería, arquitectura, gastronomía y diseño bajo un mismo techo. Piso ikpali entra en esa conversación como la voz del objeto doméstico contemporáneo.",
   },
   {
     titulo: "Espacio físico",
     texto:
-      "Un piso dedicado dentro de Fayet, montado como sala doméstica curada. Lo que se ve, se puede comprar. Lo que se compra, se reemplaza por algo nuevo dentro del mismo imaginario.",
+      "Un piso dedicado dentro de ffaayyeett, montado como sala doméstica curada. Lo que se ve, se puede comprar. Lo que se compra, se reemplaza por algo nuevo dentro del mismo imaginario.",
   },
   {
     titulo: "Digital",
@@ -19,7 +20,7 @@ const BLOQUES = [
   {
     titulo: "Activaciones",
     texto:
-      "Lanzamientos, conversaciones, cenas, presentaciones de marca. El calendario de Fayet convoca; Piso ikpali aprovecha esa agenda sin tener que producirla.",
+      "Lanzamientos, conversaciones, cenas, presentaciones de marca. El calendario de ffaayyeett convoca; Piso ikpali aprovecha esa agenda sin tener que producirla.",
   },
 ];
 
@@ -62,7 +63,7 @@ export default function SectionFayet() {
           </div>
           <div className="md:col-span-7 md:col-start-6 flex flex-col justify-end items-start gap-6">
             <p className="text-rojo font-light text-[16px] md:text-[19px] leading-relaxed max-w-xl">
-              Piso ikpali opera dentro de <em className="not-italic font-medium">Fayet</em>, un hub creativo en la Ciudad de México encabezado por Goya Taller. El espacio no define la marca, pero la amplifica: una audiencia que ya existe, una agenda que ya pasa, un contexto que ninguna tienda independiente puede fabricar sola.
+              Piso ikpali opera dentro de <em className="not-italic font-medium">ffaayyeett</em>, un hub creativo en la Ciudad de México encabezado por Goya Taller. El espacio no define la marca, pero la amplifica: una audiencia que ya existe, una agenda que ya pasa, un contexto que ninguna tienda independiente puede fabricar sola.
             </p>
             <a
               href={NOTA_MILENIO}
@@ -110,6 +111,13 @@ export default function SectionFayet() {
               </p>
             </article>
           ))}
+        </div>
+
+        <div className="mt-20 md:mt-28">
+          <p className="text-[11px] tracking-[0.22em] uppercase text-rojo/70 mb-6">
+            en la casa
+          </p>
+          <ProyectosCasa />
         </div>
       </div>
     </section>

@@ -53,7 +53,7 @@ const SEQUENCE: Slide[] = [
 
 export default function Hero({
   intro = true,
-  casa = "fayet",
+  casa = "ffaayyeett",
 }: { intro?: boolean; casa?: string } = {}) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -255,7 +255,7 @@ export default function Hero({
             habitarse — no para exhibirse.
           </p>
           <p data-paragraph className="text-[13px] md:text-[14px] leading-relaxed mb-4 font-light will-change-transform">
-            Opera dentro de <em className="not-italic font-medium">Fayet</em>, un hub creativo
+            Opera dentro de <em className="not-italic font-medium">ffaayyeett</em>, un hub creativo
             en la Ciudad de México. Cada objeto en el espacio puede comprarse. El cliente no
             necesita investigar ni conocer todas las marcas: la selección es la garantía.
           </p>

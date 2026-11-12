@@ -25,7 +25,7 @@ export default function Home() {
           "concept room",
           "diseño doméstico mexicano",
           "ikpali studio",
-          "fayet cdmx",
+          "ffaayyeett cdmx",
           "objeto curado",
           "selección como garantía",
         ]}

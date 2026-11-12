@@ -178,7 +178,7 @@ export default function SectionCierre({
           <div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-rojo/60 mb-3">instagram</p>
             <div className="flex flex-col gap-1">
-              {(colabora ? ["piso.ikpali", "ikpali.studio", "ffaayyeett"] : ["piso.ikpali"]).map((h) => (
+              {["piso.ikpali", "ikpali.studio", "ffaayyeett"].map((h) => (
                 <a
                   key={h}
                   href={`https://instagram.com/${h}`}
@@ -194,14 +194,10 @@ export default function SectionCierre({
           <div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-rojo/60 mb-3">ubicación</p>
             <p className="text-rojo font-medium text-[15px]">
-              {colabora ? "ffaayyeett" : "Fayet"}
+              ffaayyeett
               <br />
-              {colabora ? (
-                <>
-                  Lafayette 64, Anzures
-                  <br />
-                </>
-              ) : null}
+              Lafayette 64, Anzures
+              <br />
               Ciudad de México
             </p>
           </div>
