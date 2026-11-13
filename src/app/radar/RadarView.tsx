@@ -1,153 +1,277 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
-import type { AccountSnapshot, PostKind, PostSummary, Snapshot } from "@/lib/radar/metrics";
-import type { Lectura } from "@/lib/radar/lectura";
-import { ago, compact, dayLabel, median, miles, pct, signed, weekLabel } from "@/lib/radar/format";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./radar.module.css";
 
-type Props = {
-  current: Snapshot;
-  previous: Snapshot | null;
-  running: boolean;
-  notice: string | null;
-  top: PostSummary[];
-  pendientes: string[];
-  lectura: Lectura | null;
+type Pieza = {
+  c: string; h: string; ci: string; ts: string; k: "reel" | "carrusel" | "foto";
+  l: number | null; cm: number | null; p: number | null; pps: number | null; d: number | null; ix: number | null;
+  cap: string; pa: string; pi: string; dm: boolean; n: string; tr: string; ow: string | null; sg: number | null;
+};
+type Texto = { t: string; x: string };
+type Fila = { k?: string; nombre: string; reels: number; plays: number | null; propios: number; ix: number | null; arriba: number; posts?: number; er?: number | null };
+export type Corte = {
+  meta: { periodo: string; piezas: number; reels: number; carruseles: number; fotos: number; cuentas: number; total: number };
+  frase: string; palanca: string;
+  cifras: { v: string; l: string; s?: string }[];
+  posicion: Texto[]; dejar: Texto[]; medir: Texto[];
+  notas: { pant: string; pil: string; dur: string; colabs: string };
+  jugadas: { titulo: string; fact: string; imp: string; porque: string; como: string; limite: string; ej: string[] }[];
+  top: string[];
+  pant: Fila[]; pil: Fila[]; dur: Fila[];
+  colabs: { h: string; n: string; seg: number; socio: string; segSocio: number | null; reels: number; plays: number; propia: number | null; veces: number | null; tam: number | null; top: string }[];
+  cuentas: { h: string; n: string; ci: string; city: string; seg: number; piezas: number; p28: number; reels: number; plays: number | null; inter: number | null; ocultos: number; visibles: number; colab: number; dias: number | null; desde: string | null }[];
+  piezas: Pieza[];
+  nombres: Record<string, string>; PANT: Record<string, string>; PIL: Record<string, string>;
+  metodo: string[]; limites: string[]; glosario: { k: string; x: string }[];
 };
 
-type SortKey = "followers" | "posts" | "eng" | "medLikes" | "lastPost";
-type Filter = "todas" | "pares" | "audiencia" | "estados";
+type Orden = "vistas" | "indice" | "respuesta" | "fecha";
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const CIRC: Record<string, string> = { yo: "CDMX", pares: "CDMX · par directo", audiencia: "CDMX · audiencia" };
+const TABS = ["Panorama", "Jugadas", "Evidencia", "Método"] as const;
+const SIN_FILTRO = { cuenta: "", circulo: "", formato: "", pantalla: "", pilar: "" };
 
-const KIND: Record<PostKind, [singular: string, plural: string]> = {
-  reel: ["reel", "reels"],
-  carrusel: ["carrusel", "carruseles"],
-  foto: ["foto", "fotos"],
-};
-
-function mixText(mix: Record<PostKind, number>): string {
-  return (Object.keys(KIND) as PostKind[])
-    .filter((k) => mix[k] > 0)
-    .sort((a, b) => mix[b] - mix[a])
-    .map((k) => `${mix[k]} ${KIND[k][mix[k] === 1 ? 0 : 1]}`)
-    .join(", ");
+function miles(n: number): string {
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+function num(n: number | null): string {
+  if (n === null) return "";
+  if (n >= 10000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")} mil`;
+  if (n < 10 && !Number.isInteger(n)) return n.toFixed(1);
+  return miles(n);
+}
+function veces(x: number): string {
+  if (x < 0.01) return "menos de 0.01";
+  if (x >= 10) return miles(x);
+  if (x >= 2) return x.toFixed(1);
+  return x.toFixed(2);
+}
+function fecha(iso: string): string {
+  const d = new Date(Date.parse(iso) - 6 * 3600 * 1000);
+  return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]}`;
+}
+function duracion(s: number): string {
+  return s >= 90 ? `${Math.round(s / 60)} min` : `${s} s`;
+}
+function ultima(dias: number | null, desde: string | null): string {
+  if (dias === null) return "";
+  if (dias === 0) return "hoy";
+  if (dias > 60 && desde) return `${MESES[Number(desde.slice(5)) - 1]} ${desde.slice(0, 4)}`;
+  return `hace ${dias} d`;
+}
+function respuesta(p: Pieza): number {
+  return (p.l ?? 0) + (p.cm ?? 0);
+}
+function principal(p: Pieza): string {
+  if (p.p !== null) return `${num(p.p)} reproducciones`;
+  return p.l === null ? "likes ocultos" : `${miles(p.l)} likes`;
+}
+function secundarias(p: Pieza): string[] {
+  const out: string[] = [];
+  if (p.p !== null) out.push(p.l === null ? "likes ocultos" : `${miles(p.l)} likes`);
+  if (p.cm !== null) out.push(`${miles(p.cm)} ${p.cm === 1 ? "comentario" : "comentarios"}`);
+  return out;
 }
 
-function mainKind(mix: Record<PostKind, number>): string {
-  const total = mix.reel + mix.carrusel + mix.foto;
-  const best = (Object.keys(KIND) as PostKind[]).sort((a, b) => mix[b] - mix[a])[0];
-  return `${KIND[best][1]}, ${Math.round((mix[best] / total) * 100)}%`;
-}
+export default function RadarView({ corte }: { corte: Corte }) {
+  const [tab, setTab] = useState(0);
+  const [abierta, setAbierta] = useState<string | null>(null);
+  const [orden, setOrden] = useState<Orden>("vistas");
+  const [f, setF] = useState(SIN_FILTRO);
+  const salto = useRef<string | null>(null);
 
-function postStats(post: PostSummary): string {
-  const parts = [KIND[post.kind][0]];
-  if (post.er !== null) parts.push(`${pct(post.er)} de ER`);
-  if (post.likes !== null) parts.push(`${miles(post.likes)} likes`);
-  if (post.comments !== null) parts.push(`${miles(post.comments)} ${post.comments === 1 ? "comentario" : "comentarios"}`);
-  return parts.join(" · ");
-}
+  const porCodigo = useMemo(() => new Map(corte.piezas.map((p) => [p.c, p])), [corte]);
+  const propias = corte.piezas.filter((p) => p.ci === "yo");
+  const cuentasConPiezas = corte.cuentas.filter((c) => c.piezas > 0 && c.ci !== "yo");
 
-export default function RadarView({ current, previous, running, notice, top, pendientes, lectura }: Props) {
-  const [filter, setFilter] = useState<Filter>("todas");
-  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "followers", dir: -1 });
-  const [open, setOpen] = useState<string | null>(null);
+  const lista = useMemo(() => {
+    const out = corte.piezas.filter(
+      (p) =>
+        (!f.cuenta || p.h === f.cuenta) &&
+        (!f.circulo || p.ci === f.circulo) &&
+        (!f.formato || p.k === f.formato) &&
+        (!f.pantalla || p.pa === f.pantalla) &&
+        (!f.pilar || p.pi === f.pilar),
+    );
+    if (orden === "fecha") return out.sort((a, b) => Date.parse(b.ts) - Date.parse(a.ts));
+    if (orden === "respuesta") return out.sort((a, b) => respuesta(b) - respuesta(a));
+    if (orden === "indice") return out.sort((a, b) => (b.ix ?? -1) - (a.ix ?? -1));
+    return out.sort((a, b) => (b.p ?? -1) - (a.p ?? -1) || respuesta(b) - respuesta(a));
+  }, [corte, f, orden]);
 
-  const accounts = current.accounts;
-  const has = (pick: (a: AccountSnapshot) => unknown) => accounts.some((a) => pick(a) !== null);
-  const show28 = has((a) => a.posts28);
-  const showEng = has((a) => a.eng);
-  const showLikes = has((a) => a.medLikes);
-  const showMix = has((a) => a.mix);
-  const showLast = has((a) => a.lastPost);
-
-  const before = useMemo(() => new Map((previous?.accounts || []).map((a) => [a.handle, a])), [previous]);
-  const delta = (a: AccountSnapshot): number | null => {
-    const prev = before.get(a.handle);
-    return prev && prev.followers !== null && a.followers !== null ? a.followers - prev.followers : null;
+  // Abrir una pieza desde Panorama o Jugadas: va a Evidencia y la deja a la vista.
+  const ver = (c: string) => {
+    salto.current = c;
+    setF(SIN_FILTRO);
+    setOrden("vistas");
+    setAbierta(c);
+    setTab(2);
   };
+  useEffect(() => {
+    if (tab !== 2 || !abierta) return;
+    if (salto.current) {
+      document.getElementById(`pieza-${salto.current}`)?.scrollIntoView({ block: "start" });
+      salto.current = null;
+    } else {
+      document.getElementById("pieza-abierta")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [tab, abierta]);
 
-  const value = (a: AccountSnapshot, key: SortKey): number | null => {
-    if (key === "followers") return a.followers;
-    if (key === "posts") return show28 ? a.posts28 : a.postsTotal;
-    if (key === "eng") return a.eng;
-    if (key === "medLikes") return a.medLikes;
-    return a.lastPost ? Date.parse(a.lastPost) : null;
-  };
+  const nombre = (p: Pieza) => (
+    <>
+      <span className={`${styles.name} ${p.ci === "yo" ? styles.rojo : ""}`}>{corte.nombres[p.h] || p.h}</span>
+      {p.ow ? <span className={`${styles.meta} ${styles.corta}`}>con @{p.ow}</span> : null}
+    </>
+  );
 
-  const rows = useMemo(() => {
-    const list = accounts.filter((a) => filter === "todas" || a.circle === filter);
-    return [...list].sort((a, b) => {
-      const x = value(a, sort.key);
-      const y = value(b, sort.key);
-      if (x === null && y === null) return 0;
-      if (x === null) return 1;
-      if (y === null) return -1;
-      return (x - y) * sort.dir;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accounts, filter, sort, show28]);
+  const mini = (p: Pieza) => (
+    <li key={p.c}>
+      <button type="button" className={styles.card} onClick={() => ver(p.c)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={styles.cover} src={`/radar-media/${p.c}.jpg`} alt="" loading="lazy" />
+        {nombre(p)}
+        <span className={styles.meta}>
+          {p.k} · {corte.PANT[p.pa]}
+        </span>
+        <span className={styles.stats}>{principal(p)}</span>
+      </button>
+    </li>
+  );
 
-  const us = accounts.find((a) => a.you) || null;
-  // Las medianas de referencia salen solo de los pares directos.
-  const others = accounts.filter((a) => !a.you && !a.fuera && a.circle === "pares");
-  const med = (pick: (a: AccountSnapshot) => number | null) =>
-    median(others.map(pick).filter((v): v is number => v !== null));
-
-  const usDelta = us ? delta(us) : null;
-  const figures: { value: string; label: string; sub?: string }[] = [];
-  if (us) {
-    figures.push({
-      value: compact(us.followers),
-      label: "seguidores de Piso ikpali",
-      sub: usDelta !== null ? `${signed(usDelta)} contra la semana anterior` : undefined,
-    });
-  }
-  figures.push({ value: compact(med((a) => a.followers)), label: `seguidores, mediana de los ${others.length} pares con cuenta vigente` });
-  if (us && show28) {
-    figures.push({
-      value: us.posts28 === null ? "0" : `${us.posts28}`,
-      label: "publicaciones de Piso ikpali en 28 días",
-      sub: `mediana de pares: ${compact(med((a) => a.posts28))}`,
-    });
-  } else if (us) {
-    figures.push({ value: compact(us.postsTotal), label: "posts publicados por Piso ikpali" });
-  }
-  if (us && showEng) {
-    figures.push({
-      value: pct(med((a) => a.eng)),
-      label: "ER por seguidor, mediana de pares",
-      sub: us.eng === null ? "Piso ikpali tiene los likes ocultos" : `Piso ikpali: ${pct(us.eng)}`,
-    });
-  } else {
-    figures.push({ value: compact(med((a) => a.postsTotal)), label: "posts publicados, mediana de pares" });
-  }
-
-  const header = (key: SortKey, label: string, extra = "") => {
-    const active = sort.key === key;
+  const tarjeta = (p: Pieza) => {
+    const open = abierta === p.c;
     return (
-      <th className={`${styles.num} ${extra}`} aria-sort={active ? (sort.dir === -1 ? "descending" : "ascending") : "none"}>
-        <button
-          type="button"
-          data-key={key}
-          className={`${styles.sortButton} ${active ? styles.active : ""}`}
-          onClick={() => setSort((s) => (s.key === key ? { key, dir: s.dir === -1 ? 1 : -1 } : { key, dir: -1 }))}
-        >
-          {label}
-          <span className={styles.arrow} aria-hidden="true">
-            {active ? (sort.dir === -1 ? "↓" : "↑") : ""}
-          </span>
-        </button>
-      </th>
+      <Fragment key={p.c}>
+        <li id={`pieza-${p.c}`} className={open ? styles.sel : undefined}>
+          <button type="button" className={styles.card} aria-expanded={open} onClick={() => setAbierta(open ? null : p.c)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className={styles.cover} src={`/radar-media/${p.c}.jpg`} alt="" loading="lazy" />
+            {nombre(p)}
+            <span className={styles.meta}>
+              {p.k} · {corte.PANT[p.pa]} · {corte.PIL[p.pi]}
+            </span>
+            <span className={styles.stats}>{principal(p)}</span>
+            <span className={`${styles.meta} ${styles.sec}`}>
+              {orden === "indice" && p.ix !== null ? (
+                <span>{veces(p.ix)} veces la mediana de su cuenta</span>
+              ) : (
+                secundarias(p).map((s) => <span key={s}>{s}</span>)
+              )}
+            </span>
+          </button>
+        </li>
+        {open ? (
+          <li id="pieza-abierta" className={styles.panel}>
+            <div className={styles.panelHead}>
+              <span className={styles.name}>
+                {corte.nombres[p.h] || p.h}
+                {p.ow ? (
+                  <span className={styles.meta}>
+                    {" "}
+                    con @{p.ow}
+                    {p.sg ? `, de ${miles(p.sg)} seguidores` : ""}
+                  </span>
+                ) : null}
+              </span>
+              <button type="button" className={styles.cerrar} onClick={() => setAbierta(null)}>
+                cerrar
+              </button>
+            </div>
+            <div className={styles.panelBody}>
+              <div>
+                {p.k === "reel" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className={styles.strip} src={`/radar-media/${p.c}_s.jpg`} alt="Cuatro cuadros del reel, del inicio al final" loading="lazy" />
+                ) : null}
+                <p>
+                  <span className={styles.etiqueta}>Lectura</span>
+                  {p.n}
+                </p>
+                <p className={styles.meta}>
+                  {[
+                    fecha(p.ts),
+                    p.d ? duracion(p.d) : "",
+                    principal(p),
+                    ...secundarias(p),
+                    p.pps !== null ? `${p.pps >= 1 ? p.pps.toFixed(1) : p.pps.toFixed(2)} reproducciones por seguidor` : "",
+                    p.ix !== null ? `${veces(p.ix)} veces la mediana de su cuenta` : "",
+                    p.dm ? "Día de Muertos" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                <p className={styles.meta}>
+                  <a href={`https://www.instagram.com/p/${p.c}/`} target="_blank" rel="noopener noreferrer">
+                    ver en Instagram
+                  </a>
+                </p>
+              </div>
+              <div>
+                {p.tr ? (
+                  <p>
+                    <span className={styles.etiqueta}>Voz, transcripción automática</span>“{p.tr}”
+                  </p>
+                ) : null}
+                {p.cap ? (
+                  <p className={styles.meta}>
+                    <span className={styles.etiqueta}>Texto de la publicación</span>
+                    {p.cap}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </li>
+        ) : null}
+      </Fragment>
     );
   };
 
-  const columns = 3 + 1 + (showEng ? 1 : 0) + (showLikes ? 1 : 0) + (showMix ? 1 : 0) + (showLast ? 1 : 0) + 1;
-  const filters: [Filter, string][] = [
-    ["todas", "todas"],
-    ["pares", "pares directos"],
-    ["audiencia", "competencia de audiencia"],
-    ["estados", "otros estados"],
-  ];
+  const select = (key: keyof typeof f, label: string, options: [string, string][]) => (
+    <label className={styles.filtro}>
+      <span className={styles.meta}>{label}</span>
+      <select value={f[key]} onChange={(e) => setF({ ...f, [key]: e.target.value })}>
+        <option value="">todo</option>
+        {options.map(([v, t]) => (
+          <option key={v} value={v}>
+            {t}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
+  // Tabla de categorías: mediana cruda y contra la propia cuenta.
+  const tabla = (primera: string, filas: Fila[], conER: boolean, soloPropios = false) => (
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th>{primera}</th>
+          <th className={styles.num}>{soloPropios ? "reels propios" : "reels"}</th>
+          <th className={styles.num}>reproducciones, mediana</th>
+          <th className={styles.num}>contra su cuenta</th>
+          <th className={`${styles.num} ${styles.wide}`}>arriba de su mediana</th>
+          {conER ? <th className={`${styles.num} ${styles.wide}`}>fotos y carruseles</th> : null}
+          {conER ? <th className={styles.num}>ER, mediana</th> : null}
+        </tr>
+      </thead>
+      <tbody>
+        {filas.map((r) => (
+          <tr key={r.nombre}>
+            <td className={styles.cat}>
+              <span className={styles.name}>{r.nombre}</span>
+            </td>
+            <td className={styles.num}>{r.reels || ""}</td>
+            <td className={styles.num}>{r.plays === null ? "" : miles(r.plays)}</td>
+            <td className={styles.num}>{r.ix === null ? "" : r.ix.toFixed(2)}</td>
+            <td className={`${styles.num} ${styles.wide}`}>{r.propios ? `${r.arriba} de ${r.propios}` : ""}</td>
+            {conER ? <td className={`${styles.num} ${styles.wide}`}>{r.posts || ""}</td> : null}
+            {conER ? <td className={styles.num}>{r.er === null || r.er === undefined ? "" : `${r.er.toFixed(2)}%`}</td> : null}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 
   return (
     <main className={styles.page}>
@@ -156,307 +280,298 @@ export default function RadarView({ current, previous, running, notice, top, pen
           piso <span className={styles.paren}>(</span> radar <span className={styles.paren}>)</span> ikpali
         </h1>
         <p className={styles.week}>
-          <span className={styles.weekPart}>Instagram</span>
-          <span className={styles.dot}>{" · "}</span>
-          <span className={styles.weekPart}>{weekLabel(current.weekEnding)}</span>
+          <span>Instagram</span>
+          <span>{corte.meta.periodo}</span>
+          <span>
+            {corte.meta.piezas} piezas · {corte.meta.cuentas} cuentas
+          </span>
         </p>
       </header>
 
-      {running ? <p className={styles.notice}>Hay una corrida en curso. Recarga la página en un par de minutos.</p> : null}
-
-      <dl className={styles.figures}>
-        {figures.map((f) => (
-          <div key={f.label} className={styles.figure}>
-            <dd className={styles.figureValue}>{f.value}</dd>
-            <dt className={styles.figureLabel}>{f.label}</dt>
-            {f.sub ? <dd className={styles.figureSub}>{f.sub}</dd> : null}
-          </div>
-        ))}
-      </dl>
-
-      <nav className={styles.filters} aria-label="Filtrar por círculo">
-        {filters.map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            className={`${styles.textButton} ${filter === key ? styles.active : ""}`}
-            aria-pressed={filter === key}
-            onClick={() => setFilter(key)}
-          >
-            {label}
+      <nav className={styles.tabs} aria-label="Secciones">
+        {TABS.map((t, i) => (
+          <button key={t} type="button" className={`${styles.tab} ${tab === i ? styles.active : ""}`} aria-pressed={tab === i} onClick={() => setTab(i)}>
+            {t}
+            {i === 2 ? ` (${corte.meta.piezas})` : ""}
           </button>
         ))}
       </nav>
 
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th className={styles.rank} aria-label="Lugar" />
-            <th className={styles.nameHead}>tienda</th>
-            {header("followers", "seguidores")}
-            {header("posts", show28 ? "posts, 28 días" : "posts", showEng ? styles.mid : "")}
-            {showEng ? header("eng", "ER por seguidor") : null}
-            {showLikes ? header("medLikes", "interacciones por post", styles.wide) : null}
-            {showMix ? <th className={`${styles.textCol} ${styles.wide}`}>formato</th> : null}
-            {showLast ? header("lastPost", "último post", styles.wide) : null}
-            <th className={styles.toggleCol} aria-label="Detalle" />
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((a, i) => {
-            const d = delta(a);
-            const detail = Boolean(a.top || a.mix || a.web);
-            const isOpen = open === a.handle;
-            return (
-              <Fragment key={a.handle}>
-                <tr
-                  data-c={a.circle}
-                  data-v={JSON.stringify({
-                    followers: a.followers,
-                    posts: value(a, "posts"),
-                    eng: a.eng,
-                    medLikes: a.medLikes,
-                    lastPost: value(a, "lastPost"),
-                  })}
-                  className={`${styles.row} ${a.you ? styles.you : ""} ${detail ? styles.clickable : ""}`}
-                  onClick={detail ? () => setOpen(isOpen ? null : a.handle) : undefined}
-                >
-                  <td className={styles.rank}>{i + 1}</td>
-                  <td className={styles.nameCell}>
-                    <span className={styles.name}>{a.name}</span>
-                    <span className={styles.meta}>
-                      <a
-                        className={styles.handle}
-                        href={`https://www.instagram.com/${a.handle}/`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        @{a.handle}
-                      </a>
-                      <span className={styles.dot}>{" · "}</span>
-                      {a.city}
-                      {a.nota ? `, ${a.nota}` : ""}
-                    </span>
-                  </td>
-                  <td className={styles.num}>
-                    {compact(a.followers)}
-                    {d !== null ? <span className={styles.delta}>{signed(d)}</span> : null}
-                  </td>
-                  <td className={`${styles.num} ${showEng ? styles.mid : ""}`}>
-                    {compact(show28 ? a.posts28 : a.postsTotal)}
-                    {show28 && a.posts28Capped ? "+" : ""}
-                  </td>
-                  {showEng ? (
-                    <td className={styles.num}>
-                      {a.eng === null && a.hidden > 0 ? <span className={styles.meta}>ocultos</span> : pct(a.eng)}
-                      {a.eng !== null && a.engN <= 4 ? <span className={styles.delta}>con {a.engN} {a.engN === 1 ? "post" : "posts"}</span> : null}
-                    </td>
-                  ) : null}
-                  {showLikes ? <td className={`${styles.num} ${styles.wide}`}>{compact(a.medLikes)}</td> : null}
-                  {showMix ? <td className={`${styles.textCol} ${styles.wide}`}>{a.mix ? mainKind(a.mix) : ""}</td> : null}
-                  {showLast ? <td className={`${styles.num} ${styles.wide}`}>{ago(a.lastPost, current.takenAt)}</td> : null}
-                  <td className={styles.toggleCol}>
-                    {detail ? (
-                      <button type="button" className={styles.toggle} aria-expanded={isOpen} aria-label={`Detalle de ${a.name}`}>
-                        {isOpen ? "−" : "+"}
-                      </button>
-                    ) : null}
-                  </td>
-                </tr>
-                {detail && isOpen ? (
-                  <tr className={styles.detailRow}>
-                    <td />
-                    <td colSpan={columns - 1} className={styles.detail}>
-                      {a.top ? (
-                        <p>
-                          <span className={styles.detailLabel}>Publicación propia más fuerte en 28 días</span>
-                          {a.top.caption ? `${a.top.caption} ` : ""}
-                          <span className={styles.meta}>
-                            {postStats(a.top)}
-                            {" · "}
-                            <a href={a.top.url} target="_blank" rel="noopener noreferrer">
-                              ver en Instagram
-                            </a>
-                          </span>
-                        </p>
-                      ) : null}
-                      {a.mix ? (
-                        <p>
-                          <span className={styles.detailLabel}>Formatos recientes</span>
-                          {mixText(a.mix)}
-                        </p>
-                      ) : null}
-                      {a.medLikes !== null || a.lastPost ? (
-                        <p className={styles.narrowOnly}>
-                          <span className={styles.detailLabel}>Ritmo</span>
-                          {[
-                            a.posts28 !== null ? `${a.posts28} ${a.posts28 === 1 ? "post" : "posts"} en 28 días` : "",
-                            a.medLikes !== null ? `${compact(a.medLikes)} interacciones por post` : "",
-                            a.lastPost ? `último post ${ago(a.lastPost, current.takenAt)}` : "",
-                          ]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </p>
-                      ) : null}
-                      {a.web ? (
-                        <p>
-                          <span className={styles.detailLabel}>Sitio</span>
-                          <a href={a.web} target="_blank" rel="noopener noreferrer">
-                            {a.web.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
-                          </a>
-                        </p>
-                      ) : null}
-                    </td>
-                  </tr>
-                ) : null}
-              </Fragment>
-            );
-          })}
-        </tbody>
-      </table>
+      {tab === 0 ? (
+        <>
+          <p className={styles.lead}>{corte.frase}</p>
+          <dl className={styles.figures}>
+            {corte.cifras.map((c) => (
+              <div key={c.l} className={styles.figure}>
+                <dd className={styles.figureValue}>{c.v}</dd>
+                <dt className={styles.figureLabel}>{c.l}</dt>
+                {c.s ? <dd className={styles.figureSub}>{c.s}</dd> : null}
+              </div>
+            ))}
+          </dl>
 
-      {top.length ? (
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Lo mejor de la competencia en 28 días</h2>
-          <ul className={styles.posts}>
-            {top.map((post) => {
-              const owner = accounts.find((a) => a.handle === post.handle);
-              return (
-                <li key={post.code}>
-                  <a className={styles.post} href={post.url} target="_blank" rel="noopener noreferrer">
-                    {post.thumb ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className={styles.thumb} src={`/radar/img/${post.thumb}`} alt="" loading="lazy" />
-                    ) : null}
-                    <span className={styles.name}>{owner ? owner.name : `@${post.handle}`}</span>
-                    <span className={styles.meta}>{postStats(post)}</span>
-                    {post.caption ? <span className={styles.caption}>{post.caption}</span> : null}
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null}
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Lo más visto del corte</h2>
+            <ul className={`${styles.cards} ${styles.cardsSmall}`}>{corte.top.map((c) => mini(porCodigo.get(c) as Pieza))}</ul>
+            <p className={styles.pie}>
+              <button type="button" className={styles.enlace} onClick={() => setTab(2)}>
+                Ver las {corte.meta.piezas} piezas
+              </button>
+            </p>
+          </section>
 
-      {us && us.posts.length ? (
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Lo que publicó Piso ikpali</h2>
-          <table className={`${styles.table} ${styles.activity}`}>
-            <thead>
-              <tr>
-                <th>fecha</th>
-                <th>formato</th>
-                <th className={styles.num}>likes</th>
-                <th className={styles.num}>comentarios</th>
-                <th className={styles.seeHead}>publicación</th>
-              </tr>
-            </thead>
-            <tbody>
-              {us.posts.map((post) => (
-                <tr key={post.code}>
-                  <td className={styles.when}>{dayLabel(post.ts)}</td>
-                  <td>{post.collab ? `${KIND[post.kind][0]}, con @${post.collab}` : KIND[post.kind][0]}</td>
-                  <td className={styles.num} data-label="likes">
-                    {post.likes === null ? <span className={styles.meta}>ocultos</span> : miles(post.likes)}
-                  </td>
-                  <td className={styles.num} data-label="comentarios">
-                    {post.comments === null ? "" : miles(post.comments)}
-                  </td>
-                  <td className={styles.see}>
-                    <a href={post.url} target="_blank" rel="noopener noreferrer">
-                      {post.caption || "sin texto"}
-                    </a>
-                  </td>
-                </tr>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Lo que publicó Piso ikpali</h2>
+            <ul className={`${styles.cards} ${styles.cardsSmall}`}>{propias.map(mini)}</ul>
+          </section>
+
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Lectura de posición</h2>
+            <div className={styles.posicion}>
+              {corte.posicion.map((b) => (
+                <div key={b.t}>
+                  <h3 className={styles.name}>{b.t}</h3>
+                  <p>{b.x}</p>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </section>
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Qué hay en pantalla</h2>
+            <p className={styles.nota}>{corte.notas.pant}</p>
+            {tabla("en pantalla", corte.pant, true)}
+          </section>
+
+          <div className={styles.dos}>
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>De qué trata</h2>
+              <p className={styles.nota}>{corte.notas.pil}</p>
+              {tabla("pilar", corte.pil, false)}
+            </section>
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>Cuánto dura</h2>
+              <p className={styles.nota}>{corte.notas.dur}</p>
+              {tabla("duración", corte.dur, false, true)}
+            </section>
+          </div>
+
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Con quién se publica</h2>
+            <p className={styles.nota}>{corte.notas.colabs}</p>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>cuenta y socio</th>
+                  <th className={`${styles.num} ${styles.wide}`}>seguidores de la cuenta</th>
+                  <th className={`${styles.num} ${styles.wide}`}>seguidores del socio</th>
+                  <th className={styles.num}>tamaño del socio, veces la cuenta</th>
+                  <th className={`${styles.num} ${styles.wide}`}>reels</th>
+                  <th className={styles.num}>reproducciones</th>
+                  <th className={`${styles.num} ${styles.wide}`}>mediana propia</th>
+                  <th className={styles.num}>contra su cuenta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {corte.colabs.map((c) => (
+                  <tr key={c.h + c.socio}>
+                    <td>
+                      <button type="button" className={`${styles.name} ${styles.enlace}`} onClick={() => ver(c.top)}>
+                        {c.n}
+                      </button>
+                      <span className={styles.meta}>
+                        <span className={styles.con}>con </span>@{c.socio}
+                      </span>
+                    </td>
+                    <td className={`${styles.num} ${styles.wide}`}>{miles(c.seg)}</td>
+                    <td className={`${styles.num} ${styles.wide}`}>{c.segSocio === null ? "" : miles(c.segSocio)}</td>
+                    <td className={styles.num}>{c.tam === null ? "" : c.tam < 0.01 ? "menos de 0.01" : c.tam >= 10 ? Math.round(c.tam) : c.tam.toFixed(2)}</td>
+                    <td className={`${styles.num} ${styles.wide}`}>{c.reels}</td>
+                    <td className={styles.num}>{miles(c.plays)}</td>
+                    <td className={`${styles.num} ${styles.wide}`}>{c.propia === null ? "sin reels propios" : miles(c.propia)}</td>
+                    <td className={styles.num}>{c.veces === null ? "" : c.veces.toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Cuentas</h2>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>tienda</th>
+                  <th className={styles.num}>seguidores</th>
+                  <th className={styles.num}>en 28 días</th>
+                  <th className={`${styles.num} ${styles.wide}`}>reels</th>
+                  <th className={`${styles.num} ${styles.wide}`}>reproducciones por reel</th>
+                  <th className={`${styles.num} ${styles.wide}`}>interacciones por publicación</th>
+                  <th className={styles.num}>última</th>
+                </tr>
+              </thead>
+              <tbody>
+                {corte.cuentas.map((c) => (
+                  <tr key={c.h} className={c.ci === "yo" ? styles.rojo : undefined}>
+                    <td>
+                      <span className={styles.name}>{c.n}</span>
+                      <span className={styles.meta}>
+                        @{c.h}
+                        <span className={styles.sep}> · </span>
+                        <span className={styles.linea2}>{CIRC[c.ci] || c.city}</span>
+                      </span>
+                    </td>
+                    <td className={styles.num}>{num(c.seg)}</td>
+                    <td className={styles.num}>{c.p28}</td>
+                    <td className={`${styles.num} ${styles.wide}`}>{c.reels || ""}</td>
+                    <td className={`${styles.num} ${styles.wide}`}>{num(c.plays)}</td>
+                    <td className={`${styles.num} ${styles.wide}`}>{c.inter === null || c.visibles < 3 ? (c.ocultos ? "ocultos" : "") : num(c.inter)}</td>
+                    <td className={styles.num}>{ultima(c.dias, c.desde)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </>
       ) : null}
 
-      {lectura ? (
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{lectura.titulo}</h2>
-          <p className={styles.lead}>{lectura.metodo}</p>
-
-          <table className={`${styles.table} ${styles.activity}`}>
-            <thead>
-              <tr>
-                <th className={styles.nameHead}>tienda</th>
-                <th>última publicación</th>
-                <th className={styles.num}>en 28 días</th>
-                <th className={styles.seeHead}>qué se ve</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lectura.actividad.map((row) => {
-                const owner = accounts.find((a) => a.handle === row.handle);
-                return (
-                  <tr key={row.handle} className={owner?.you ? styles.you : ""}>
-                    <td className={styles.who}>{owner ? owner.name : `@${row.handle}`}</td>
-                    <td className={styles.when}>{row.ultimo}</td>
-                    <td className={styles.num} data-label="en 28 días">
-                      {row.en28}
-                    </td>
-                    <td className={styles.see}>{row.seVe}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          <div className={styles.reading}>
-            <div>
-              <h3 className={styles.readingTitle}>Descubrimientos</h3>
-              <ol className={styles.items}>
-                {lectura.descubrimientos.map((d) => (
-                  <li key={d.titulo}>
-                    <span className={styles.name}>{d.titulo}</span>
-                    <p>{d.texto}</p>
-                    <p className={styles.meta}>Límite: {d.limite}</p>
-                  </li>
-                ))}
-              </ol>
+      {tab === 1 ? (
+        <>
+          <p className={styles.lead}>{corte.palanca}</p>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Las {corte.jugadas.length} jugadas, de la que más mueve a la más incierta</h2>
+            <ol className={styles.jugadas}>
+              {corte.jugadas.map((j, i) => (
+                <li key={j.titulo}>
+                  <div className={styles.jugadaTexto}>
+                    <h3 className={styles.jugadaTitulo}>
+                      <span className={styles.rojo}>{i + 1}</span> {j.titulo}
+                    </h3>
+                    <p className={styles.meta}>
+                      Factibilidad: {j.fact.toLowerCase()} · Impacto: {j.imp.toLowerCase()}
+                    </p>
+                    <p>
+                      <span className={styles.etiqueta}>Por qué</span>
+                      {j.porque}
+                    </p>
+                    <p>
+                      <span className={styles.etiqueta}>Cómo se ve en Piso ikpali</span>
+                      {j.como}
+                    </p>
+                    <p className={styles.meta}>
+                      <span className={styles.etiqueta}>Límite</span>
+                      {j.limite}
+                    </p>
+                  </div>
+                  <ul className={styles.ejemplos}>
+                    {j.ej.map((c) => {
+                      const p = porCodigo.get(c);
+                      if (!p) return null;
+                      return (
+                        <li key={c}>
+                          <button type="button" className={styles.card} onClick={() => ver(p.c)}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img className={styles.cover} src={`/radar-media/${p.c}.jpg`} alt="" loading="lazy" />
+                            {nombre(p)}
+                            <span className={styles.meta}>{principal(p)}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          </section>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Dejar de hacer</h2>
+            <div className={styles.posicion}>
+              {corte.dejar.map((b) => (
+                <div key={b.t}>
+                  <h3 className={styles.name}>{b.t}</h3>
+                  <p>{b.x}</p>
+                </div>
+              ))}
             </div>
-            <div>
-              <h3 className={styles.readingTitle}>Jugadas</h3>
-              <ol className={styles.items}>
-                {lectura.jugadas.map((j) => (
-                  <li key={j.titulo}>
-                    <span className={styles.name}>{j.titulo}</span>
-                    <p>{j.texto}</p>
-                    <p className={styles.meta}>Sustento: {j.sustento}</p>
-                  </li>
-                ))}
-              </ol>
+          </section>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Cómo saber si funcionó</h2>
+            <div className={styles.posicion}>
+              {corte.medir.map((b) => (
+                <div key={b.t}>
+                  <h3 className={styles.name}>{b.t}</h3>
+                  <p>{b.x}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : null}
+
+      {tab === 2 ? (
+        <>
+          <div className={styles.controles}>
+            <div className={styles.orden}>
+              <span className={styles.meta}>ordenar por</span>
+              {(
+                [
+                  ["vistas", "vistas"],
+                  ["indice", "contra su cuenta"],
+                  ["respuesta", "respuesta"],
+                  ["fecha", "fecha"],
+                ] as const
+              ).map(([k, t]) => (
+                <button key={k} type="button" className={`${styles.tab} ${styles.tabSmall} ${orden === k ? styles.active : ""}`} aria-pressed={orden === k} onClick={() => setOrden(k)}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            <div className={styles.filtros}>
+              {select("cuenta", "cuenta", [["piso.ikpali", "Piso ikpali"], ...cuentasConPiezas.map((c) => [c.h, c.n] as [string, string])])}
+              {select("circulo", "círculo", [["pares", "pares directos"], ["audiencia", "competencia de audiencia"], ["estados", "otros estados"], ["yo", "Piso ikpali"]])}
+              {select("formato", "formato", [["reel", "reel"], ["carrusel", "carrusel"], ["foto", "foto"]])}
+              {select("pantalla", "en pantalla", Object.entries(corte.PANT))}
+              {select("pilar", "pilar", Object.entries(corte.PIL))}
+              <span className={`${styles.meta} ${styles.cuenta}`}>
+                {lista.length} de {corte.meta.piezas}
+              </span>
             </div>
           </div>
-        </section>
+          <ul className={styles.cards}>{lista.map(tarjeta)}</ul>
+        </>
       ) : null}
 
-      <footer className={styles.footer}>
-        <div className={styles.notes}>
-          {current.source === "chrome" ? (
-            <p>
-              Esta primera foto se leyó directo de los perfiles el {dayLabel(current.takenAt)}: trae seguidores (redondeados arriba de 10 mil) y total
-              de posts. ER, posts de la semana y formatos entran con la primera corrida de Apify.
-            </p>
-          ) : (
-            <p>
-              Datos de los perfiles públicos de Instagram, capturados el {dayLabel(current.takenAt)}: las 12 publicaciones más recientes de cada
-              cuenta. ER por seguidor es la mediana de likes más comentarios entre seguidores, solo en publicaciones propias con likes visibles; las
-              colaboraciones y los likes ocultos quedan fuera. Lo mejor de la competencia se ordena por esa tasa, no por total. Instagram no publica
-              alcance, guardados ni vistas. Se actualiza solo cada lunes.
-            </p>
-          )}
-          {current.missing.length || pendientes.length ? (
-            <p>Sin datos esta semana: {[...new Set([...pendientes, ...current.missing])].join(", ")}.</p>
-          ) : null}
-          {notice ? <p>{notice}</p> : null}
-        </div>
-      </footer>
+      {tab === 3 ? (
+        <>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Cómo se arma</h2>
+            <ol className={styles.lista}>
+              {corte.metodo.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ol>
+          </section>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Límites</h2>
+            <ul className={styles.lista}>
+              {corte.limites.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ul>
+          </section>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Glosario</h2>
+            <dl className={styles.glosario}>
+              {corte.glosario.map((g) => (
+                <div key={g.k}>
+                  <dt className={styles.name}>{g.k}</dt>
+                  <dd>{g.x}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        </>
+      ) : null}
     </main>
   );
 }

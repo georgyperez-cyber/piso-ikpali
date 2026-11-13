@@ -1,31 +1,15 @@
 import type { Metadata } from "next";
-import { loadRadar, topPosts } from "@/lib/radar/store";
-import { ROSTER } from "@/lib/radar/roster";
-import { LECTURA } from "@/lib/radar/lectura";
-import RadarView from "./RadarView";
+import corte from "@/lib/radar/corte-2026-11-12.json";
+import RadarView, { type Corte } from "./RadarView";
 
-export const maxDuration = 60;
-export const dynamic = "force-dynamic";
-
-// Página abierta, sin contraseña. No está enlazada desde el sitio ni se indexa.
+// Radar de Instagram de Piso ikpali. Página abierta, sin enlazar ni indexar.
+// Cada corte se arma en sesión (datos, material visto y lectura) y vive en
+// src/lib/radar/corte-AAAA-MM-DD.json, con sus imágenes en public/radar-media.
 export const metadata: Metadata = {
   title: "Radar · Piso ikpali",
   robots: { index: false, follow: false },
 };
 
-export default async function RadarPage() {
-  const data = await loadRadar();
-  const pendientes = ROSTER.filter((e) => !e.handle).map((e) => e.name);
-
-  return (
-    <RadarView
-      current={data.current}
-      previous={data.previous}
-      running={data.running}
-      notice={data.notice}
-      top={topPosts(data.current)}
-      pendientes={pendientes}
-      lectura={LECTURA}
-    />
-  );
+export default function RadarPage() {
+  return <RadarView corte={corte as unknown as Corte} />;
 }
