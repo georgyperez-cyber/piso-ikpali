@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import corte from "@/lib/radar/corte-2026-11-12.json";
+import corte from "@/lib/radar/corte-2026-11-13.json";
 import RadarView, { type Corte } from "./RadarView";
 
 // Radar de Instagram de Piso ikpali. Página abierta, sin enlazar ni indexar.
