@@ -11,7 +11,6 @@ type Props = {
   previous: Snapshot | null;
   running: boolean;
   notice: string | null;
-  flash: string | null;
   top: PostSummary[];
   pendientes: string[];
   lectura: Lectura | null;
@@ -48,7 +47,7 @@ function postStats(post: PostSummary): string {
   return parts.join(" · ");
 }
 
-export default function RadarView({ current, previous, running, notice, flash, top, pendientes, lectura }: Props) {
+export default function RadarView({ current, previous, running, notice, top, pendientes, lectura }: Props) {
   const [filter, setFilter] = useState<Filter>("todas");
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "followers", dir: -1 });
   const [open, setOpen] = useState<string | null>(null);
@@ -163,9 +162,7 @@ export default function RadarView({ current, previous, running, notice, flash, t
         </p>
       </header>
 
-      {flash || running ? (
-        <p className={styles.notice}>{flash || "Hay una corrida en curso. Recarga la página en un par de minutos."}</p>
-      ) : null}
+      {running ? <p className={styles.notice}>Hay una corrida en curso. Recarga la página en un par de minutos.</p> : null}
 
       <dl className={styles.figures}>
         {figures.map((f) => (
@@ -459,11 +456,6 @@ export default function RadarView({ current, previous, running, notice, flash, t
           ) : null}
           {notice ? <p>{notice}</p> : null}
         </div>
-        <form method="post" action="/radar/actualizar">
-          <button type="submit" className={styles.textButton}>
-            actualizar ahora
-          </button>
-        </form>
       </footer>
     </main>
   );

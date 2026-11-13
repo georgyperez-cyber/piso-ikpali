@@ -1,19 +1,22 @@
-import { isAuthed } from "@/lib/radar/auth";
-import { kvGetBinary } from "@/lib/radar/apify";
+import { hasApify, kvGetBinary } from "@/lib/radar/apify";
 
-// Miniaturas de los posts más fuertes, guardadas en la corrida semanal.
-export async function GET(_request: Request, { params }: { params: Promise<{ code: string }> }) {
-  if (!(await isAuthed())) return new Response(null, { status: 404 });
+// Miniaturas de las publicaciones más fuertes. Las de la rutina semanal viven en
+// el almacén de Apify; las del corte guardado en el sitio, en public/radar-thumbs.
+export async function GET(request: Request, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   if (!/^[\w-]{5,40}$/.test(code)) return new Response(null, { status: 404 });
 
-  try {
-    const record = await kvGetBinary(`thumb-${code}`);
-    if (!record || !record.type.startsWith("image/")) return new Response(null, { status: 404 });
-    return new Response(record.body, {
-      headers: { "Content-Type": record.type, "Cache-Control": "private, max-age=604800" },
-    });
-  } catch {
-    return new Response(null, { status: 404 });
+  if (hasApify()) {
+    try {
+      const record = await kvGetBinary(`thumb-${code}`);
+      if (record && record.type.startsWith("image/")) {
+        return new Response(record.body, {
+          headers: { "Content-Type": record.type, "Cache-Control": "public, max-age=604800" },
+        });
+      }
+    } catch {
+      // Sigue al archivo guardado en el sitio.
+    }
   }
+  return Response.redirect(new URL(`/radar-thumbs/${code}.jpg`, request.url), 302);
 }

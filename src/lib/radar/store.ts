@@ -142,7 +142,7 @@ export async function loadRadar(): Promise<RadarData> {
       notice = err instanceof Error ? err.message : "No se pudo leer Apify.";
     }
   } else {
-    notice = "Falta configurar APIFY_TOKEN: se muestra la última foto guardada en el sitio.";
+    notice = "Corte guardado en el sitio. La actualización de cada lunes se activa al agregar APIFY_TOKEN y CRON_SECRET en Vercel.";
   }
 
   const weeks = [...byWeek.keys()].sort();
