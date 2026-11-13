@@ -8,9 +8,11 @@
 
 .page {
   --rojo: #ed3424;
-  --tinta: #1a1a1a;
-  --gris: #6f6f6f;
-  --linea: #dedede;
+  --tinta: #ed3424;
+  --gris: #ed3424;
+  --linea: #f9b8b2;
+  --medio: #f69a92;
+  --suave: #fef3f2;
   --margen: clamp(20px, 3.2vw, 40px);
 
   min-height: 100vh;
@@ -33,7 +35,35 @@
 .page a:hover,
 .enlace:hover,
 .cerrar:hover {
-  color: var(--rojo);
+  background: var(--rojo);
+  color: #fff;
+}
+
+.page a.card,
+.page a.card:hover {
+  display: block;
+  background: none;
+  color: inherit;
+  text-decoration: none;
+}
+
+.liga {
+  padding: 0 1px;
+}
+
+.verIg {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.card:hover .verIg {
+  background: var(--rojo);
+  color: #fff;
+  text-decoration: none;
 }
 
 .page p {
@@ -45,10 +75,20 @@
   font-weight: 700;
 }
 
-.rojo,
-.rojo .meta,
-.rojo strong {
-  color: var(--rojo);
+/* Piso ikpali resaltado: fondo rojo, texto blanco */
+
+.name.rojo,
+.barra.rojo .barraNombre,
+tr.rojo .name {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0 4px;
+  background: var(--rojo);
+  color: #fff;
+}
+
+.barra.rojo .barraNombre {
+  justify-self: end;
 }
 
 .gris {
@@ -59,16 +99,20 @@
 /* Términos con definición */
 
 .term {
-  padding: 0 3px;
-  background: #fde4e0;
+  padding: 0 4px;
+  background: var(--rojo);
+  color: #fff;
   cursor: help;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .term:hover,
 .term:focus {
-  background: var(--rojo);
-  color: #fff;
+  background: #fff;
+  color: var(--rojo);
   outline: none;
+  box-shadow: inset 0 0 0 1px var(--rojo);
 }
 
 .tip {
@@ -76,7 +120,7 @@
   z-index: 60;
   width: min(300px, calc(100vw - 24px));
   padding: 10px 12px;
-  background: var(--tinta);
+  background: var(--rojo);
   color: #fff;
   font-size: 13px;
   font-weight: 400;
@@ -394,7 +438,7 @@
 .barraTrack {
   display: flex;
   height: 20px;
-  background: #f3f3f3;
+  background: var(--suave);
 }
 
 .barraTrack span {
@@ -485,7 +529,7 @@
 .indiceTrack {
   position: relative;
   height: 16px;
-  background: #f3f3f3;
+  background: var(--suave);
 }
 
 .indiceUno {
@@ -504,7 +548,7 @@
 }
 
 .indiceBar.abajo {
-  background: #9b9b9b;
+  background: var(--medio);
 }
 
 .indiceValor {
@@ -535,8 +579,9 @@
 }
 
 .punto:hover {
+  fill: #fff;
   stroke: var(--rojo);
-  stroke-width: 3px;
+  stroke-width: 2px;
 }
 
 /* Jugadas */
@@ -674,8 +719,7 @@
 }
 
 .certeza.baja {
-  border-color: #a8a8a8;
-  color: var(--gris);
+  border-style: dashed;
 }
 
 /* Evidencia */
@@ -706,16 +750,19 @@
 .filtroBtn {
   position: relative;
   z-index: 21;
-  padding: 8px 12px;
-  background: var(--tinta);
-  color: #fff;
+  padding: 7px 11px;
+  border: 1px solid var(--rojo);
+  background: #fff;
+  color: var(--rojo);
   font-size: 14px;
   line-height: 1.2;
 }
 
 .filtroBtn:hover,
+.filtroBtn[aria-expanded="true"],
 .filtroOn {
   background: var(--rojo);
+  color: #fff;
 }
 
 .filtroPanel {
@@ -741,7 +788,7 @@
 }
 
 .filtroPanel label:hover {
-  background: #f3f3f3;
+  background: var(--suave);
 }
 
 .filtroPanel input {
@@ -820,7 +867,7 @@
   aspect-ratio: 4 / 5;
   margin: 8px 0 10px;
   object-fit: cover;
-  background: #f1f1f1;
+  background: var(--suave);
 }
 
 .cardsSmall .cover,
@@ -865,7 +912,9 @@
 
 .card:hover .name,
 .sel .name {
-  color: var(--rojo);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .card:hover .cover {

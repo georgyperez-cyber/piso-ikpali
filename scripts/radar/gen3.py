@@ -75,6 +75,8 @@ for q in P:
 code={q['i']:q['code'] for q in P}
 T=json.load(open(C+"/textos3.json"))
 for j in T['jugadas']: j['ej']=[code[i] for i in j['ej']]
+# Ligas a publicaciones: [texto](i:N) -> [texto](CODIGO)
+T=json.loads(re.sub(r"\]\(i:(\d+)\)",lambda m:"]("+code[int(m.group(1))]+")",json.dumps(T,ensure_ascii=False)))
 top=[q['code'] for q in sorted([q for q in P if q['kind']=='reel'],key=lambda q:-q['plays'])[:6]]
 k=collections.Counter(q['kind'] for q in P)
 out=dict(meta=dict(fecha="2026-11-13",periodo="15 de agosto al 12 de noviembre de 2026",piezas=len(P),reels=k['reel'],carruseles=k['carrusel'],fotos=k['foto'],cuentas=len(accts),total=len(prof)),
