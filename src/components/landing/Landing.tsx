@@ -49,8 +49,9 @@ const ruido = (i: number, k: number) => {
 function calcularTablero(items: Producto[], vw: number, vh: number): Layout {
   const n = items.length;
   const movil = vw < 768;
-  const cell = movil ? Math.round(vw * 0.38) : Math.round(gsap.utils.clamp(180, 260, vw * 0.16));
-  let step = cell + Math.round(cell * 0.3);
+  const cell = movil ? Math.round(vw * 0.32) : Math.round(gsap.utils.clamp(180, 260, vw * 0.16));
+  // en el teléfono las piezas van más juntas que en la compu, para que el tablero no parezca el grid
+  let step = cell + Math.round(cell * (movil ? 0.1 : 0.3));
 
   let cols = 1;
   let mejor = Infinity;
@@ -96,6 +97,10 @@ const encoger = (r: DOMRect) => {
   const h = r.height * ESCALA_FOCO;
   return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, width: w, height: h };
 };
+
+// Teléfono o tableta: sin mouse no hay hover. Ahí el "mouse" del efecto de
+// cercanía es el centro de la pantalla, y no corre lo que depende del cursor.
+const esTactil = () => !window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
 // Precio y existencias en vivo: el admin (pisoikpali.com/admin) publica el
 // inventario sin sesión. Si no responde, se queda RESPALDO.
@@ -160,6 +165,7 @@ const Pieza = memo(function Pieza({ p, i, k, t, registrar, onClick, agotado }: P
         <img className="ld-item__img" src={p.src} alt={p.nombre} draggable={false} loading="lazy" decoding="async" />
         <span className="ld-item__label" style={t === undefined ? undefined : { top: `${(p.fondo ?? 1) * 100}%` }}>
           {p.nombre}
+          {agotado && <span className="ld-item__estado"> · agotado</span>}
         </span>
       </div>
     </div>
@@ -226,12 +232,14 @@ export default function Landing() {
   const [errorForm, setErrorForm] = useState("");
   const inv = useInventario();
   const invRef = useRef(inv);
+  const tactilRef = useRef(false);
   invRef.current = inv;
   const agotados = useMemo(() => PRODUCTOS.map((p) => p.variantes.length > 0 && estadoDe(p, inv).estado === "agotado"), [inv]);
 
   const setFase = (f: Fase) => {
     faseRef.current = f;
     setFaseState(f);
+    rootRef.current?.classList.toggle("en-grid", f === "grid" || (f === "foco" && faseAntesRef.current === "grid"));
   };
 
   const todos = useCallback(() => elsRef.current.flat().filter(Boolean), []);
@@ -416,14 +424,16 @@ export default function Landing() {
   /* ───────── proximidad del mouse: las piezas cercanas crecen ───────── */
 
   const proximidad = useCallback(() => {
-    if (faseRef.current !== "tablero" || !mouse.current.activo) return;
+    const tactil = tactilRef.current;
+    if (faseRef.current !== "tablero" || (!tactil && !mouse.current.activo)) return;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const L = layoutRef.current!;
-    // alcanza dos anillos de vecinas; la que está bajo el mouse es la más grande
-    const RADIO = L.step * zoomRef.current * 1.9;
-    const PICO = 0.38;
-    const { x: mx, y: my } = mouse.current;
+    // con mouse: alcanza dos anillos de vecinas y la que está bajo el cursor es la más grande.
+    // En el teléfono: la del centro de la pantalla es la más grande y bajan hacia las orillas.
+    const RADIO = tactil ? Math.hypot(vw, vh) * 0.42 : L.step * zoomRef.current * 1.9;
+    const PICO = tactil ? 0.42 : 0.38;
+    const { x: mx, y: my } = tactil ? { x: vw / 2, y: vh / 2 } : mouse.current;
     todos().forEach((el) => {
       if (!reveladoRef.current.has(el)) return;
       const r = el.getBoundingClientRect();
@@ -561,15 +571,9 @@ export default function Landing() {
     const otros = ordenDesde(original);
     const regresaA = faseAntesRef.current;
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setFoco(null);
-        setFase(regresaA);
-        rootRef.current?.classList.remove("is-focus");
-        if (regresaA === "tablero") dragRef.current?.enable();
-        else lenisRef.current?.start();
-      },
-    });
+    // el tablero se libera en cuanto la pieza aterriza (no al final de la onda de las demás),
+    // para que se pueda arrastrar o cambiar a cuadrícula sin esperar
+    const tl = gsap.timeline();
     tl.to(infoRef.current!.children, { autoAlpha: 0, y: 10, duration: 0.3, ease: "power2.in", stagger: 0.03 }, 0);
     tl.to(closeRef.current, { autoAlpha: 0, scale: 0.6, duration: 0.3, ease: "power2.in" }, 0);
     tl.to(
@@ -580,6 +584,11 @@ export default function Landing() {
     tl.add(() => {
       gsap.set(original, { visibility: "visible" });
       gsap.set(clone, { autoAlpha: 0 });
+      setFoco(null);
+      setFase(regresaA);
+      rootRef.current?.classList.remove("is-focus");
+      if (regresaA === "tablero") dragRef.current?.enable();
+      else lenisRef.current?.start();
     });
     tl.to(
       otros.map((o) => o.el),
@@ -718,6 +727,8 @@ export default function Landing() {
   /* ───────── montaje ───────── */
 
   useEffect(() => {
+    tactilRef.current = esTactil();
+    rootRef.current?.classList.toggle("is-tactil", tactilRef.current);
     const root = rootRef.current!;
     const wrap = wrapRef.current!;
     const board = boardRef.current!;
@@ -775,8 +786,15 @@ export default function Landing() {
     let moviendo = false;
     let quieto = 0;
     let frame = 0;
+    // en el teléfono el efecto de cercanía solo se recalcula mientras el tablero se mueve
+    // (y un rato después): quieto no cambia nada y ahorra batería
+    let claveTablero = "";
+    let faseTick = "";
+    let quedan = 0;
     const tick = () => {
-      if (++frame % 6 === 0) {
+      frame++;
+      // las letras se vuelven blancas sobre piezas oscuras; en el teléfono las barras son opacas y no hace falta
+      if (!tactilRef.current && frame % 6 === 0) {
         const fuente = faseRef.current === "grid" ? gridElsRef.current : todos();
         revisarContraste(root, fuente);
       }
@@ -799,7 +817,10 @@ export default function Landing() {
         }
       } else flot.classList.remove("is-on");
 
-      if (faseRef.current !== "tablero") return;
+      if (faseRef.current !== "tablero") {
+        faseTick = faseRef.current;
+        return;
+      }
       const o = scrollObjetivo.current;
       const a = scrollActual.current;
       const dx = o.x - a.x;
@@ -817,7 +838,21 @@ export default function Landing() {
         pintar(a.x, a.y);
         drag.update();
       }
-      if (frame % 2 === 0) proximidad();
+      if (frame % 2 === 0) {
+        if (!tactilRef.current) proximidad();
+        else {
+          const clave = `${Math.round(a.x)},${Math.round(a.y)},${zoomRef.current.toFixed(3)}`;
+          if (clave !== claveTablero || faseTick !== faseRef.current) {
+            claveTablero = clave;
+            faseTick = faseRef.current;
+            quedan = 70;
+          }
+          if (quedan > 0) {
+            quedan--;
+            proximidad();
+          }
+        }
+      }
     };
     gsap.ticker.add(tick);
 
@@ -855,7 +890,10 @@ export default function Landing() {
       };
       scrambleRaf = requestAnimationFrame(paso);
     };
-    const onOver = (e: PointerEvent) => setHover((e.target as HTMLElement).closest<HTMLElement>(".ld-item"));
+    const onOver = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return; // en el teléfono no hay hover: el nombre no se asoma al tocar
+      setHover((e.target as HTMLElement).closest<HTMLElement>(".ld-item"));
+    };
     const onOut = (e: PointerEvent) => {
       const to = e.relatedTarget as HTMLElement | null;
       if (!to || !to.closest(".ld-item")) setHover(null);
