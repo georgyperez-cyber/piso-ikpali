@@ -49,9 +49,9 @@ const ruido = (i: number, k: number) => {
 function calcularTablero(items: Producto[], vw: number, vh: number): Layout {
   const n = items.length;
   const movil = vw < 768;
-  const cell = movil ? Math.round(vw * 0.32) : Math.round(gsap.utils.clamp(180, 260, vw * 0.16));
+  const cell = movil ? Math.round(vw * 0.33) : Math.round(gsap.utils.clamp(180, 260, vw * 0.16));
   // en el teléfono las piezas van más juntas que en la compu, para que el tablero no parezca el grid
-  let step = cell + Math.round(cell * (movil ? 0.1 : 0.3));
+  let step = cell + Math.round(cell * (movil ? 0.16 : 0.3));
 
   let cols = 1;
   let mejor = Infinity;
@@ -432,7 +432,7 @@ export default function Landing() {
     // con mouse: alcanza dos anillos de vecinas y la que está bajo el cursor es la más grande.
     // En el teléfono: la del centro de la pantalla es la más grande y bajan hacia las orillas.
     const RADIO = tactil ? Math.hypot(vw, vh) * 0.42 : L.step * zoomRef.current * 1.9;
-    const PICO = tactil ? 0.42 : 0.38;
+    const PICO = tactil ? 0.34 : 0.38;
     const { x: mx, y: my } = tactil ? { x: vw / 2, y: vh / 2 } : mouse.current;
     todos().forEach((el) => {
       if (!reveladoRef.current.has(el)) return;
@@ -903,6 +903,8 @@ export default function Landing() {
 
     const onWheel = (e: WheelEvent) => {
       if (faseRef.current === "grid") return; // lo maneja Lenis
+      // los paneles con scroll propio (aviso de privacidad, el mensaje del formulario) se mueven solos
+      if ((e.target as HTMLElement).closest(".ld-bar, textarea")) return;
       e.preventDefault();
       if (faseRef.current !== "tablero") return;
       if (e.ctrlKey) {

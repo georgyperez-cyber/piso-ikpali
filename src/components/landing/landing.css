@@ -478,8 +478,8 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   /* el texto se desvanece antes de llegar a los botones, para que no se vea encimado */
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 20px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 20px, #000 calc(100% - 28px), transparent);
   padding-bottom: 24px;
   scrollbar-width: thin;
   scrollbar-color: rgba(237, 52, 36, 0.3) transparent;
@@ -751,7 +751,7 @@
 @media not ((hover: hover) and (pointer: fine)) {
   .ld { --glass-bg: rgba(255, 255, 255, 0.92); }
   /* en el tablero las piezas van más grandes dentro de su cuadro: más juntas, sin encimarse */
-  .ld-board { --aire: 12%; }
+  .ld-board { --aire: 16%; }
 }
 
 @media (max-width: 767px) {
