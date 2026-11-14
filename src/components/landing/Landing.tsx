@@ -87,6 +87,16 @@ const elegirIntro = () => {
 
 type Fase = "intro" | "tablero" | "foco" | "grid";
 
+// Las fotos finales vienen recortadas al objeto (llenan su cuadro). Para que
+// respiren como antes, la pieza abierta ocupa este tanto de su caja; en el
+// tablero y el grid el aire lo da el padding de .ld-item__hit (--aire).
+const ESCALA_FOCO = 0.74;
+const encoger = (r: DOMRect) => {
+  const w = r.width * ESCALA_FOCO;
+  const h = r.height * ESCALA_FOCO;
+  return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, width: w, height: h };
+};
+
 // Precio y existencias en vivo: el admin (pisoikpali.com/admin) publica el
 // inventario sin sesión. Si no responde, se queda RESPALDO.
 const URL_INVENTARIO = "/admin/api/publico/catalogo";
@@ -488,7 +498,7 @@ export default function Landing() {
   useLayoutEffect(() => {
     if (!foco) return;
     const clone = cloneRef.current!;
-    const box = boxRef.current!.getBoundingClientRect();
+    const box = encoger(boxRef.current!.getBoundingClientRect());
     const r = origenRef.current!;
     const original = origenElRef.current!;
     const otros = ordenDesde(original);
@@ -529,7 +539,7 @@ export default function Landing() {
   // al abrir el formulario la caja de la pieza cambia de tamaño: la copia la sigue
   useLayoutEffect(() => {
     if (!foco || !boxRef.current || !cloneRef.current) return;
-    const box = boxRef.current.getBoundingClientRect();
+    const box = encoger(boxRef.current.getBoundingClientRect());
     gsap.to(cloneRef.current, {
       left: box.left,
       top: box.top,
@@ -1478,7 +1488,7 @@ export default function Landing() {
                   loading={i < 2 ? "eager" : "lazy"}
                   decoding="async"
                   className="absolute inset-0 m-auto object-contain will-change-[opacity,transform]"
-                  style={{ width: "clamp(100px, 14vw, 210px)", height: "clamp(100px, 14vw, 210px)" }}
+                  style={{ width: "clamp(100px, 14vw, 210px)", height: "clamp(100px, 14vw, 210px)", padding: i ? "13%" : undefined }}
                 />
               ))}
             </span>

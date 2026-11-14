@@ -8,7 +8,8 @@
 //
 // Las fotos se exportan con scripts/fotos-producto/optimizar.py (lee mapa.json,
 // foto → id): <id>-800.webp para el tablero y el grid, <id>-1600.webp para la
-// pieza abierta.
+// pieza abierta. Las jarras de Mot se exportaron con margen (el objeto al 80 %
+// del cuadro) porque llenas se veían más grandes que el resto.
 
 export type Variante = { sku: string; talla?: string };
 
@@ -32,7 +33,7 @@ export type EstadoInv = "disponible" | "bajo" | "agotado";
 export type Inventario = Record<string, { precio: number | null; disponible: number; estado: EstadoInv }>;
 
 const LISTA: Omit<Producto, "src" | "srcGrande">[] = [
-  { id: "jarra-azul-nube", nombre: "Jarra azul nube", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-012" }], tam: 1.0, fondo: 0.968 },
+  { id: "jarra-azul-nube", nombre: "Jarra azul nube", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-012" }], tam: 1.0, fondo: 0.875 },
   { id: "hebilla-piel-de-vibora", nombre: "Hebilla piel de víbora", marca: "Kmy", categoria: "Accesorios", variantes: [{ sku: "KM-009" }], tam: 0.75, fondo: 0.839 },
   { id: "botella-moteada", nombre: "Botella moteada", marca: "Casa 8", categoria: "Cerámica", variantes: [{ sku: "CO-001" }], tam: 1.05, fondo: 0.99 },
   { id: "lampara-pe-aluminio", nombre: "Lámpara Pe aluminio", marca: "buRRo", categoria: "Iluminación", variantes: [{ sku: "BR-008" }], tam: 1.0, fondo: 0.95 },
@@ -41,7 +42,7 @@ const LISTA: Omit<Producto, "src" | "srcGrande">[] = [
   { id: "hebilla-azul-morado-iridiscente", nombre: "Hebilla azul-morado iridiscente", marca: "Kmy", categoria: "Accesorios", variantes: [{ sku: "KM-010" }], tam: 0.75, fondo: 0.83 },
   { id: "charola-moteada", nombre: "Charola moteada", marca: "Casa 8", categoria: "Cerámica", variantes: [{ sku: "CO-008" }], tam: 1.0, fondo: 0.995 },
   { id: "lampara-pe-azul-marino", nombre: "Lámpara Pe azul marino", marca: "buRRo", categoria: "Iluminación", variantes: [{ sku: "BR-004" }], tam: 1.0, fondo: 0.944 },
-  { id: "vela-baakel-chica", nombre: "Vela Baakel chica", marca: "Estebanez Studio", categoria: "Velas", variantes: [{ sku: "ES-002" }], tam: 0.85, fondo: 0.771 },
+  { id: "vela-baakel-chica", nombre: "Vela Baakel chica", marca: "Estebanez Studio", categoria: "Velas", variantes: [{ sku: "ES-002" }], tam: 1.05, fondo: 0.771 },
   { id: "taza-toronto-chica-azul-cometa", nombre: "Taza Toronto chica azul cometa", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-013" }], tam: 0.7, fondo: 0.771 },
   { id: "hebilla-negra-con-dos-aguilas-doradas", nombre: "Hebilla negra con dos águilas doradas", marca: "Kmy", categoria: "Accesorios", variantes: [{ sku: "KM-011" }], tam: 0.75, fondo: 0.832 },
   { id: "jabonera-moteada", nombre: "Jabonera moteada", marca: "Casa 8", categoria: "Cerámica", variantes: [{ sku: "CO-012" }], tam: 0.85, fondo: 0.796 },
@@ -52,7 +53,7 @@ const LISTA: Omit<Producto, "src" | "srcGrande">[] = [
   { id: "set-de-bano-moteado", nombre: "Set de baño moteado", marca: "Casa 8", categoria: "Cerámica", variantes: [], tam: 1.0, fondo: 0.866 },
   { id: "lampara-pe-roja", nombre: "Lámpara Pe roja", marca: "buRRo", categoria: "Iluminación", variantes: [{ sku: "BR-005" }], tam: 1.0, fondo: 0.943 },
   { id: "mesa-itztepetl", nombre: "Mesa Itztepetl", marca: "Estebanez Studio", categoria: "Mobiliario", variantes: [{ sku: "ES-006" }], tam: 1.15, fondo: 0.939 },
-  { id: "jarra-rojo-tomate", nombre: "Jarra rojo tomate", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-010" }], tam: 1.0, fondo: 0.964 },
+  { id: "jarra-rojo-tomate", nombre: "Jarra rojo tomate", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-010" }], tam: 1.0, fondo: 0.872 },
   { id: "hebilla-verde-oscuro-con-dos-gallos", nombre: "Hebilla verde oscuro con dos gallos", marca: "Kmy", categoria: "Accesorios", variantes: [{ sku: "KM-013" }], tam: 0.75, fondo: 0.829 },
   { id: "vaso-moteado", nombre: "Vaso moteado", marca: "Casa 8", categoria: "Cerámica", variantes: [{ sku: "CO-005" }], tam: 0.8, fondo: 0.933 },
   { id: "rosary-bracelet", nombre: "Rosary Bracelet", marca: "Estella Williams", categoria: "Joyería", variantes: [{ sku: "EW-005" }], tam: 0.8, fondo: 0.912 },
@@ -72,10 +73,10 @@ const LISTA: Omit<Producto, "src" | "srcGrande">[] = [
   { id: "jabonera-negra", nombre: "Jabonera negra", marca: "Casa 8", categoria: "Cerámica", variantes: [{ sku: "CO-011" }], tam: 0.85, fondo: 0.768 },
   { id: "lampara-de-piso-parakata", nombre: "Lámpara de piso Parakata", marca: "Paralelo Mexicano", categoria: "Iluminación", variantes: [{ sku: "PM-003" }], tam: 1.15, fondo: 0.983 },
   { id: "lampara-pa-blanca", nombre: "Lámpara Pa blanca", marca: "buRRo", categoria: "Iluminación", variantes: [{ sku: "BR-001" }], tam: 1.0, fondo: 0.906 },
-  { id: "jarra-verde-bosque", nombre: "Jarra verde bosque", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-011" }], tam: 1.0, fondo: 0.968 },
+  { id: "jarra-verde-bosque", nombre: "Jarra verde bosque", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-011" }], tam: 1.0, fondo: 0.875 },
   { id: "hebilla-naranja-con-gallo-plateado", nombre: "Hebilla naranja con gallo plateado", marca: "Kmy", categoria: "Accesorios", variantes: [{ sku: "KM-017" }], tam: 0.75, fondo: 0.834 },
   { id: "set-de-bano-negro", nombre: "Set de baño negro", marca: "Casa 8", categoria: "Cerámica", variantes: [], tam: 1.0, fondo: 0.854 },
-  { id: "vela-eek-chica", nombre: "Vela Eek chica", marca: "Estebanez Studio", categoria: "Velas", variantes: [{ sku: "ES-003" }], tam: 0.85, fondo: 0.771 },
+  { id: "vela-eek-chica", nombre: "Vela Eek chica", marca: "Estebanez Studio", categoria: "Velas", variantes: [{ sku: "ES-003" }], tam: 1.05, fondo: 0.771 },
   { id: "rosary-necklace", nombre: "Rosary Necklace", marca: "Estella Williams", categoria: "Joyería", variantes: [{ sku: "EW-006" }], tam: 0.9, fondo: 0.976 },
   { id: "plato-verde-bosque", nombre: "Plato verde bosque", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-004" }], tam: 1.0, fondo: 0.716 },
   { id: "hebilla-azul-marino-con-pluma", nombre: "Hebilla azul marino con pluma", marca: "Kmy", categoria: "Accesorios", variantes: [{ sku: "KM-018" }], tam: 0.75, fondo: 0.828 },
@@ -90,7 +91,7 @@ const LISTA: Omit<Producto, "src" | "srcGrande">[] = [
   { id: "vaso-azul-nube", nombre: "Vaso azul nube", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-003" }], tam: 0.8, fondo: 0.901 },
   { id: "hebilla-vino-con-herraduras", nombre: "Hebilla vino con herraduras", marca: "Kmy", categoria: "Accesorios", variantes: [{ sku: "KM-020" }], tam: 0.75, fondo: 0.832 },
   { id: "vaso-liso-moteado", nombre: "Vaso liso moteado", marca: "Casa 8", categoria: "Cerámica", variantes: [{ sku: "CO-010" }], tam: 0.8, fondo: 0.932 },
-  { id: "vela-eek-grande", nombre: "Vela Eek grande", marca: "Estebanez Studio", categoria: "Velas", variantes: [{ sku: "ES-004" }], tam: 1.0, fondo: 0.878 },
+  { id: "vela-eek-grande", nombre: "Vela Eek grande", marca: "Estebanez Studio", categoria: "Velas", variantes: [{ sku: "ES-004" }], tam: 1.15, fondo: 0.878 },
   { id: "zitlala-tiger-pendant-mini", nombre: "Zitlala Tiger Pendant mini", marca: "Estella Williams", categoria: "Joyería", variantes: [{ sku: "EW-003" }], tam: 0.55, fondo: 0.769 },
   { id: "plato-hondo-azul-nube", nombre: "Plato hondo azul nube", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-009" }], tam: 0.9, fondo: 0.735 },
   { id: "hebilla-ambar-con-herraduras", nombre: "Hebilla ámbar con herraduras", marca: "Kmy", categoria: "Accesorios", variantes: [{ sku: "KM-021" }], tam: 0.75, fondo: 0.832 },
@@ -104,7 +105,7 @@ const LISTA: Omit<Producto, "src" | "srcGrande">[] = [
   { id: "lampara-pa-azul", nombre: "Lámpara Pa azul", marca: "buRRo", categoria: "Iluminación", variantes: [{ sku: "BR-002" }], tam: 1.0, fondo: 0.85 },
   { id: "plato-hondo-rojo-tomate", nombre: "Plato hondo rojo tomate", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-008" }], tam: 0.9, fondo: 0.734 },
   { id: "vaso-terracota", nombre: "Vaso terracota", marca: "Casa 8", categoria: "Cerámica", variantes: [{ sku: "CO-006" }], tam: 0.8, fondo: 0.939 },
-  { id: "vela-poctapoc-chica", nombre: "Vela Poctapoc chica", marca: "Estebanez Studio", categoria: "Velas", variantes: [{ sku: "ES-001" }], tam: 0.85, fondo: 0.876 },
+  { id: "vela-poctapoc-chica", nombre: "Vela Poctapoc chica", marca: "Estebanez Studio", categoria: "Velas", variantes: [{ sku: "ES-001" }], tam: 1.0, fondo: 0.876 },
   { id: "zitlala-tiger-ring", nombre: "Zitlala Tiger Ring", marca: "Estella Williams", categoria: "Joyería", variantes: [{ sku: "EW-007", talla: "7" }, { sku: "EW-009", talla: "8" }, { sku: "EW-008", talla: "10" }], tam: 0.65, fondo: 0.831 },
   { id: "hebilla-plateada-con-mariposa", nombre: "Hebilla plateada con mariposa", marca: "Kmy", categoria: "Accesorios", variantes: [{ sku: "KM-023" }], tam: 0.75, fondo: 0.831 },
   { id: "plato-hondo-verde-bosque", nombre: "Plato hondo verde bosque", marca: "Mot", categoria: "Cerámica", variantes: [{ sku: "MT-007" }], tam: 0.9, fondo: 0.735 },
