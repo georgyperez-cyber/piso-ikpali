@@ -798,5 +798,15 @@
    "full": 235,
    "png": 2747
   }
+ },
+ "lampara-changarro-amarilla": {
+  "fondo": 0.963,
+  "arriba": 0.07,
+  "kb": {
+   "800": 38,
+   "1600": 111,
+   "full": 157,
+   "png": 1448
+  }
  }
 }
