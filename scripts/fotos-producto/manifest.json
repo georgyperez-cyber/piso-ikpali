@@ -1,0 +1,802 @@
+{
+ "jarra-azul-nube": {
+  "fondo": 0.968,
+  "arriba": 0.021,
+  "kb": {
+   "800": 23,
+   "1600": 54,
+   "full": 82,
+   "png": 1272
+  }
+ },
+ "jarra-rojo-tomate": {
+  "fondo": 0.964,
+  "arriba": 0.035,
+  "kb": {
+   "800": 28,
+   "1600": 71,
+   "full": 113,
+   "png": 2315
+  }
+ },
+ "jarra-verde-bosque": {
+  "fondo": 0.968,
+  "arriba": 0.021,
+  "kb": {
+   "800": 27,
+   "1600": 66,
+   "full": 97,
+   "png": 2044
+  }
+ },
+ "plato-azul-nube": {
+  "fondo": 0.713,
+  "arriba": 0.275,
+  "kb": {
+   "800": 17,
+   "1600": 40,
+   "full": 56,
+   "png": 997
+  }
+ },
+ "plato-rojo-tomate": {
+  "fondo": 0.714,
+  "arriba": 0.275,
+  "kb": {
+   "800": 20,
+   "1600": 49,
+   "full": 71,
+   "png": 1243
+  }
+ },
+ "plato-verde-bosque": {
+  "fondo": 0.716,
+  "arriba": 0.274,
+  "kb": {
+   "800": 17,
+   "1600": 41,
+   "full": 55,
+   "png": 1007
+  }
+ },
+ "plato-hondo-azul-nube": {
+  "fondo": 0.735,
+  "arriba": 0.284,
+  "kb": {
+   "800": 15,
+   "1600": 39,
+   "full": 52,
+   "png": 1158
+  }
+ },
+ "plato-hondo-rojo-tomate": {
+  "fondo": 0.734,
+  "arriba": 0.285,
+  "kb": {
+   "800": 18,
+   "1600": 44,
+   "full": 62,
+   "png": 1260
+  }
+ },
+ "plato-hondo-verde-bosque": {
+  "fondo": 0.735,
+  "arriba": 0.259,
+  "kb": {
+   "800": 17,
+   "1600": 40,
+   "full": 51,
+   "png": 1181
+  }
+ },
+ "taza-toronto-chica-azul-cometa": {
+  "fondo": 0.771,
+  "arriba": 0.253,
+  "kb": {
+   "800": 38,
+   "1600": 108,
+   "full": 178,
+   "png": 1826
+  }
+ },
+ "taza-toronto-chica-verde-rana": {
+  "fondo": 0.774,
+  "arriba": 0.254,
+  "kb": {
+   "800": 37,
+   "1600": 110,
+   "full": 179,
+   "png": 1929
+  }
+ },
+ "taza-toronto-grande-azul-cometa": {
+  "fondo": 0.769,
+  "arriba": 0.204,
+  "kb": {
+   "800": 35,
+   "1600": 101,
+   "full": 155,
+   "png": 1599
+  }
+ },
+ "taza-toronto-grande-verde-rana": {
+  "fondo": 0.787,
+  "arriba": 0.194,
+  "kb": {
+   "800": 36,
+   "1600": 104,
+   "full": 167,
+   "png": 1897
+  }
+ },
+ "vaso-rojo-tomate": {
+  "fondo": 0.884,
+  "arriba": 0.102,
+  "kb": {
+   "800": 22,
+   "1600": 65,
+   "full": 105,
+   "png": 1849
+  }
+ },
+ "vaso-verde-bosque": {
+  "fondo": 0.893,
+  "arriba": 0.09,
+  "kb": {
+   "800": 20,
+   "1600": 58,
+   "full": 90,
+   "png": 1700
+  }
+ },
+ "vaso-azul-nube": {
+  "fondo": 0.901,
+  "arriba": 0.087,
+  "kb": {
+   "800": 18,
+   "1600": 48,
+   "full": 74,
+   "png": 1513
+  }
+ },
+ "lampara-pe-aluminio": {
+  "fondo": 0.95,
+  "arriba": 0.042,
+  "kb": {
+   "800": 37,
+   "1600": 108,
+   "full": 165,
+   "png": 2100
+  }
+ },
+ "lampara-pe-azul-marino": {
+  "fondo": 0.944,
+  "arriba": 0.041,
+  "kb": {
+   "800": 36,
+   "1600": 151,
+   "full": 253,
+   "png": 2808
+  }
+ },
+ "lampara-pe-blanca": {
+  "fondo": 0.945,
+  "arriba": 0.045,
+  "kb": {
+   "800": 32,
+   "1600": 84,
+   "full": 128,
+   "png": 1749
+  }
+ },
+ "lampara-pe-roja": {
+  "fondo": 0.943,
+  "arriba": 0.044,
+  "kb": {
+   "800": 28,
+   "1600": 95,
+   "full": 159,
+   "png": 1925
+  }
+ },
+ "lampara-pa-aluminio": {
+  "fondo": 0.905,
+  "arriba": 0.104,
+  "kb": {
+   "800": 32,
+   "1600": 100,
+   "full": 139,
+   "png": 1989
+  }
+ },
+ "lampara-pa-blanca": {
+  "fondo": 0.906,
+  "arriba": 0.135,
+  "kb": {
+   "800": 39,
+   "1600": 100,
+   "full": 137,
+   "png": 1490
+  }
+ },
+ "lampara-pa-roja": {
+  "fondo": 0.863,
+  "arriba": 0.131,
+  "kb": {
+   "800": 35,
+   "1600": 123,
+   "full": 208,
+   "png": 2109
+  }
+ },
+ "lampara-pa-azul": {
+  "fondo": 0.85,
+  "arriba": 0.134,
+  "kb": {
+   "800": 30,
+   "1600": 102,
+   "full": 165,
+   "png": 1685
+  }
+ },
+ "botella-moteada": {
+  "fondo": 0.99,
+  "arriba": 0.048,
+  "kb": {
+   "800": 34,
+   "1600": 98,
+   "full": 150,
+   "png": 1536
+  }
+ },
+ "botella-negra": {
+  "fondo": 0.977,
+  "arriba": 0.077,
+  "kb": {
+   "800": 29,
+   "1600": 113,
+   "full": 179,
+   "png": 1833
+  }
+ },
+ "botella-terracota": {
+  "fondo": 0.975,
+  "arriba": 0.037,
+  "kb": {
+   "800": 26,
+   "1600": 80,
+   "full": 130,
+   "png": 1441
+  }
+ },
+ "charola-moteada": {
+  "fondo": 0.995,
+  "arriba": 0.005,
+  "kb": {
+   "800": 54,
+   "1600": 154,
+   "full": 240,
+   "png": 2804
+  }
+ },
+ "charola-negra": {
+  "fondo": 0.997,
+  "arriba": 0.007,
+  "kb": {
+   "800": 29,
+   "1600": 114,
+   "full": 199,
+   "png": 2671
+  }
+ },
+ "jabonera-moteada": {
+  "fondo": 0.796,
+  "arriba": 0.301,
+  "kb": {
+   "800": 41,
+   "1600": 127,
+   "full": 184,
+   "png": 2196
+  }
+ },
+ "jabonera-negra": {
+  "fondo": 0.768,
+  "arriba": 0.244,
+  "kb": {
+   "800": 26,
+   "1600": 98,
+   "full": 158,
+   "png": 2181
+  }
+ },
+ "set-de-bano-moteado": {
+  "fondo": 0.866,
+  "arriba": 0.281,
+  "kb": {
+   "800": 37,
+   "1600": 118,
+   "full": 185,
+   "png": 1884
+  }
+ },
+ "set-de-bano-negro": {
+  "fondo": 0.854,
+  "arriba": 0.275,
+  "kb": {
+   "800": 25,
+   "1600": 84,
+   "full": 141,
+   "png": 1658
+  }
+ },
+ "vaso-moteado": {
+  "fondo": 0.933,
+  "arriba": 0.265,
+  "kb": {
+   "800": 25,
+   "1600": 81,
+   "full": 132,
+   "png": 1687
+  }
+ },
+ "vaso-negro": {
+  "fondo": 0.934,
+  "arriba": 0.261,
+  "kb": {
+   "800": 26,
+   "1600": 92,
+   "full": 154,
+   "png": 1822
+  }
+ },
+ "vaso-liso-moteado": {
+  "fondo": 0.932,
+  "arriba": 0.264,
+  "kb": {
+   "800": 33,
+   "1600": 107,
+   "full": 175,
+   "png": 1872
+  }
+ },
+ "vaso-liso-negro": {
+  "fondo": 0.931,
+  "arriba": 0.256,
+  "kb": {
+   "800": 17,
+   "1600": 67,
+   "full": 116,
+   "png": 1654
+  }
+ },
+ "vaso-terracota": {
+  "fondo": 0.939,
+  "arriba": 0.259,
+  "kb": {
+   "800": 30,
+   "1600": 106,
+   "full": 171,
+   "png": 1839
+  }
+ },
+ "vela-baakel-chica": {
+  "fondo": 0.771,
+  "arriba": 0.303,
+  "kb": {
+   "800": 64,
+   "1600": 189,
+   "full": 294,
+   "png": 2371
+  }
+ },
+ "vela-eek-chica": {
+  "fondo": 0.771,
+  "arriba": 0.314,
+  "kb": {
+   "800": 75,
+   "1600": 241,
+   "full": 361,
+   "png": 2698
+  }
+ },
+ "vela-eek-grande": {
+  "fondo": 0.878,
+  "arriba": 0.226,
+  "kb": {
+   "800": 105,
+   "1600": 313,
+   "full": 487,
+   "png": 3677
+  }
+ },
+ "vela-poctapoc-chica": {
+  "fondo": 0.876,
+  "arriba": 0.163,
+  "kb": {
+   "800": 106,
+   "1600": 322,
+   "full": 503,
+   "png": 3969
+  }
+ },
+ "mesa-itztepetl": {
+  "fondo": 0.939,
+  "arriba": 0.086,
+  "kb": {
+   "800": 109,
+   "1600": 345,
+   "full": 517,
+   "png": 3784
+  }
+ },
+ "vasija-baakel-molcajete": {
+  "fondo": 0.848,
+  "arriba": 0.122,
+  "kb": {
+   "800": 138,
+   "1600": 398,
+   "full": 580,
+   "png": 4300
+  }
+ },
+ "chilapa-tiger-pendant": {
+  "fondo": 0.945,
+  "arriba": 0.021,
+  "kb": {
+   "800": 117,
+   "1600": 328,
+   "full": 487,
+   "png": 3613
+  }
+ },
+ "diablo-mask-pendant": {
+  "fondo": 0.935,
+  "arriba": 0.062,
+  "kb": {
+   "800": 106,
+   "1600": 284,
+   "full": 429,
+   "png": 3161
+  }
+ },
+ "rosary-bracelet": {
+  "fondo": 0.912,
+  "arriba": 0.041,
+  "kb": {
+   "800": 64,
+   "1600": 210,
+   "full": 336,
+   "png": 1304
+  }
+ },
+ "rosary-necklace": {
+  "fondo": 0.976,
+  "arriba": 0.01,
+  "kb": {
+   "800": 49,
+   "1600": 149,
+   "full": 224,
+   "png": 822
+  }
+ },
+ "zitlala-tiger-pendant": {
+  "fondo": 0.93,
+  "arriba": 0.048,
+  "kb": {
+   "800": 121,
+   "1600": 323,
+   "full": 482,
+   "png": 3517
+  }
+ },
+ "zitlala-tiger-pendant-mini": {
+  "fondo": 0.769,
+  "arriba": 0.226,
+  "kb": {
+   "800": 50,
+   "1600": 182,
+   "full": 292,
+   "png": 1782
+  }
+ },
+ "zitlala-tiger-ring": {
+  "fondo": 0.831,
+  "arriba": 0.13,
+  "kb": {
+   "800": 99,
+   "1600": 253,
+   "full": 376,
+   "png": 3363
+  }
+ },
+ "hebilla-piel-de-vibora": {
+  "fondo": 0.839,
+  "arriba": 0.159,
+  "kb": {
+   "800": 111,
+   "1600": 314,
+   "full": 454,
+   "png": 4325
+  }
+ },
+ "hebilla-azul-morado-iridiscente": {
+  "fondo": 0.83,
+  "arriba": 0.156,
+  "kb": {
+   "800": 170,
+   "1600": 453,
+   "full": 666,
+   "png": 4955
+  }
+ },
+ "hebilla-negra-con-dos-aguilas-doradas": {
+  "fondo": 0.832,
+  "arriba": 0.16,
+  "kb": {
+   "800": 81,
+   "1600": 220,
+   "full": 321,
+   "png": 3183
+  }
+ },
+ "hebilla-morada-con-crochet-blanco": {
+  "fondo": 0.837,
+  "arriba": 0.158,
+  "kb": {
+   "800": 136,
+   "1600": 391,
+   "full": 550,
+   "png": 4544
+  }
+ },
+ "hebilla-verde-oscuro-con-dos-gallos": {
+  "fondo": 0.829,
+  "arriba": 0.17,
+  "kb": {
+   "800": 141,
+   "1600": 376,
+   "full": 546,
+   "png": 4559
+  }
+ },
+ "hebilla-carey-ambar": {
+  "fondo": 0.844,
+  "arriba": 0.153,
+  "kb": {
+   "800": 75,
+   "1600": 207,
+   "full": 295,
+   "png": 2998
+  }
+ },
+ "hebilla-rosa-rojo-y-dorado": {
+  "fondo": 0.829,
+  "arriba": 0.168,
+  "kb": {
+   "800": 164,
+   "1600": 508,
+   "full": 760,
+   "png": 4974
+  }
+ },
+ "hebilla-cobre-con-crochet-blanco": {
+  "fondo": 0.827,
+  "arriba": 0.16,
+  "kb": {
+   "800": 173,
+   "1600": 537,
+   "full": 807,
+   "png": 5194
+  }
+ },
+ "hebilla-naranja-con-gallo-plateado": {
+  "fondo": 0.834,
+  "arriba": 0.146,
+  "kb": {
+   "800": 83,
+   "1600": 218,
+   "full": 327,
+   "png": 3250
+  }
+ },
+ "hebilla-azul-marino-con-pluma": {
+  "fondo": 0.828,
+  "arriba": 0.159,
+  "kb": {
+   "800": 102,
+   "1600": 304,
+   "full": 452,
+   "png": 4272
+  }
+ },
+ "hebilla-carey-oscuro": {
+  "fondo": 0.835,
+  "arriba": 0.151,
+  "kb": {
+   "800": 62,
+   "1600": 172,
+   "full": 267,
+   "png": 2748
+  }
+ },
+ "hebilla-vino-con-herraduras": {
+  "fondo": 0.832,
+  "arriba": 0.16,
+  "kb": {
+   "800": 159,
+   "1600": 465,
+   "full": 702,
+   "png": 4857
+  }
+ },
+ "hebilla-ambar-con-herraduras": {
+  "fondo": 0.832,
+  "arriba": 0.154,
+  "kb": {
+   "800": 182,
+   "1600": 594,
+   "full": 918,
+   "png": 5177
+  }
+ },
+ "hebilla-rojiza-con-rifles-y-corneta": {
+  "fondo": 0.828,
+  "arriba": 0.149,
+  "kb": {
+   "800": 167,
+   "1600": 490,
+   "full": 712,
+   "png": 4927
+  }
+ },
+ "hebilla-plateada-con-mariposa": {
+  "fondo": 0.831,
+  "arriba": 0.157,
+  "kb": {
+   "800": 161,
+   "1600": 481,
+   "full": 692,
+   "png": 5180
+  }
+ },
+ "vertebral-chain": {
+  "fondo": 0.989,
+  "arriba": 0.01,
+  "kb": {
+   "800": 130,
+   "1600": 371,
+   "full": 555,
+   "png": 2381
+  }
+ },
+ "vertebral-chain-eslabon": {
+  "fondo": 0.981,
+  "arriba": 0.038,
+  "kb": {
+   "800": 71,
+   "1600": 227,
+   "full": 349,
+   "png": 2253
+  }
+ },
+ "tercer-molar": {
+  "fondo": 0.918,
+  "arriba": 0.099,
+  "kb": {
+   "800": 94,
+   "1600": 278,
+   "full": 427,
+   "png": 3384
+  }
+ },
+ "primer-molar": {
+  "fondo": 0.912,
+  "arriba": 0.075,
+  "kb": {
+   "800": 92,
+   "1600": 271,
+   "full": 409,
+   "png": 2746
+  }
+ },
+ "jabon-cubo-chico": {
+  "fondo": 0.765,
+  "arriba": 0.237,
+  "kb": {
+   "800": 35,
+   "1600": 125,
+   "full": 204,
+   "png": 1859
+  }
+ },
+ "jabon-cubo-grande": {
+  "fondo": 0.892,
+  "arriba": 0.119,
+  "kb": {
+   "800": 78,
+   "1600": 224,
+   "full": 344,
+   "png": 3342
+  }
+ },
+ "room-spray-soliflor": {
+  "fondo": 0.945,
+  "arriba": 0.055,
+  "kb": {
+   "800": 29,
+   "1600": 98,
+   "full": 162,
+   "png": 1541
+  }
+ },
+ "room-spray-fica-folia": {
+  "fondo": 0.967,
+  "arriba": 0.031,
+  "kb": {
+   "800": 28,
+   "1600": 90,
+   "full": 138,
+   "png": 1572
+  }
+ },
+ "lampara-de-piso-parakata": {
+  "fondo": 0.983,
+  "arriba": 0.039,
+  "kb": {
+   "800": 97,
+   "1600": 277,
+   "full": 420,
+   "png": 3412
+  }
+ },
+ "portalibros-kuini": {
+  "fondo": 0.927,
+  "arriba": 0.135,
+  "kb": {
+   "800": 54,
+   "1600": 145,
+   "full": 219,
+   "png": 2214
+  }
+ },
+ "portalibros-yakata": {
+  "fondo": 0.813,
+  "arriba": 0.203,
+  "kb": {
+   "800": 61,
+   "1600": 190,
+   "full": 267,
+   "png": 2296
+  }
+ },
+ "servilletero-papatzoa-taupe": {
+  "fondo": 0.824,
+  "arriba": 0.259,
+  "kb": {
+   "800": 58,
+   "1600": 181,
+   "full": 268,
+   "png": 2571
+  }
+ },
+ "vela-jamaica": {
+  "fondo": 0.831,
+  "arriba": 0.19,
+  "kb": {
+   "800": 48,
+   "1600": 175,
+   "full": 283,
+   "png": 2841
+  }
+ },
+ "vela-ocote": {
+  "fondo": 0.875,
+  "arriba": 0.149,
+  "kb": {
+   "800": 44,
+   "1600": 147,
+   "full": 235,
+   "png": 2747
+  }
+ }
+}

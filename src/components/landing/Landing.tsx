@@ -7,7 +7,7 @@ import { InertiaPlugin } from "gsap/InertiaPlugin";
 import { Flip } from "gsap/Flip";
 import { MorphSVGPlugin } from "gsap/MorphSVGPlugin";
 import Lenis from "lenis";
-import { PRODUCTOS, SITIO, formatoPrecio, type Producto } from "./productos";
+import { PRODUCTOS, RESPALDO, SITIO, avisoExistencias, estadoDe, formatoPrecio, type EstadoInv, type Inventario, type Producto } from "./productos";
 import WakeSlider from "./WakeSlider";
 import GlassBar from "./GlassBar";
 import { Adapt, revisarContraste } from "./contraste";
@@ -87,6 +87,41 @@ const elegirIntro = () => {
 
 type Fase = "intro" | "tablero" | "foco" | "grid";
 
+// Precio y existencias en vivo: el admin (pisoikpali.com/admin) publica el
+// inventario sin sesión. Si no responde, se queda RESPALDO.
+const URL_INVENTARIO = "/admin/api/publico/catalogo";
+const URL_INTERES = "/admin/api/publico/interes";
+
+function useInventario() {
+  const [inv, setInv] = useState<Inventario>(RESPALDO);
+  useEffect(() => {
+    let vivo = true;
+    const cargar = async () => {
+      try {
+        const r = await fetch(URL_INVENTARIO, { cache: "no-store" });
+        if (!r.ok) return;
+        const d: { productos: { sku: string; precio: number | null; disponible: number; estado: EstadoInv }[] } = await r.json();
+        if (!vivo || !Array.isArray(d.productos)) return;
+        const nuevo: Inventario = { ...RESPALDO };
+        d.productos.forEach((x) => (nuevo[x.sku] = { precio: x.precio, disponible: x.disponible, estado: x.estado }));
+        setInv(nuevo);
+      } catch {
+        /* sin red: se queda lo último que se tenía */
+      }
+    };
+    cargar();
+    const t = setInterval(cargar, 60_000);
+    const alVolver = () => document.visibilityState === "visible" && cargar();
+    document.addEventListener("visibilitychange", alVolver);
+    return () => {
+      vivo = false;
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", alVolver);
+    };
+  }, []);
+  return inv;
+}
+
 const CATEGORIAS = ["todo", ...Array.from(new Set(PRODUCTOS.map((p) => p.categoria)))];
 const MARCAS = ["todas", ...Array.from(new Set(PRODUCTOS.map((p) => p.marca)))];
 
@@ -97,14 +132,15 @@ type PiezaProps = {
   t?: number; // tile
   registrar: (el: HTMLDivElement | null, i: number, t?: number) => void;
   onClick?: (i: number, el: HTMLElement) => void;
+  agotado?: boolean;
 };
 
 // Una pieza del tablero (t = copia del bloque) o del grid (sin t).
-const Pieza = memo(function Pieza({ p, i, k, t, registrar, onClick }: PiezaProps) {
+const Pieza = memo(function Pieza({ p, i, k, t, registrar, onClick, agotado }: PiezaProps) {
   return (
     <div
       ref={(el) => registrar(el, t === undefined ? i : (k as number), t)}
-      className="ld-item"
+      className={`ld-item${agotado ? " is-agotado" : ""}`}
       data-i={i}
       data-flip-id={t === undefined ? `p${i}` : undefined}
       onClick={onClick ? (e) => onClick(i, e.currentTarget) : undefined}
@@ -175,6 +211,13 @@ export default function Landing() {
   const [foco, setFoco] = useState<{ p: Producto; i: number } | null>(null);
   const [formAbierto, setFormAbierto] = useState(false);
   const [filtro, setFiltro] = useState({ categoria: "todo", marca: "todas" });
+  const [talla, setTalla] = useState<string | null>(null); // SKU elegido cuando la pieza tiene tallas
+  const [envio, setEnvio] = useState<"" | "enviando" | "listo">("");
+  const [errorForm, setErrorForm] = useState("");
+  const inv = useInventario();
+  const invRef = useRef(inv);
+  invRef.current = inv;
+  const agotados = useMemo(() => PRODUCTOS.map((p) => p.variantes.length > 0 && estadoDe(p, inv).estado === "agotado"), [inv]);
 
   const setFase = (f: Fase) => {
     faseRef.current = f;
@@ -411,7 +454,11 @@ export default function Landing() {
     lenisRef.current?.stop();
     rootRef.current?.classList.add("is-focus");
     setFormAbierto(false);
-    setFoco({ p: PRODUCTOS[i], i });
+    setEnvio("");
+    const p = PRODUCTOS[i];
+    const libre = p.variantes.find((v) => (invRef.current[v.sku]?.disponible ?? 1) > 0) ?? p.variantes[0];
+    setTalla(p.variantes.length > 1 ? libre.sku : null);
+    setFoco({ p, i });
   }, []);
 
   // las demás piezas visibles, ordenadas por cercanía a la enfocada
@@ -778,7 +825,10 @@ export default function Landing() {
         flot.classList.remove("is-on");
         return;
       }
-      const real = PRODUCTOS[Number(item.dataset.i)]?.nombre || "";
+      const pz = PRODUCTOS[Number(item.dataset.i)];
+      const st = pz ? estadoDe(pz, invRef.current) : null;
+      const aviso = st && pz?.variantes.length ? avisoExistencias(st.estado, st.disponible) : "";
+      const real = pz ? `${pz.nombre}${aviso ? ` · ${aviso}` : ""}` : "";
       let k = 0;
       let t0 = performance.now();
       flot.classList.add("is-on");
@@ -1115,14 +1165,40 @@ export default function Landing() {
 
   /* ───────── formulario ───────── */
 
-  const enviar = (e: React.FormEvent<HTMLFormElement>) => {
+  // El formulario entra como lead al admin. Si el admin no responde, se manda como antes (WhatsApp o correo).
+  const enviar = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!foco) return;
+    if (!foco || envio === "enviando") return;
     const fd = new FormData(e.currentTarget);
     const nombre = String(fd.get("nombre") || "").trim();
     const contacto = String(fd.get("contacto") || "").trim();
     const mensaje = String(fd.get("mensaje") || "").trim();
-    const texto = `Hola, me interesa ${foco.p.nombre} (${foco.p.marca}). ${mensaje}`.trim();
+    const variante = foco.p.variantes.find((v) => v.sku === talla) ?? foco.p.variantes[0];
+    const agotada = !!variante && estadoDe(foco.p, inv, variante.sku).estado === "agotado";
+    const pieza = `${foco.p.nombre} (${foco.p.marca})${agotada ? ", agotada" : ""}`;
+    setErrorForm("");
+    setEnvio("enviando");
+    try {
+      const r = await fetch(URL_INTERES, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, contacto, mensaje, sitio: String(fd.get("sitio") || ""), sku: variante?.sku, talla: variante?.talla, pieza }),
+      });
+      if (r.ok) {
+        setEnvio("listo");
+        return;
+      }
+      if (r.status === 400 || r.status === 429) {
+        const d = await r.json().catch(() => ({}));
+        setErrorForm(d.error || "Revisa tus datos");
+        setEnvio("");
+        return;
+      }
+    } catch {
+      /* sin conexión con el admin: sigue abajo */
+    }
+    setEnvio("");
+    const texto = `Hola, me interesa ${foco.p.nombre}${variante?.talla ? ` talla ${variante.talla}` : ""} (${foco.p.marca}). ${mensaje}`.trim();
     if (SITIO.whatsapp) {
       const t = `${texto}\n\n${nombre}${contacto ? ` · ${contacto}` : ""}`;
       window.open(`https://wa.me/${SITIO.whatsapp}?text=${encodeURIComponent(t)}`, "_blank", "noopener");
@@ -1135,6 +1211,8 @@ export default function Landing() {
   };
 
   const esGrid = fase === "grid" || (fase === "foco" && faseAntesRef.current === "grid");
+  const focoEstado = foco ? estadoDe(foco.p, inv, talla ?? undefined) : { precio: null, disponible: null, estado: "disponible" as EstadoInv };
+  const focoAviso = foco && foco.p.variantes.length ? avisoExistencias(focoEstado.estado, focoEstado.disponible) : "";
 
   const registrar = useCallback((el: HTMLDivElement | null, i: number, t?: number) => {
     if (!el) return;
@@ -1242,7 +1320,7 @@ export default function Landing() {
           {celdas > 0 &&
             TILES.map((_, t) =>
               Array.from({ length: celdas }, (_, k) => (
-                <Pieza key={`${t}-${k}`} p={PRODUCTOS[k % PRODUCTOS.length]} i={k % PRODUCTOS.length} k={k} t={t} registrar={registrar} />
+                <Pieza key={`${t}-${k}`} p={PRODUCTOS[k % PRODUCTOS.length]} i={k % PRODUCTOS.length} k={k} t={t} registrar={registrar} agotado={agotados[k % PRODUCTOS.length]} />
               ))
             )}
         </div>
@@ -1259,7 +1337,7 @@ export default function Landing() {
       >
         <div ref={gridBoxRef} className="ld-gridbox">
           {PRODUCTOS.map((p, i) => (
-            <Pieza key={p.id} p={p} i={i} registrar={registrar} onClick={clickGrid} />
+            <Pieza key={p.id} p={p} i={i} registrar={registrar} onClick={clickGrid} agotado={agotados[i]} />
           ))}
         </div>
       </div>
@@ -1268,27 +1346,68 @@ export default function Landing() {
       {foco && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img ref={cloneRef} className="ld-focus__clone" src={foco.p.src} alt="" aria-hidden style={{ opacity: 0 }} />
+          <img
+            ref={cloneRef}
+            className="ld-focus__clone"
+            src={foco.p.src}
+            alt=""
+            aria-hidden
+            style={{ opacity: 0 }}
+            onLoad={(e) => {
+              // la del tablero ya está en caché; la grande entra cuando termina de cargar, sin parpadeo
+              const im = e.currentTarget;
+              if (im.src.endsWith(foco.p.srcGrande)) return;
+              const grande = new Image();
+              grande.onload = () => {
+                if (cloneRef.current === im) im.src = foco.p.srcGrande;
+              };
+              grande.src = foco.p.srcGrande;
+            }}
+          />
           <div className={`ld-focus${formAbierto ? " is-form" : ""}`}>
             <div ref={boxRef} className="ld-focus__box" aria-hidden />
             <div ref={infoRef} className="ld-focus__info">
               <p className="ld-focus__marca" style={{ opacity: 0 }}>{foco.p.marca}</p>
               <h2 className="ld-focus__nombre" style={{ opacity: 0 }}>{foco.p.nombre}</h2>
-              <p className="ld-focus__precio" style={{ opacity: 0 }}>{formatoPrecio(foco.p.precio)}</p>
+              <p className="ld-focus__precio" style={{ opacity: 0 }}>
+                {formatoPrecio(focoEstado.precio)}
+                {focoAviso && <span className={`ld-focus__aviso${focoEstado.estado === "agotado" ? " is-agotado" : ""}`}>{focoAviso}</span>}
+              </p>
+              {foco.p.variantes.length > 1 && (
+                <div className="ld-tallas" role="group" aria-label="Talla" style={{ opacity: 0 }}>
+                  {foco.p.variantes.map((v) => {
+                    const sin = (inv[v.sku]?.disponible ?? 1) <= 0;
+                    return (
+                      <button
+                        key={v.sku}
+                        type="button"
+                        className={`ld-talla${talla === v.sku ? " is-on" : ""}${sin ? " is-agotado" : ""}`}
+                        aria-pressed={talla === v.sku}
+                        onClick={() => setTalla(v.sku)}
+                      >
+                        {v.talla}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <div style={{ opacity: 0 }}>
                 {!formAbierto ? (
                   <button type="button" className="ld-focus__cta" onClick={() => setFormAbierto(true)}>
-                    <span className="ld-btn-tx">me interesa <span className="arrow">→</span></span>
+                    <span className="ld-btn-tx">{focoEstado.estado === "agotado" ? "avísame si vuelve" : "me interesa"} <span className="arrow">→</span></span>
                   </button>
+                ) : envio === "listo" ? (
+                  <p className="ld-form__ok">Recibido. Te escribimos pronto.</p>
                 ) : (
                   <form className="ld-form" onSubmit={enviar}>
-                    <input name="nombre" placeholder="nombre" autoComplete="name" required />
-                    <input name="contacto" placeholder="correo o whatsapp" autoComplete="email" required />
-                    <textarea name="mensaje" placeholder="¿algo que quieras preguntar?" rows={2} />
+                    <input name="nombre" placeholder="nombre" autoComplete="name" required maxLength={120} />
+                    <input name="contacto" placeholder="correo o whatsapp" autoComplete="email" required maxLength={160} />
+                    <textarea name="mensaje" placeholder="¿algo que quieras preguntar?" rows={2} maxLength={1500} />
+                    <input name="sitio" className="ld-form__trampa" tabIndex={-1} autoComplete="off" aria-hidden />
                     <div className="ld-form__row">
-                      <span className="ld-form__nota">te contestamos nosotros</span>
-                      <button type="submit" className="ld-focus__cta" style={{ marginTop: 0 }}>
-                        <span className="ld-btn-tx">enviar <span className="arrow">→</span></span>
+                      <span className="ld-form__nota">{errorForm || "te contestamos nosotros"}</span>
+                      <button type="submit" className="ld-focus__cta" style={{ marginTop: 0 }} disabled={envio === "enviando"}>
+                        <span className="ld-btn-tx">{envio === "enviando" ? "enviando" : "enviar"} <span className="arrow">→</span></span>
                       </button>
                     </div>
                   </form>
