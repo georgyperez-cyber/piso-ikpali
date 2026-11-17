@@ -2,6 +2,8 @@ import Img from "./Img";
 
 // Proyectos que conviven en ffaayyeett. Lo usan SectionSoftOpening (/fayet) y
 // SectionFayet (home).
+// En pantallas de menos de 1400 px van en tres columnas: en cinco, "cocina · panadería · comedor"
+// no cabía en una línea y dejaba "comedor" sola abajo.
 // Logos: SVG en el rojo de Piso ikpali (#ed3424) dentro de public/fayet-logos/.
 // `alto` es la altura del logo en desktop; se ajusta a ojo para que pesen igual.
 // Sin logo, se muestra el nombre en tipografía.
@@ -18,7 +20,7 @@ export const PROYECTOS: Proyecto[] = [
 
 export default function ProyectosCasa() {
   return (
-    <ul className="grid grid-cols-1 md:grid-cols-5 md:gap-x-8 border-t border-rojo/20">
+    <ul className="grid grid-cols-1 md:grid-cols-3 min-[1400px]:grid-cols-5! md:gap-x-8 md:gap-y-10 border-t border-rojo/20">
       {PROYECTOS.map((p) => (
         <li
           key={p.nombre}

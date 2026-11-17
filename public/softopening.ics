@@ -1,0 +1,21 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Piso ikpali//Soft opening//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:soft-opening-2026@pisoikpali.com
+DTSTAMP:20261117T000000Z
+DTSTART:20261205T170000Z
+DTEND:20261205T220000Z
+SUMMARY:Soft opening · Piso ikpali
+LOCATION:ffaayyeett\, Lafayette 64\, Anzures\, Ciudad de México
+DESCRIPTION:Soft opening de Piso ikpali en ffaayyeett. https://pisoikpali.com/softopening
+URL:https://pisoikpali.com/softopening
+BEGIN:VALARM
+TRIGGER:-PT2H
+ACTION:DISPLAY
+DESCRIPTION:Soft opening · Piso ikpali
+END:VALARM
+END:VEVENT
+END:VCALENDAR

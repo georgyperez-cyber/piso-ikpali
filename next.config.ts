@@ -5,10 +5,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
-  // La invitación general cambió de /soft-opening a /comite; los links ya
-  // enviados siguen funcionando.
+  // /softopening es la invitación al soft opening del 5 de diciembre con su RSVP.
+  // /soft-opening (antes redirigía a /comite, que ya pasó) y /rsvp llegan ahí.
   async redirects() {
-    return [{ source: "/soft-opening", destination: "/comite", permanent: false }];
+    return [
+      { source: "/soft-opening", destination: "/softopening", permanent: false },
+      { source: "/rsvp", destination: "/softopening", permanent: false },
+    ];
   },
   // El panel de administración (inventario, ventas, caja) corre en Railway y se
   // sirve bajo /admin. Next no debe quitar la diagonal final: el panel la necesita.

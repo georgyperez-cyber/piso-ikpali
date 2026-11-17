@@ -13,13 +13,13 @@ export const AVISO: [string, React.ReactNode][] = [
   [
     "Qué datos",
     <>
-      Los que escribes en el formulario cuando te interesa una pieza: tu nombre y un correo o número de WhatsApp para contestarte, y el mensaje que quieras dejar. No pedimos nada más.
+      Los que escribes en el formulario cuando te interesa una pieza: tu nombre y un correo o número de WhatsApp para contestarte, y el mensaje que quieras dejar. Si confirmas tu asistencia a un evento: tu nombre, un correo o WhatsApp, cuántas personas van contigo y, si quieres, tu Instagram. No pedimos nada más.
     </>,
   ],
   [
     "Para qué",
     <>
-      Para responderte sobre la pieza que te interesó, confirmarte disponibilidad y precio, y acordar la entrega o la visita a la tienda. Si nos lo pides, también para avisarte de piezas nuevas.
+      Para responderte sobre la pieza que te interesó, confirmarte disponibilidad y precio, y acordar la entrega o la visita a la tienda. Si confirmaste a un evento, para tener la lista de invitados y avisarte si algo cambia. Si nos lo pides, también para avisarte de piezas nuevas.
     </>,
   ],
   [
@@ -44,7 +44,7 @@ export const AVISO: [string, React.ReactNode][] = [
   [
     "Cookies",
     <>
-      Esta página no usa cookies de rastreo ni publicidad. Guarda un solo dato en tu navegador, y solo durante la visita: que ya pasó la animación de entrada.
+      Esta página no usa cookies de rastreo ni publicidad. El catálogo guarda un solo dato en tu navegador, y solo durante la visita: que ya pasó la animación de entrada. La página de un evento guarda en tu navegador que ya confirmaste, para mostrarte tu respuesta si vuelves.
     </>,
   ],
 ];

@@ -1,0 +1,225 @@
+/* RSVP del soft opening (/softopening). Mismo sistema que el resto del sitio:
+   Helixa, rojo #ed3424 sobre blanco, esquinas rectas, transición única power3.inOut. */
+
+/* ---------- título: Soft ( objeto ) opening ---------- */
+.rv-titulo {
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  /* móvil: dos líneas, "Soft ( )" / "opening", que llenan el ancho de la caja de texto
+     (la línea más larga mide ~3.3 em; 48px = los dos márgenes) */
+  font-size: min(calc((100vw - 48px) / 3.36), 150px);
+}
+@media (min-width: 768px) {
+  /* escritorio: una sola línea de lado a lado de la caja de texto (~6.55 em; 96px = márgenes) */
+  .rv-titulo { font-size: min(calc((100vw - 96px) / 6.62), 210px); }
+}
+.rv-t {
+  /* En Helixa la barra de la t queda 0.012 em más abajo que la de la f; con el tracking cerrado se
+     tocan y se nota el escalón. Se sube la t para que las dos barras hagan una sola línea. */
+  position: relative;
+  top: -0.012em;
+}
+.rv-parentesis {
+  /* los paréntesis van sobre la misma línea base que "Soft" y "opening", donde los puso la tipografía */
+  display: inline-flex;
+  align-items: baseline;
+  overflow-x: clip;
+  overflow-y: visible;
+  margin: 0 0.16em; /* espacio de palabra a los dos lados del paréntesis */
+}
+.rv-parentesis > .rv-p { display: inline-block; }
+.rv-escenario {
+  position: relative;
+  flex: 0 0 auto;
+  width: 1.04em;
+  height: 1em;
+  /* sin texto, su línea base es su borde de abajo: se baja para centrarlo con el paréntesis */
+  transform: translateY(0.19em); /* el paréntesis de Helixa va de +0.76 a -0.14 em: su centro queda a 0.31 em */
+}
+.rv-escenario img {
+  position: absolute;
+  inset: -0.12em 0;
+  width: 100%;
+  height: calc(100% + 0.24em);
+  object-fit: contain;
+  visibility: hidden;
+}
+.rv-escenario img.is-on { visibility: visible; }
+
+/* ---------- panel rojo: botón → formulario → confirmación ---------- */
+.rv-panel {
+  background: var(--rojo);
+  color: var(--blanco);
+  overflow: hidden;
+}
+.rv-boton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  font: inherit;
+  font-weight: 500;
+  font-size: clamp(22px, 1.7vw, 24px);
+  letter-spacing: -0.01em;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.rv-flecha { display: inline-block; transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1); }
+@media (hover: hover) and (pointer: fine) {
+  .rv-boton:hover .rv-flecha,
+  .rv-enviar:hover .rv-flecha { transform: translateX(5px); }
+}
+.rv-boton:focus-visible,
+.rv-enviar:focus-visible,
+.rv-opcion:focus-visible,
+.rv-chico:focus-visible { outline: 2px solid var(--blanco); outline-offset: 3px; }
+
+.rv-form,
+.rv-listo { padding: 24px 22px 26px; }
+@media (min-width: 768px) {
+  .rv-form, .rv-listo { padding: 30px 30px 32px; }
+}
+.rv-form { display: grid; gap: 22px; }
+.rv-cabeza {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  font-weight: 500;
+  font-size: clamp(22px, 1.7vw, 24px);
+  letter-spacing: -0.01em;
+}
+.rv-cerrar {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.8);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rv-campo { display: grid; gap: 6px; }
+.rv-etiqueta {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+.rv-campo input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 0;
+  padding: 8px 0 10px;
+  font: inherit;
+  font-size: 17px; /* 16 o más: iPhone no hace zoom al escribir */
+  font-weight: 300;
+  color: var(--blanco);
+  outline: none;
+  transition: border-color 0.25s ease;
+}
+.rv-campo input::placeholder { color: rgba(255, 255, 255, 0.55); }
+.rv-campo input:focus { border-bottom-color: var(--blanco); }
+.rv-campo input:-webkit-autofill {
+  -webkit-text-fill-color: var(--blanco);
+  -webkit-box-shadow: 0 0 0 40px var(--rojo) inset;
+  caret-color: var(--blanco);
+}
+.rv-nota { font-size: 13px; font-weight: 300; color: rgba(255, 255, 255, 0.75); }
+
+.rv-opciones { display: grid; grid-template-columns: repeat(2, 1fr); margin-top: 4px; }
+.rv-opcion {
+  font: inherit;
+  font-size: 17px;
+  font-weight: 400;
+  padding: 11px 4px;
+  color: var(--blanco);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.rv-opcion + .rv-opcion { border-left: 0; }
+.rv-opcion.is-on { background: var(--blanco); color: var(--rojo); }
+@media (hover: hover) and (pointer: fine) {
+  .rv-opcion:not(.is-on):hover { background: rgba(255, 255, 255, 0.12); }
+}
+
+.rv-enviar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  font: inherit;
+  font-weight: 500;
+  font-size: clamp(22px, 1.7vw, 24px);
+  letter-spacing: -0.01em;
+  color: var(--rojo);
+  background: var(--blanco);
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+.rv-enviar:disabled { cursor: wait; opacity: 0.75; }
+.rv-error { font-size: 17px; font-weight: 400; line-height: 1.4; }
+.rv-error a,
+.rv-legal a { text-decoration: underline; text-underline-offset: 3px; }
+.rv-legal { font-size: 13px; font-weight: 300; line-height: 1.45; color: rgba(255, 255, 255, 0.7); }
+.rv-trampa {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+}
+
+.rv-listo h3 {
+  font-weight: 500;
+  font-size: clamp(34px, 3.1vw, 44px);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+.rv-listo p { font-weight: 300; font-size: 17px; line-height: 1.45; }
+.rv-chicos { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 8px; }
+.rv-chico {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--blanco);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.rv-chico + .rv-chico { border-left: 0; }
+@media (hover: hover) and (pointer: fine) {
+  .rv-chico:hover { background: var(--blanco); color: var(--rojo); }
+}
+
+/* ---------- párrafo de la invitación ---------- */
+/* Teléfono y tableta: bandera, sin partir palabras (la columna no da para justificar).
+   Escritorio amplio (desde 1440, donde la columna ya mide sus 580 px fijos): justificado con
+   partición silábica, ~70 caracteres por línea y huecos de menos de 0.5 em. */
+.rv-parrafo { text-align: left; hyphens: manual; text-wrap: pretty; }
+@media (min-width: 1440px) {
+  .rv-parrafo {
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphenate-limit-chars: 7 3 3;
+  }
+}
