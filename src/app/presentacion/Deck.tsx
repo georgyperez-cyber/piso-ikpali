@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { iconoRojo, iconoNegro } from "@/lib/piezas";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Deck shell — keyboard + click navigation
@@ -122,8 +123,9 @@ export default function Deck() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const A = "/assets-optimized";
-const ico = (n: number, size: 400 | 600 = 400) => `${A}/hero-icono-${n}-${size}.webp`;
-const icoNegro = (n: number, size: 400 | 600 = 400) => `${A}/hero-icono-negro-${n}-${size}.webp`;
+// Piezas ícono con trama (fotos finales del catálogo, lib/piezas.ts)
+const ico = (n: number, size: 400 | 600 = 400) => iconoRojo(n, size);
+const icoNegro = (n: number, size: 400 | 600 = 400) => iconoNegro(n, size);
 
 // Icons that have both red and black versions available
 const ICONS_BOTH = [1, 2, 3, 4, 5, 6, 8];

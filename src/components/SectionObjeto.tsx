@@ -1,4 +1,5 @@
 import Img from "./Img";
+import { iconoNegro } from "@/lib/piezas";
 
 // Black icons sized to ~0.85 of the cap height, sitting on the baseline
 // like a glyph between words. ICON_LG is for icons that need more visual weight.
@@ -23,18 +24,18 @@ export default function SectionObjeto() {
           }}
         >
           Un espacio
-          <Img src="/assets-optimized/hero-icono-negro-8-600.webp" alt="" className={ICON} />
+          <Img src={iconoNegro(8)} alt="" className={ICON} />
           donde los objetos conviven, rotan,
-          <Img src="/assets-optimized/hero-icono-negro-4-600.webp" alt="" className={ICON} />
+          <Img src={iconoNegro(4)} alt="" className={ICON} />
           se venden,
           se
-          <Img src="/assets-optimized/hero-icono-negro-3-600.webp" alt="" className={ICON_LG} />
+          <Img src={iconoNegro(3)} alt="" className={ICON_LG} />
           reponen y construyen
-          <Img src="/assets-optimized/hero-icono-negro-6-600.webp" alt="" className={ICON} />
+          <Img src={iconoNegro(6)} alt="" className={ICON} />
           un imaginario
-          <Img src="/assets-optimized/hero-icono-negro-1-600.webp" alt="" className={ICON} />
+          <Img src={iconoNegro(1)} alt="" className={ICON} />
           doméstico
-          <Img src="/assets-optimized/hero-icono-negro-5-600.webp" alt="" className={ICON} />
+          <Img src={iconoNegro(5)} alt="" className={ICON} />
           vivo.
         </h2>
       </div>

@@ -4,12 +4,14 @@ import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Img from "./Img";
+import { iconoRojo, iconoNombre } from "@/lib/piezas";
 
 // Replicates the cactus + red-icons reference: full-width B&W texture,
 // horizontal row of red hero icons sitting on a baseline.
-const ICONS = [1, 3, 6, 4, 2, 8, 5].map((n) => `/assets-optimized/hero-icono-${n}-600.webp`);
-
-const LABELS = ["clutch", "tazón", "vasija", "juego", "vela", "anillo", "jarra"];
+// Piezas ícono con trama roja y la palabra de cada una (lib/piezas.ts)
+const ORDEN = [1, 3, 6, 4, 2, 8, 5];
+const ICONS = ORDEN.map((n) => iconoRojo(n));
+const LABELS = ORDEN.map((n) => iconoNombre(n));
 
 export default function SectionGlosario() {
   const sectionRef = useRef<HTMLElement>(null);

@@ -2,19 +2,12 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { gsap } from "gsap";
+import { PARENTESIS, foto } from "@/lib/piezas";
 
 type Slide = { src: string; scale: number };
 
-const SEQUENCE: Slide[] = [
-  { src: "/assets-optimized/hero-icono-foto-1-720.webp", scale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-2-720.webp", scale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-3-720.webp", scale: 1.15 },
-  { src: "/assets-optimized/hero-icono-foto-4-720.webp", scale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-5-720.webp", scale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-6-720.webp", scale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-7-720.webp", scale: 1.0 },
-  { src: "/assets-optimized/hero-icono-foto-8-720.webp", scale: 1.0 },
-];
+// Fotos finales del catálogo (lib/piezas.ts)
+const SEQUENCE: Slide[] = PARENTESIS.map((id) => ({ src: foto(id), scale: 1.0 }));
 
 const STAGE = "clamp(80px, 12vw, 180px)";
 
@@ -138,7 +131,7 @@ export default function HolaMarca({
       ref={wrapRef}
       className="relative w-full bg-blanco text-rojo overflow-hidden"
     >
-      <link rel="preload" as="image" href="/assets-optimized/hero-icono-foto-1-720.webp" />
+      <link rel="preload" as="image" href={SEQUENCE[0].src} />
 
       <div className="absolute top-5 left-5 md:top-8 md:left-10 text-[8px] tracking-[0.1em] md:text-[11px] md:tracking-[0.18em] uppercase text-rojo/80 z-10 whitespace-nowrap">
         piso ikpali · est. 2026 · cdmx

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import "./rsvp.css";
+import { PARENTESIS, foto } from "@/lib/piezas";
 
 // /softopening · invitación al soft opening (sábado 5 de diciembre de 2026) con su "sí asistiré".
 // La respuesta entra al admin (pisoikpali.com/admin → RSVP) por /admin/api/publico/rsvp.
@@ -30,8 +31,8 @@ const GOOGLE =
   "&location=" + encodeURIComponent("ffaayyeett, Lafayette 64, Anzures, Ciudad de México") +
   "&details=" + encodeURIComponent("Soft opening de Piso ikpali en ffaayyeett. https://pisoikpali.com/softopening");
 
-// Objetos que van a estar en la tienda; cambian con corte, sin disolvencia.
-const OBJETOS = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => `/assets-optimized/hero-icono-foto-${i}-720.webp`);
+// Piezas de la tienda (fotos finales del catálogo, lib/piezas.ts); cambian con corte, sin disolvencia.
+const OBJETOS = PARENTESIS.map((id) => foto(id));
 // Cada invitado puede venir con una persona (+1)
 const ACOMPANANTES: [number, string][] = [[0, "solo yo"], [1, "+1"]];
 

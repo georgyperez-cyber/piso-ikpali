@@ -3,20 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import Img from "./Img";
+import { iconoRojo, iconoFoto } from "@/lib/piezas";
 
+// Las ocho piezas ícono con trama roja y cuatro de ellas en su foto a color (lib/piezas.ts)
 const ICONS = [
-  "/assets-optimized/hero-icono-1-600.webp",
-  "/assets-optimized/hero-icono-2-600.webp",
-  "/assets-optimized/hero-icono-3-600.webp",
-  "/assets-optimized/hero-icono-4-600.webp",
-  "/assets-optimized/hero-icono-5-600.webp",
-  "/assets-optimized/hero-icono-6-600.webp",
-  "/assets-optimized/hero-icono-7-600.webp",
-  "/assets-optimized/hero-icono-8-600.webp",
-  "/assets-optimized/hero-icono-foto-1-720.webp",
-  "/assets-optimized/hero-icono-foto-3-720.webp",
-  "/assets-optimized/hero-icono-foto-5-720.webp",
-  "/assets-optimized/hero-icono-foto-7-720.webp",
+  ...[1, 2, 3, 4, 5, 6, 7, 8].map((n) => iconoRojo(n)),
+  ...[1, 3, 5, 7].map((n) => iconoFoto(n)),
 ];
 
 // Sellers, not buyers. Period baked into each so each cycle is a complete sentence.

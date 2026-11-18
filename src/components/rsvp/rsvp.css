@@ -39,8 +39,9 @@
 }
 .rv-escenario img {
   position: absolute;
-  inset: -0.12em 0;
-  width: 100%;
+  /* aire a los lados: las piezas anchas (hebillas, tazas) no tocan los paréntesis */
+  inset: -0.12em 0.1em;
+  width: calc(100% - 0.2em);
   height: calc(100% + 0.24em);
   object-fit: contain;
   visibility: hidden;

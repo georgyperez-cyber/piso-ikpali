@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import Img from "./Img";
+import { iconoRojo } from "@/lib/piezas";
 
 function pickDistinct(count: number, total: number, exclude: number[] = []): number[] {
   const out: number[] = [];
@@ -59,8 +60,8 @@ const CELLS = [
 ];
 
 const OVERLAY_ICONS = [
-  "/assets-optimized/hero-icono-2-600.webp",
-  "/assets-optimized/hero-icono-5-600.webp",
+  iconoRojo(2),
+  iconoRojo(5),
 ];
 
 export default function SectionAudiencia() {

@@ -1,6 +1,7 @@
 import HolaMarca from "@/components/HolaMarca";
 import SectionTextura from "@/components/SectionTextura";
 import Img from "@/components/Img";
+import { iconoNegro } from "@/lib/piezas";
 
 const ICON = "inline-block align-[-0.18em] mx-2 md:mx-3 h-[0.85em] w-auto select-none";
 
@@ -38,11 +39,11 @@ export default function CartaMarca({ marca }: { marca: string }) {
             style={{ fontSize: "clamp(32px, 6vw, 80px)", letterSpacing: "-0.01em" }}
           >
             A partir de hoy, {marca} forma
-            <Img src="/assets-optimized/hero-icono-negro-4-600.webp" alt="" className={ICON} />
+            <Img src={iconoNegro(4)} alt="" className={ICON} />
             parte de la selección
-            <Img src="/assets-optimized/hero-icono-negro-1-600.webp" alt="" className={ICON} />
+            <Img src={iconoNegro(1)} alt="" className={ICON} />
             oficial de marcas
-            <Img src="/assets-optimized/hero-icono-negro-6-600.webp" alt="" className={ICON} />
+            <Img src={iconoNegro(6)} alt="" className={ICON} />
             participantes.
           </h2>
         </div>

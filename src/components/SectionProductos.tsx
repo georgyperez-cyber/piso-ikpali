@@ -1,9 +1,8 @@
 import Img from "./Img";
+import { MUESTRA, foto } from "@/lib/piezas";
 
-// Una muestra de la selección, no el catálogo completo. 40 piezas para que la
-// retícula cierre pareja en 4, 5 y 8 columnas.
-const TOTAL = 40;
-const PIEZAS = Array.from({ length: TOTAL }, (_, i) => i + 1);
+// Una muestra de la selección, no el catálogo completo: 40 fotos finales del catálogo
+// para que la retícula cierre pareja en 4, 5 y 8 columnas (lib/piezas.ts).
 
 export default function SectionProductos() {
   return (
@@ -22,13 +21,13 @@ export default function SectionProductos() {
         </div>
 
         <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-8 gap-px bg-rojo/15">
-          {PIEZAS.map((n) => (
+          {MUESTRA.map((id) => (
             <div
-              key={n}
+              key={id}
               className="relative aspect-square bg-blanco flex items-center justify-center p-3 md:p-4"
             >
               <Img
-                src={`/assets-optimized/hero-icono-foto-${n}-480.webp`}
+                src={foto(id)}
                 alt=""
                 className="w-full h-full object-contain"
               />

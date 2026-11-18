@@ -1,4 +1,5 @@
 import Img from "./Img";
+import { iconoRojo as rojo } from "@/lib/piezas";
 
 type Props = {
   textura: number;
@@ -15,7 +16,7 @@ export default function SectionTextura({
   variant = "spacer",
 }: Props) {
   const bg = `/assets-optimized/textura-${textura}-1280.webp`;
-  const icon = `/assets-optimized/hero-icono-${iconoRojo}-600.webp`;
+  const icon = rojo(iconoRojo);
   const height =
     variant === "full" ? "h-[60vh] md:h-[80vh]" : "h-[42vh] md:h-[56vh]";
   return (

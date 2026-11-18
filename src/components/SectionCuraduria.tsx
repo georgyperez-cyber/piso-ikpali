@@ -3,8 +3,9 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import Img from "./Img";
+import { iconoRojo } from "@/lib/piezas";
 
-const ICONOS = [1, 2, 3, 4, 5, 6, 8].map((n) => `/assets-optimized/hero-icono-${n}-600.webp`);
+const ICONOS = [1, 2, 3, 4, 5, 6, 8].map((n) => iconoRojo(n));
 
 type Crit = { word: string; full: string; in: boolean };
 const CRITERIOS: Crit[] = [
