@@ -37,7 +37,7 @@ const OBJETOS = PARENTESIS.map((id) => foto(id));
 const ACOMPANANTES: [number, string][] = [[0, "solo yo"], [1, "+1"]];
 
 type Fase = "cerrado" | "form" | "listo";
-type Respuesta = { nombre: string; contacto: string; acompanantes: number; instagram: string };
+type Respuesta = { nombre: string; whatsapp: string; correo: string; acompanantes: number; instagram: string };
 type ErrorForm = { texto: string; correo?: string } | null;
 
 const primerNombre = (n: string) => {
@@ -47,7 +47,14 @@ const primerNombre = (n: string) => {
 const leerLocal = (): Respuesta | null => {
   try {
     const s = window.localStorage.getItem(CLAVE_LOCAL);
-    return s ? (JSON.parse(s) as Respuesta) : null;
+    if (!s) return null;
+    const r = JSON.parse(s) as Respuesta & { contacto?: string };
+    // Respuestas guardadas cuando el formulario pedía un solo "WhatsApp o correo"
+    if (r.contacto && !r.whatsapp && !r.correo) {
+      if (r.contacto.includes("@")) r.correo = r.contacto;
+      else r.whatsapp = r.contacto;
+    }
+    return { ...r, whatsapp: r.whatsapp || "", correo: r.correo || "" };
   } catch {
     return null;
   }
@@ -61,7 +68,7 @@ const guardarLocal = (r: Respuesta) => {
 };
 const mailtoRespaldo = (r: Respuesta) =>
   `mailto:${EVENTO.correo}?subject=${encodeURIComponent("Confirmo: soft opening del 5 de diciembre")}&body=${encodeURIComponent(
-    `Hola, confirmo que voy al soft opening de Piso ikpali.\n\nNombre: ${r.nombre}\nContacto: ${r.contacto}\n` +
+    `Hola, confirmo que voy al soft opening de Piso ikpali.\n\nNombre: ${r.nombre}\nWhatsApp: ${r.whatsapp}\nCorreo: ${r.correo}\n` +
       `${r.acompanantes ? "Voy con mi +1" : "Voy sin acompañante"}` +
       `${r.instagram ? `\nInstagram: ${r.instagram}` : ""}`
   )}`;
@@ -166,13 +173,16 @@ export default function RsvpHero() {
     if (enviando) return;
     const fd = new FormData(e.currentTarget);
     const r: Respuesta = {
-      nombre: String(fd.get("nombre") || "").trim(),
-      contacto: String(fd.get("contacto") || "").trim(),
+      nombre: String(fd.get("nombre") || "").trim().replace(/\s+/g, " "),
+      whatsapp: String(fd.get("whatsapp") || "").trim(),
+      correo: String(fd.get("correo") || "").trim(),
       instagram: String(fd.get("instagram") || "").trim(),
       acompanantes: acomp,
     };
-    if (!r.nombre) return setError({ texto: "Escribe tu nombre." });
-    if (!r.contacto) return setError({ texto: "Déjanos tu WhatsApp o tu correo." });
+    if (r.nombre.split(" ").length < 2) return setError({ texto: "Escribe tu nombre completo, con apellido." });
+    const digitos = r.whatsapp.replace(/\D/g, "");
+    if (digitos.length < 10 || digitos.length > 15) return setError({ texto: "Escribe tu WhatsApp a 10 dígitos." });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.correo)) return setError({ texto: "Escribe un correo válido." });
     setError(null);
     setEnviando(true);
     try {
@@ -281,19 +291,34 @@ export default function RsvpHero() {
                   )}
                 </div>
                 <label className="rv-campo">
-                  <span className="rv-etiqueta">Tu nombre</span>
+                  <span className="rv-etiqueta">Nombre completo</span>
                   <input ref={nombreRef} name="nombre" autoComplete="name" required maxLength={120} defaultValue={respuesta?.nombre} />
                 </label>
                 <label className="rv-campo">
-                  <span className="rv-etiqueta">WhatsApp o correo</span>
+                  <span className="rv-etiqueta">WhatsApp</span>
                   <input
-                    name="contacto"
+                    name="whatsapp"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    required
+                    maxLength={40}
+                    defaultValue={respuesta?.whatsapp}
+                  />
+                </label>
+                <label className="rv-campo">
+                  <span className="rv-etiqueta">Correo</span>
+                  <input
+                    name="correo"
+                    type="email"
+                    inputMode="email"
                     autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     required
                     maxLength={160}
-                    defaultValue={respuesta?.contacto}
+                    defaultValue={respuesta?.correo}
                   />
-                  <span className="rv-nota">Para avisarte si cambia algo.</span>
                 </label>
                 <div className="rv-campo" role="group" aria-labelledby="rv-acomp">
                   <span className="rv-etiqueta" id="rv-acomp">¿Vienes con alguien?</span>

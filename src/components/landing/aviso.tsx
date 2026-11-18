@@ -13,7 +13,7 @@ export const AVISO: [string, React.ReactNode][] = [
   [
     "Qué datos",
     <>
-      Los que escribes en el formulario cuando te interesa una pieza: tu nombre y un correo o número de WhatsApp para contestarte, y el mensaje que quieras dejar. Si confirmas tu asistencia a un evento: tu nombre, un correo o WhatsApp, cuántas personas van contigo y, si quieres, tu Instagram. No pedimos nada más.
+      Los que escribes en el formulario cuando te interesa una pieza: tu nombre y un correo o número de WhatsApp para contestarte, y el mensaje que quieras dejar. Si confirmas tu asistencia a un evento: tu nombre completo, tu WhatsApp, tu correo, si vas con alguien más y, si quieres, tu Instagram. No pedimos nada más.
     </>,
   ],
   [
