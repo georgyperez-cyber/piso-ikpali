@@ -32,6 +32,9 @@ export default function GlassBar({ visible = true }: { visible?: boolean }) {
     const targetH = inn.offsetHeight;
 
     if (!size.current) {
+      // primera medida, o una nueva tras cambiar la ventana o cargar la tipografía:
+      // se coloca en seco y se corta cualquier animación a medias
+      gsap.killTweensOf(o, "width,height");
       gsap.set(o, { width: targetW, height: targetH });
       size.current = { w: targetW, h: targetH };
       return;
@@ -41,24 +44,30 @@ export default function GlassBar({ visible = true }: { visible?: boolean }) {
     gsap.fromTo(
       o,
       { width: from.w, height: from.h },
-      { width: targetW, height: targetH, duration: 0.65, ease: "expo.inOut", overwrite: true }
+      { width: targetW, height: targetH, duration: 0.5, ease: "expo.inOut", overwrite: true }
     );
     if (panel.current) {
       gsap.fromTo(
         panel.current,
         { autoAlpha: 0, y: 10 },
-        { autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out", delay: 0.25, overwrite: true }
+        { autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out", delay: 0.2, overwrite: true }
       );
     }
   }, [abierto, medida]);
 
   useLayoutEffect(() => {
-    const onResize = () => {
+    const remedir = () => {
       size.current = null;
       setMedida((m) => m + 1);
     };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    window.addEventListener("resize", remedir);
+    // la fila se midió con la tipografía de respaldo: al llegar Helixa se mide otra vez
+    let vivo = true;
+    document.fonts?.ready.then(() => vivo && remedir());
+    return () => {
+      vivo = false;
+      window.removeEventListener("resize", remedir);
+    };
   }, []);
 
   useLayoutEffect(() => {
@@ -85,8 +94,12 @@ export default function GlassBar({ visible = true }: { visible?: boolean }) {
             {abierto === "ubicacion" && (
               <p>
                 <em>{SITIO.direccion}</em>, {SITIO.ciudad}. {SITIO.dentroDe}.
-                <br />
-                {SITIO.horario}
+                {SITIO.horario && (
+                  <>
+                    <br />
+                    {SITIO.horario}
+                  </>
+                )}
               </p>
             )}
             {abierto === "contacto" && (

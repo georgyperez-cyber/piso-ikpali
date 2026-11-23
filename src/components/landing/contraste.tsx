@@ -64,17 +64,23 @@ export function revisarContraste(root: HTMLElement, items: HTMLElement[], umbral
   // solo las piezas visibles y con mapa listo
   const piezas: { r: DOMRect; m: { a: Float32Array; l: Float32Array } }[] = [];
   for (const el of items) {
-    const r = el.getBoundingClientRect();
-    if (r.width < 4 || r.right < 0 || r.left > vw || r.bottom < 0 || r.top > vh) continue;
-    if (getComputedStyle(el).visibility === "hidden") continue;
     const img = el.querySelector("img");
     if (!img) continue;
+    // la caja de la foto, no la de la pieza: la pieza trae aire alrededor y el mapa es de la foto
+    const r = img.getBoundingClientRect();
+    if (r.width < 4 || r.right < 0 || r.left > vw || r.bottom < 0 || r.top > vh) continue;
+    if (getComputedStyle(el).visibility === "hidden") continue;
     const m = mapaDe(img);
     if (!m) continue;
     piezas.push({ r, m });
   }
 
   letras.forEach((s) => {
+    // sobre el cristal no: ahí la pieza se ve como una mancha clara y la letra blanca se perdía
+    if (s.closest(".ld-glass")) {
+      if (s.classList.contains("is-neg")) s.classList.remove("is-neg");
+      return;
+    }
     const b = s.getBoundingClientRect();
     if (!b.width) return;
     const cx = b.left + b.width / 2;

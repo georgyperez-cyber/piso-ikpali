@@ -7,7 +7,24 @@ import { InertiaPlugin } from "gsap/InertiaPlugin";
 import { Flip } from "gsap/Flip";
 import { MorphSVGPlugin } from "gsap/MorphSVGPlugin";
 import Lenis from "lenis";
-import { PRODUCTOS, RESPALDO, SITIO, avisoExistencias, estadoDe, formatoPrecio, type EstadoInv, type Inventario, type Producto } from "./productos";
+import {
+  CATEGORIAS,
+  PRODUCTOS,
+  RESPALDO,
+  SITIO,
+  avisoExistencias,
+  claveLinea,
+  coloresDe,
+  estadoDe,
+  formatoPrecio,
+  linkWhatsApp,
+  mensajeCarrito,
+  mensajePieza,
+  type EstadoInv,
+  type Inventario,
+  type Linea,
+  type Producto,
+} from "./productos";
 import WakeSlider from "./WakeSlider";
 import GlassBar from "./GlassBar";
 import { Adapt, revisarContraste } from "./contraste";
@@ -15,7 +32,7 @@ import "./landing.css";
 
 gsap.registerPlugin(Draggable, InertiaPlugin, Flip, MorphSVGPlugin);
 
-// iconos del botón grid / tablero (un solo path, para el morph)
+// iconos del botón cuadrícula / experiencia (un solo path, para el morph)
 const ICONO_GRID = "M1 1h4.5v4.5H1zM8.5 1h4.5v4.5H8.5zM1 8.5h4.5V13H1zM8.5 8.5h4.5V13H8.5z";
 const circ = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
 const ICONO_TABLERO = circ(3, 4, 1.6) + circ(10.5, 2.8, 1.6) + circ(7, 8.2, 1.6) + circ(2.6, 11.4, 1.6) + circ(11.2, 10.6, 1.6);
@@ -105,7 +122,6 @@ const esTactil = () => !window.matchMedia("(hover: hover) and (pointer: fine)").
 // Precio y existencias en vivo: el admin (pisoikpali.com/admin) publica el
 // inventario sin sesión. Si no responde, se queda RESPALDO.
 const URL_INVENTARIO = "/admin/api/publico/catalogo";
-const URL_INTERES = "/admin/api/publico/interes";
 
 function useInventario() {
   const [inv, setInv] = useState<Inventario>(RESPALDO);
@@ -137,8 +153,29 @@ function useInventario() {
   return inv;
 }
 
-const CATEGORIAS = ["todo", ...Array.from(new Set(PRODUCTOS.map((p) => p.categoria)))];
+const CATS = ["todo", ...CATEGORIAS];
 const MARCAS = ["todas", ...Array.from(new Set(PRODUCTOS.map((p) => p.marca)))];
+
+// Filtro del catálogo: categoría, marca y lo que se escribe en buscar.
+type Filtro = { categoria: string; marca: string; q: string };
+const SIN_FILTRO: Filtro = { categoria: "todo", marca: "todas", q: "" };
+const plano = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const TEXTO = PRODUCTOS.map((p) => plano(`${p.nombre} ${p.marca} ${p.categoria}`));
+const coincide = (i: number, f: Filtro) => {
+  const p = PRODUCTOS[i];
+  const palabras = plano(f.q).split(/\s+/).filter(Boolean);
+  return (
+    (f.categoria === "todo" || p.categoria === f.categoria) &&
+    (f.marca === "todas" || p.marca === f.marca) &&
+    palabras.every((w) => TEXTO[i].includes(w))
+  );
+};
+const hayFiltro = (f: Filtro) => f.categoria !== "todo" || f.marca !== "todas" || f.q.trim() !== "";
+
+const CLAVE_CARRITO = "piso-ikpali-carrito";
+
+// Una fila del carrito, con nombre, foto y precio en vivo.
+type FilaCarrito = { clave: string; nombre: string; detalle: string; src: string; precio: number | null; cantidad: number; max: number };
 
 type PiezaProps = {
   p: Producto;
@@ -180,8 +217,8 @@ export default function Landing() {
   const gridWrapRef = useRef<HTMLDivElement>(null);
   const gridBoxRef = useRef<HTMLDivElement>(null);
   const elsRef = useRef<HTMLDivElement[][]>(TILES.map(() => [])); // [tile][celda]
-  const iconoRef = useRef<SVGPathElement>(null);
   const gridElsRef = useRef<HTMLDivElement[]>([]);
+  const iconoRef = useRef<SVGPathElement>(null);
   const introRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
@@ -224,16 +261,30 @@ export default function Landing() {
   const [celdas, setCeldas] = useState(0);
   const [introFotos, setIntroFotos] = useState<string[]>([]);
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
+  const [buscarAbierto, setBuscarAbierto] = useState(false);
+  const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [foco, setFoco] = useState<{ p: Producto; i: number } | null>(null);
-  const [formAbierto, setFormAbierto] = useState(false);
-  const [filtro, setFiltro] = useState({ categoria: "todo", marca: "todas" });
+  const [filtro, setFiltroState] = useState<Filtro>(SIN_FILTRO);
+  const [busqueda, setBusqueda] = useState(""); // lo que se va escribiendo; el filtro lo sigue con un respiro
   const [talla, setTalla] = useState<string | null>(null); // SKU elegido cuando la pieza tiene tallas
-  const [envio, setEnvio] = useState<"" | "enviando" | "listo">("");
-  const [errorForm, setErrorForm] = useState("");
+  const [carrito, setCarrito] = useState<Linea[]>([]);
+  const filtroRef = useRef<Filtro>(SIN_FILTRO);
+  const pendienteRef = useRef(false); // llegó un filtro a media transición: se aplica al terminar
+  const buscarT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const carritoListo = useRef(false);
+  const focoRef = useRef<{ p: Producto; i: number } | null>(null);
+  const origenIRef = useRef(-1); // la pieza que se abrió (antes de cambiar de color)
+  const cambioColorRef = useRef(false); // el foco cambió por un cambio de color, no por abrir otra pieza
+  const cambiandoRef = useRef(false);
   const inv = useInventario();
   const invRef = useRef(inv);
   const tactilRef = useRef(false);
   invRef.current = inv;
+  focoRef.current = foco;
+  const setFiltro = (f: Filtro) => {
+    filtroRef.current = f;
+    setFiltroState(f);
+  };
   const agotados = useMemo(() => PRODUCTOS.map((p) => p.variantes.length > 0 && estadoDe(p, inv).estado === "agotado"), [inv]);
 
   const setFase = (f: Fase) => {
@@ -473,8 +524,9 @@ export default function Landing() {
     dragRef.current?.disable();
     lenisRef.current?.stop();
     rootRef.current?.classList.add("is-focus");
-    setFormAbierto(false);
-    setEnvio("");
+    origenIRef.current = i;
+    cambioColorRef.current = false;
+    cambiandoRef.current = false;
     const p = PRODUCTOS[i];
     const libre = p.variantes.find((v) => (invRef.current[v.sku]?.disponible ?? 1) > 0) ?? p.variantes[0];
     setTalla(p.variantes.length > 1 ? libre.sku : null);
@@ -513,7 +565,26 @@ export default function Landing() {
     const original = origenElRef.current!;
     const otros = ordenDesde(original);
 
-    gsap.set(clone, { left: r.left, top: r.top, width: r.width, height: r.height, autoAlpha: 1 });
+    if (cambioColorRef.current) {
+      // otro color de la misma pieza: la foto ya se fue (escala 0) y la nueva aparece en su lugar.
+      // Las fotos de cada color no embonan entre sí, por eso no se funden: una sale y la otra entra.
+      cambioColorRef.current = false;
+      gsap.set(clone, { left: box.left, top: box.top, width: box.width, height: box.height, autoAlpha: 1 });
+      gsap.set(infoRef.current!.children, { autoAlpha: 1, y: 0 });
+      gsap.set(closeRef.current, { autoAlpha: 1, scale: 1 });
+      let vivo = true;
+      const aparecer = () => {
+        if (!vivo) return;
+        cambiandoRef.current = false;
+        gsap.to(clone, { scale: 1, duration: 0.5, ease: "back.out(1.5)", overwrite: "auto" });
+      };
+      (clone.decode ? clone.decode() : Promise.resolve()).then(aparecer, aparecer);
+      return () => {
+        vivo = false;
+      };
+    }
+
+    gsap.set(clone, { left: r.left, top: r.top, width: r.width, height: r.height, autoAlpha: 1, scale: 1 });
     gsap.set(original, { visibility: "hidden" });
 
     const tl = gsap.timeline();
@@ -546,22 +617,25 @@ export default function Landing() {
     };
   }, [foco, ordenDesde]);
 
-  // al abrir el formulario la caja de la pieza cambia de tamaño: la copia la sigue
-  useLayoutEffect(() => {
-    if (!foco || !boxRef.current || !cloneRef.current) return;
-    const box = encoger(boxRef.current.getBoundingClientRect());
-    gsap.to(cloneRef.current, {
-      left: box.left,
-      top: box.top,
-      width: box.width,
-      height: box.height,
-      duration: 0.7,
-      ease: "expo.inOut",
-      delay: 0.05,
-      overwrite: "auto",
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formAbierto]);
+  // otro color de la misma pieza (Mot, Casa 8, buRRo): la foto sale, cambia y entra
+  const cambiarColor = useCallback(
+    (i: number) => {
+      if (faseRef.current !== "foco" || !foco || i === foco.i || cambiandoRef.current) return;
+      cambiandoRef.current = true;
+      gsap.to(cloneRef.current, {
+        scale: 0,
+        duration: 0.28,
+        ease: "back.in(1.4)",
+        overwrite: "auto",
+        onComplete: () => {
+          cambioColorRef.current = true;
+          setTalla(null);
+          setFoco({ p: PRODUCTOS[i], i });
+        },
+      });
+    },
+    [foco]
+  );
 
   const cerrarFoco = useCallback(() => {
     if (faseRef.current !== "foco" || !foco) return;
@@ -570,19 +644,24 @@ export default function Landing() {
     const original = origenElRef.current!;
     const otros = ordenDesde(original);
     const regresaA = faseAntesRef.current;
+    // si se cambió de color, la foto ya no es la de la pieza del tablero: no vuela de regreso, se encoge
+    const cambiado = foco.i !== origenIRef.current;
 
     // el tablero se libera en cuanto la pieza aterriza (no al final de la onda de las demás),
     // para que se pueda arrastrar o cambiar a cuadrícula sin esperar
     const tl = gsap.timeline();
     tl.to(infoRef.current!.children, { autoAlpha: 0, y: 10, duration: 0.3, ease: "power2.in", stagger: 0.03 }, 0);
     tl.to(closeRef.current, { autoAlpha: 0, scale: 0.6, duration: 0.3, ease: "power2.in" }, 0);
-    tl.to(
-      clone,
-      { left: r.left, top: r.top, width: r.width, height: r.height, duration: 0.9, ease: "expo.inOut" },
-      0.15
-    );
+    if (cambiado) tl.to(clone, { scale: 0, duration: 0.4, ease: "back.in(1.4)", overwrite: "auto" }, 0.1);
+    else
+      tl.to(
+        clone,
+        { left: r.left, top: r.top, width: r.width, height: r.height, duration: 0.9, ease: "expo.inOut" },
+        0.15
+      );
     tl.add(() => {
       gsap.set(original, { visibility: "visible" });
+      if (cambiado) gsap.fromTo(original, { scale: 0 }, { scale: 1, duration: 0.7, ease: "back.out(1.5)", overwrite: "auto" });
       gsap.set(clone, { autoAlpha: 0 });
       setFoco(null);
       setFase(regresaA);
@@ -606,6 +685,28 @@ export default function Landing() {
     []
   );
 
+  // el filtro dentro del grid, con Flip: lo que no coincide se va, lo demás se reacomoda
+  const aplicarEnGrid = useCallback((f: Filtro) => {
+    const gridEls = gridElsRef.current;
+    const state = Flip.getState(gridEls);
+    gridEls.forEach((el, i) => {
+      el.style.display = coincide(i, f) ? "block" : "none";
+    });
+    lenisRef.current?.scrollTo(0, { duration: 0.8 });
+    Flip.from(state, {
+      duration: 0.8,
+      ease: "expo.inOut",
+      absolute: true,
+      scale: true,
+      stagger: { amount: 0.12 },
+      onEnter: (els) => gsap.fromTo(els, { scale: 0 }, { scale: 1, duration: 0.6, ease: "back.out(1.5)", stagger: 0.02 }),
+      onLeave: (els) => gsap.to(els, { scale: 0, duration: 0.35, ease: "back.in(1.3)" }),
+      onComplete: () => lenisRef.current?.resize(),
+    });
+  }, []);
+
+  // experiencia (tablero) ↔ cuadrícula. Al entrar a la cuadrícula solo viajan las
+  // piezas que pasan el filtro; al volver a la experiencia el filtro se quita.
   const toggleGrid = useCallback(() => {
     const board = boardRef.current!;
     if (transRef.current || (faseRef.current !== "tablero" && faseRef.current !== "grid")) return;
@@ -626,8 +727,11 @@ export default function Landing() {
 
     if (faseRef.current === "tablero") {
       setFase("grid");
+      setFiltrosAbiertos(true); // en la cuadrícula los filtros ya están a la vista
       dragRef.current?.disable();
       observerRef.current?.disconnect();
+      const f = filtroRef.current;
+      const pasa = PRODUCTOS.map((_, i) => coincide(i, f));
       // de cada pieza viaja la copia más cercana al centro de la pantalla
       const elegidos = PRODUCTOS.map((_, i) => {
         const copias = copiasDe(i);
@@ -646,28 +750,31 @@ export default function Landing() {
       elegidosRef.current = elegidos;
       todos().forEach((el) => el.removeAttribute("data-flip-id"));
       elegidos.forEach((el, i) => el.setAttribute("data-flip-id", `p${i}`));
-      const state = Flip.getState(elegidos);
-      const resto = todos().filter((el) => !elegidos.includes(el));
+      const viajan = elegidos.filter((_, i) => pasa[i]);
+      const state = Flip.getState(viajan);
+      const resto = todos().filter((el) => !viajan.includes(el));
       gsap.to(resto, { scale: 0, duration: 0.4, ease: "back.in(1.3)", stagger: { amount: 0.15 }, overwrite: "auto" });
-      gsap.set(elegidos, { visibility: "hidden" });
+      gsap.set(viajan, { visibility: "hidden" });
       gsap.to(hintRef.current, { autoAlpha: 0, duration: 0.3 });
 
       gsap.set(gridWrap, { display: "block" });
       gridWrap.scrollTop = 0;
-      gsap.set(gridEls, { clearProps: "transform", display: "block" });
+      gridEls.forEach((el, i) => gsap.set(el, { clearProps: "transform", display: pasa[i] ? "block" : "none" }));
       lenisRef.current?.resize();
-      Flip.from(state, {
-        ...flipVars,
-        targets: gridEls,
-        onComplete: () => {
-          gsap.set(board, { autoAlpha: 0 });
-          lenisRef.current?.start();
-          transRef.current = false;
-        },
-      });
+      const alTerminar = () => {
+        gsap.set(board, { autoAlpha: 0 });
+        lenisRef.current?.start();
+        transRef.current = false;
+        if (pendienteRef.current) {
+          pendienteRef.current = false;
+          aplicarEnGrid(filtroRef.current);
+        }
+      };
+      const destinos = gridEls.filter((_, i) => pasa[i]);
+      if (destinos.length) Flip.from(state, { ...flipVars, targets: destinos, onComplete: alTerminar });
+      else gsap.delayedCall(0.45, alTerminar);
     } else if (faseRef.current === "grid") {
       lenisRef.current?.stop();
-      setFiltrosAbiertos(false);
       const elegidos = elegidosRef.current;
       // solo viajan las piezas que se ven en el grid (las filtradas aparecen al final)
       const visibles = gridEls.filter((el) => el.style.display !== "none");
@@ -677,52 +784,112 @@ export default function Landing() {
       gsap.set(visibles, { visibility: "hidden" });
       gsap.set(board, { autoAlpha: 1 });
       gsap.set(objetivos, { visibility: "visible", scale: 1 });
-      Flip.from(state, {
-        ...flipVars,
-        targets: objetivos,
-        onComplete: () => {
-          gsap.set(gridWrap, { display: "none" });
-          gridWrap.scrollTop = 0;
-          lenisRef.current?.scrollTo(0, { immediate: true, force: true });
-          gsap.set(gridEls, { clearProps: "visibility,display,transform" });
-          setFiltro({ categoria: "todo", marca: "todas" });
-          setFiltrosAbiertos(false);
-          const faltan = elegidos.filter((el) => !objetivos.includes(el));
-          gsap.set(faltan, { visibility: "visible", scale: 0 });
-          const resto = todos().filter((el) => !objetivos.includes(el));
-          resto.forEach((el) => reveladoRef.current.add(el));
-          gsap.to(resto, { scale: 1, duration: 0.6, ease: "back.out(1.5)", stagger: { amount: 0.25 }, overwrite: "auto" });
-          setFase("tablero");
-          dragRef.current?.enable();
-          transRef.current = false;
-        },
-      });
+      const alTerminar = () => {
+        gsap.set(gridWrap, { display: "none" });
+        gridWrap.scrollTop = 0;
+        lenisRef.current?.scrollTo(0, { immediate: true, force: true });
+        gsap.set(gridEls, { clearProps: "visibility,display,transform" });
+        pendienteRef.current = false;
+        if (buscarT.current) clearTimeout(buscarT.current);
+        setFiltro(SIN_FILTRO);
+        setBusqueda("");
+        setFiltrosAbiertos(false);
+        setBuscarAbierto(false);
+        const faltan = elegidos.filter((el) => !objetivos.includes(el));
+        gsap.set(faltan, { visibility: "visible", scale: 0 });
+        const resto = todos().filter((el) => !objetivos.includes(el));
+        resto.forEach((el) => reveladoRef.current.add(el));
+        gsap.to(resto, { scale: 1, duration: 0.6, ease: "back.out(1.5)", stagger: { amount: 0.25 }, overwrite: "auto" });
+        setFase("tablero");
+        dragRef.current?.enable();
+        transRef.current = false;
+      };
+      if (objetivos.length) Flip.from(state, { ...flipVars, targets: objetivos, onComplete: alTerminar });
+      else gsap.delayedCall(0.2, alTerminar);
     }
-  }, [flipVars, todos, copiasDe]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flipVars, todos, copiasDe, aplicarEnGrid]);
 
-  // filtro del grid con Flip: lo que no coincide se va, lo demás se reacomoda
-  const filtrar = useCallback((f: { categoria: string; marca: string }) => {
-    if (transRef.current || faseRef.current !== "grid") return;
-    setFiltro(f);
-    const gridEls = gridElsRef.current;
-    const state = Flip.getState(gridEls);
-    gridEls.forEach((el, i) => {
-      const p = PRODUCTOS[i];
-      const ok = (f.categoria === "todo" || p.categoria === f.categoria) && (f.marca === "todas" || p.marca === f.marca);
-      el.style.display = ok ? "block" : "none";
-    });
-    lenisRef.current?.scrollTo(0, { duration: 0.8 });
-    Flip.from(state, {
-      duration: 0.8,
-      ease: "expo.inOut",
-      absolute: true,
-      scale: true,
-      stagger: { amount: 0.12 },
-      onEnter: (els) => gsap.fromTo(els, { scale: 0 }, { scale: 1, duration: 0.6, ease: "back.out(1.5)", stagger: 0.02 }),
-      onLeave: (els) => gsap.to(els, { scale: 0, duration: 0.35, ease: "back.in(1.3)" }),
-      onComplete: () => lenisRef.current?.resize(),
-    });
+  // Filtrar o buscar siempre se ve en cuadrícula: desde la experiencia, el
+  // tablero repetiría las mismas pocas piezas una y otra vez.
+  const filtrar = useCallback(
+    (f: Filtro) => {
+      setFiltro(f);
+      if (faseRef.current === "tablero") {
+        if (hayFiltro(f)) toggleGrid();
+        return;
+      }
+      if (faseRef.current !== "grid") return;
+      if (transRef.current) {
+        pendienteRef.current = true;
+        return;
+      }
+      aplicarEnGrid(f);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [toggleGrid, aplicarEnGrid]
+  );
+
+  const alBuscar = (texto: string) => {
+    setBusqueda(texto);
+    if (buscarT.current) clearTimeout(buscarT.current);
+    buscarT.current = setTimeout(() => filtrar({ ...filtroRef.current, q: texto }), 220);
+  };
+
+  /* ───────── carrito ───────── */
+
+  useEffect(() => {
+    try {
+      const guardado: unknown = JSON.parse(localStorage.getItem(CLAVE_CARRITO) || "[]");
+      if (Array.isArray(guardado)) {
+        const limpio = guardado
+          .filter((l): l is Linea => !!l && typeof l.id === "string" && PRODUCTOS.some((p) => p.id === l.id))
+          .map((l) => ({ id: l.id, sku: typeof l.sku === "string" ? l.sku : undefined, cantidad: Math.max(1, Math.floor(Number(l.cantidad)) || 1) }));
+        if (limpio.length) setCarrito(limpio);
+      }
+    } catch {
+      /* sin almacenamiento: el carrito vive solo en esta visita */
+    }
+    carritoListo.current = true;
   }, []);
+  useEffect(() => {
+    if (!carritoListo.current) return;
+    try {
+      localStorage.setItem(CLAVE_CARRITO, JSON.stringify(carrito));
+    } catch {
+      /* igual */
+    }
+  }, [carrito]);
+
+  const agregarAlCarrito = (p: Producto, sku?: string) =>
+    setCarrito((c) => (c.some((l) => l.id === p.id && l.sku === sku) ? c : [...c, { id: p.id, sku, cantidad: 1 }]));
+  const cambiarCantidad = useCallback(
+    (clave: string, n: number) =>
+      setCarrito((c) => (n <= 0 ? c.filter((l) => claveLinea(l) !== clave) : c.map((l) => (claveLinea(l) === clave ? { ...l, cantidad: n } : l)))),
+    []
+  );
+  const filasCarrito: FilaCarrito[] = useMemo(
+    () =>
+      carrito.flatMap((l) => {
+        const p = PRODUCTOS.find((x) => x.id === l.id);
+        if (!p) return [];
+        const st = estadoDe(p, inv, l.sku);
+        const tallaTx = p.variantes.find((v) => v.sku === l.sku)?.talla;
+        return [
+          {
+            clave: claveLinea(l),
+            nombre: p.nombre,
+            detalle: `${p.marca}${tallaTx ? ` · talla ${tallaTx}` : ""}`,
+            src: p.src,
+            precio: st.precio,
+            cantidad: l.cantidad,
+            max: Math.max(l.cantidad, st.disponible ?? 9),
+          },
+        ];
+      }),
+    [carrito, inv]
+  );
+  const totalCarrito = filasCarrito.some((f) => f.precio === null) ? null : filasCarrito.reduce((t, f) => t + (f.precio as number) * f.cantidad, 0);
 
   /* ───────── montaje ───────── */
 
@@ -805,15 +972,13 @@ export default function Landing() {
       // el nombre flotante sigue a la pieza en hover (el tablero se mueve debajo)
       const hov = hoveredRef.current;
       if (hov) {
-        const visible = (faseRef.current === "tablero" && !wrap.classList.contains("is-moving")) || faseRef.current === "grid";
+        const visible = faseRef.current === "tablero" && !wrap.classList.contains("is-moving");
         flot.classList.toggle("is-on", visible);
         if (visible) {
           const img = hov.querySelector("img")!;
           const r = img.getBoundingClientRect();
           const p = PRODUCTOS[Number(hov.dataset.i)];
-          const enGrid = faseRef.current === "grid";
-          const y = enGrid ? hov.getBoundingClientRect().bottom + 4 : r.top + r.height * (p?.fondo ?? 1) + 18;
-          gsap.set(flot, { x: r.left + r.width / 2, y });
+          gsap.set(flot, { x: r.left + r.width / 2, y: r.top + r.height * (p?.fondo ?? 1) + 18 });
         }
       } else flot.classList.remove("is-on");
 
@@ -876,7 +1041,7 @@ export default function Landing() {
       const real = pz ? `${pz.nombre}${aviso ? ` · ${aviso}` : ""}` : "";
       let k = 0;
       let t0 = performance.now();
-      flot.classList.add("is-on");
+      if (faseRef.current === "tablero") flot.classList.add("is-on");
       const paso = (t: number) => {
         if (hoveredRef.current !== item) return;
         if (t - t0 > 22) {
@@ -904,7 +1069,7 @@ export default function Landing() {
     const onWheel = (e: WheelEvent) => {
       if (faseRef.current === "grid") return; // lo maneja Lenis
       // los paneles con scroll propio (aviso de privacidad, el mensaje del formulario) se mueven solos
-      if ((e.target as HTMLElement).closest(".ld-bar, textarea")) return;
+      if ((e.target as HTMLElement).closest(".ld-bar, .ld-filtros, .ld-top__panel")) return;
       e.preventDefault();
       if (faseRef.current !== "tablero") return;
       if (e.ctrlKey) {
@@ -935,7 +1100,7 @@ export default function Landing() {
     const radio = { r: 14 };
     const curX = gsap.quickTo(pos, "x", { duration: 0.18, ease: "power3" });
     const curY = gsap.quickTo(pos, "y", { duration: 0.18, ease: "power3" });
-    const SEL = "a, button, [role='button'], .ld-item__hit, .ld-wake, input, textarea";
+    const SEL = "a, button, [role='button'], .ld-item__hit, .ld-wake, input";
     let cursorVisto = false;
     const tamCursor = (chico: boolean) => {
       const r = chico ? 6 : 14;
@@ -979,7 +1144,7 @@ export default function Landing() {
       sil.appendChild(c);
       return { el, c };
     });
-    const TEXTOS = ".ld-glass, .ld-corner, .ld-bar__btn, .ld-filtro, .ld-wake__val, .ld-hint, .ld-label-float, .ld-focus__marca, .ld-focus__nombre, .ld-focus__precio, .ld-form__nota, .ld-bar__panel, .ld-focus__cta, .ld-btn-tx";
+    const TEXTOS = ".ld-glass, .ld-corner, .ld-bar__btn, .ld-filtro, .ld-wake__val, .ld-hint, .ld-label-float, .ld-focus__marca, .ld-focus__nombre, .ld-focus__precio, .ld-bar__panel, .ld-top__panel, .ld-focus__cta, .ld-btn-tx";
     const pintarCursor = () => {
       if (!fino) return;
       const R = radio.r;
@@ -1213,56 +1378,22 @@ export default function Landing() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [celdas, introFotos]);
 
-  /* ───────── formulario ───────── */
-
-  // El formulario entra como lead al admin. Si el admin no responde, se manda como antes (WhatsApp o correo).
-  const enviar = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!foco || envio === "enviando") return;
-    const fd = new FormData(e.currentTarget);
-    const nombre = String(fd.get("nombre") || "").trim();
-    const contacto = String(fd.get("contacto") || "").trim();
-    const mensaje = String(fd.get("mensaje") || "").trim();
-    const variante = foco.p.variantes.find((v) => v.sku === talla) ?? foco.p.variantes[0];
-    const agotada = !!variante && estadoDe(foco.p, inv, variante.sku).estado === "agotado";
-    const pieza = `${foco.p.nombre} (${foco.p.marca})${agotada ? ", agotada" : ""}`;
-    setErrorForm("");
-    setEnvio("enviando");
-    try {
-      const r = await fetch(URL_INTERES, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, contacto, mensaje, sitio: String(fd.get("sitio") || ""), sku: variante?.sku, talla: variante?.talla, pieza }),
-      });
-      if (r.ok) {
-        setEnvio("listo");
-        return;
-      }
-      if (r.status === 400 || r.status === 429) {
-        const d = await r.json().catch(() => ({}));
-        setErrorForm(d.error || "Revisa tus datos");
-        setEnvio("");
-        return;
-      }
-    } catch {
-      /* sin conexión con el admin: sigue abajo */
-    }
-    setEnvio("");
-    const texto = `Hola, me interesa ${foco.p.nombre}${variante?.talla ? ` talla ${variante.talla}` : ""} (${foco.p.marca}). ${mensaje}`.trim();
-    if (SITIO.whatsapp) {
-      const t = `${texto}\n\n${nombre}${contacto ? ` · ${contacto}` : ""}`;
-      window.open(`https://wa.me/${SITIO.whatsapp}?text=${encodeURIComponent(t)}`, "_blank", "noopener");
-    } else {
-      const cuerpo = `${texto}\n\n${nombre}\n${contacto}`;
-      window.location.href = `mailto:${SITIO.email}?subject=${encodeURIComponent(
-        `Me interesa: ${foco.p.nombre}`
-      )}&body=${encodeURIComponent(cuerpo)}`;
-    }
-  };
-
   const esGrid = fase === "grid" || (fase === "foco" && faseAntesRef.current === "grid");
   const focoEstado = foco ? estadoDe(foco.p, inv, talla ?? undefined) : { precio: null, disponible: null, estado: "disponible" as EstadoInv };
   const focoAviso = foco && foco.p.variantes.length ? avisoExistencias(focoEstado.estado, focoEstado.disponible) : "";
+  const focoSku = foco ? (talla ?? foco.p.variantes[0]?.sku) : undefined;
+  const focoColores = foco ? coloresDe(foco.p) : [];
+  const focoEnCarrito = !!foco && carrito.some((l) => l.id === foco.p.id && l.sku === focoSku);
+  const piezasCarrito = carrito.reduce((n, l) => n + l.cantidad, 0);
+  const alternarBuscar = () => {
+    if (buscarAbierto && busqueda) alBuscar(""); // cerrar la búsqueda la quita
+    setBuscarAbierto((v) => !v);
+  };
+  const sinResultados = esGrid && hayFiltro(filtro) && !PRODUCTOS.some((_, i) => coincide(i, filtro));
+  const verCarrito = () => {
+    cerrarFoco();
+    setCarritoAbierto(true);
+  };
 
   const registrar = useCallback((el: HTMLDivElement | null, i: number, t?: number) => {
     if (!el) return;
@@ -1292,9 +1423,10 @@ export default function Landing() {
         <Adapt>cdmx</Adapt>
       </div>
 
-      {/* zoom + grid (+ filtros en grid) */}
-      <div ref={topRef} className={`ld-glass ld-top${esGrid ? " is-grid" : ""}`} style={{ opacity: 0 }}>
-        <div className="ld-top__row">
+      {/* zoom (solo en la experiencia) y cuatro iconos: cuadrícula, filtrar, buscar y carrito.
+          Filtrar, buscar y carrito abren su fila debajo. */}
+      <div ref={topRef} className="ld-glass ld-top" style={{ opacity: 0 }}>
+        <div className="ld-top__row ld-top__row--iconos">
           {!esGrid && (
             <>
               <WakeSlider value={zoomVal} onChange={onZoom} bars={30} label={(v) => `${Math.round(zoomDeValor(v) * 100)}`} />
@@ -1305,58 +1437,144 @@ export default function Landing() {
             type="button"
             className="ld-iconbtn"
             onClick={toggleGrid}
-            aria-label={esGrid ? "Ver tablero" : "Ver en cuadrícula"}
+            aria-label={esGrid ? "Ver la experiencia" : "Ver en cuadrícula"}
             aria-pressed={esGrid}
-            title={esGrid ? "tablero" : "cuadrícula"}
+            title={esGrid ? "experiencia" : "cuadrícula"}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="currentColor" aria-hidden>
               <path ref={iconoRef} d={ICONO_GRID} />
             </svg>
           </button>
-          {esGrid && (
-            <>
-              <span className="ld-top__sep" aria-hidden />
-              <button
-                type="button"
-                className={`ld-filtro ld-filtro--toggle${filtrosAbiertos ? " is-open" : ""}`}
-                onClick={() => setFiltrosAbiertos((v) => !v)}
-                aria-expanded={filtrosAbiertos}
-              >
-                <Adapt>{filtrosAbiertos ? "cerrar" : "filtrar"}</Adapt>
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            className={`ld-iconbtn${filtrosAbiertos ? " is-on" : ""}`}
+            onClick={() => setFiltrosAbiertos((v) => !v)}
+            aria-label="Filtrar"
+            aria-expanded={filtrosAbiertos}
+            title="filtrar"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden>
+              <path d="M2 4.2h12M4.2 8h7.6M6.6 11.8h2.8" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={`ld-iconbtn${buscarAbierto ? " is-on" : ""}`}
+            onClick={alternarBuscar}
+            aria-label="Buscar"
+            aria-expanded={buscarAbierto}
+            title="buscar"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" aria-hidden>
+              <circle cx="7" cy="7" r="4.4" />
+              <path d="M10.3 10.3 13.8 13.8" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={`ld-iconbtn ld-iconbtn--carrito${carritoAbierto ? " is-on" : ""}`}
+            onClick={() => setCarritoAbierto((v) => !v)}
+            aria-label={piezasCarrito ? `Carrito, ${piezasCarrito} ${piezasCarrito === 1 ? "pieza" : "piezas"}` : "Carrito"}
+            aria-expanded={carritoAbierto}
+            title="carrito"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M1.5 2.2h2.1l1.7 7.9h7.1l1.5-5.6H4.1" />
+              <circle cx="6.3" cy="13" r="1" />
+              <circle cx="11.5" cy="13" r="1" />
+            </svg>
+            {piezasCarrito > 0 && <span className="ld-iconbtn__num">{piezasCarrito}</span>}
+          </button>
         </div>
-        {esGrid && filtrosAbiertos && (
+        {buscarAbierto && (
           <div className="ld-top__row ld-top__row--marcas">
-              <div className="ld-filtros" role="group" aria-label="Filtrar por categoría">
-                {CATEGORIAS.map((c) => (
+            <input
+              className="ld-buscar"
+              type="text"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              spellCheck={false}
+              autoFocus
+              placeholder="buscar pieza o marca"
+              aria-label="Buscar pieza o marca"
+              value={busqueda}
+              onChange={(e) => alBuscar(e.target.value)}
+            />
+          </div>
+        )}
+        {filtrosAbiertos && (
+          <>
+            <div className="ld-top__row ld-top__row--marcas">
+              <div className="ld-filtros ld-filtros--fila" role="group" aria-label="Filtrar por categoría">
+                {CATS.map((c) => (
                   <button
                     key={c}
                     type="button"
                     className={`ld-filtro${filtro.categoria === c ? " is-on" : ""}`}
-                    onClick={() => filtrar({ ...filtro, categoria: c })}
+                    aria-pressed={filtro.categoria === c}
+                    onClick={() => filtrar({ ...filtroRef.current, categoria: c })}
                   >
-                    <span className="ld-btn-tx"><Adapt>{c.toLowerCase()}</Adapt></span>
+                    <span className="ld-btn-tx"><Adapt>{c === "todo" ? "ver todo" : c.toLowerCase()}</Adapt></span>
                   </button>
                 ))}
               </div>
-          </div>
-        )}
-        {esGrid && filtrosAbiertos && (
-          <div className="ld-top__row ld-top__row--marcas">
-            <div className="ld-filtros" role="group" aria-label="Filtrar por marca">
-              {MARCAS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  className={`ld-filtro${filtro.marca === m ? " is-on" : ""}`}
-                  onClick={() => filtrar({ ...filtro, marca: m })}
-                >
-                  <span className="ld-btn-tx"><Adapt>{m.toLowerCase()}</Adapt></span>
-                </button>
-              ))}
             </div>
+            <div className="ld-top__row ld-top__row--marcas">
+              <div className="ld-filtros ld-filtros--fila" role="group" aria-label="Filtrar por marca">
+                {MARCAS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`ld-filtro${filtro.marca === m ? " is-on" : ""}`}
+                    aria-pressed={filtro.marca === m}
+                    onClick={() => filtrar({ ...filtroRef.current, marca: m })}
+                  >
+                    <span className="ld-btn-tx"><Adapt>{m.toLowerCase()}</Adapt></span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+        {carritoAbierto && (
+          <div className="ld-top__panel" data-lenis-prevent>
+            {filasCarrito.length === 0 ? (
+              <p>Tu carrito está vacío. Abre una pieza y agrégala.</p>
+            ) : (
+              <div className="ld-cart">
+                <ul className="ld-cart__lista">
+                  {filasCarrito.map((f) => (
+                    <li key={f.clave} className="ld-cart__fila">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img className="ld-cart__foto" src={f.src} alt="" />
+                      <div className="ld-cart__texto">
+                        <span className="ld-cart__nombre">{f.nombre}</span>
+                        <span className="ld-cart__detalle">{f.detalle}</span>
+                      </div>
+                      <div className="ld-cart__cant">
+                        <button type="button" onClick={() => cambiarCantidad(f.clave, f.cantidad - 1)} aria-label={f.cantidad > 1 ? `Quitar una ${f.nombre}` : `Quitar ${f.nombre} del carrito`}>
+                          −
+                        </button>
+                        <span aria-live="polite">{f.cantidad}</span>
+                        <button type="button" onClick={() => cambiarCantidad(f.clave, f.cantidad + 1)} disabled={f.cantidad >= f.max} aria-label={`Agregar otra ${f.nombre}`}>
+                          +
+                        </button>
+                      </div>
+                      <span className="ld-cart__precio">{f.precio === null ? "por confirmar" : formatoPrecio(f.precio * f.cantidad)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="ld-cart__pie">
+                  <span className="ld-cart__total">{totalCarrito === null ? "total por confirmar" : `total ${formatoPrecio(totalCarrito)}`}</span>
+                  <a className="ld-focus__cta" style={{ marginTop: 0 }} href={linkWhatsApp(mensajeCarrito(carrito, inv))} target="_blank" rel="noreferrer">
+                    <span className="ld-btn-tx">
+                      lo quiero <span className="arrow">→</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1390,6 +1608,7 @@ export default function Landing() {
             <Pieza key={p.id} p={p} i={i} registrar={registrar} onClick={clickGrid} agotado={agotados[i]} />
           ))}
         </div>
+        {sinResultados && <p className="ld-vacio">No hay piezas con ese filtro.</p>}
       </div>
 
       {/* pieza enfocada */}
@@ -1409,12 +1628,13 @@ export default function Landing() {
               if (im.src.endsWith(foco.p.srcGrande)) return;
               const grande = new Image();
               grande.onload = () => {
-                if (cloneRef.current === im) im.src = foco.p.srcGrande;
+                // solo si sigue abierta la misma pieza (se pudo cambiar de color mientras cargaba)
+                if (cloneRef.current === im && focoRef.current?.p.id === foco.p.id) im.src = foco.p.srcGrande;
               };
               grande.src = foco.p.srcGrande;
             }}
           />
-          <div className={`ld-focus${formAbierto ? " is-form" : ""}`}>
+          <div className={`ld-focus${focoColores.length > 1 ? " has-colores" : ""}`}>
             <div ref={boxRef} className="ld-focus__box" aria-hidden />
             <div ref={infoRef} className="ld-focus__info">
               <p className="ld-focus__marca" style={{ opacity: 0 }}>{foco.p.marca}</p>
@@ -1441,27 +1661,41 @@ export default function Landing() {
                   })}
                 </div>
               )}
-              <div style={{ opacity: 0 }}>
-                {!formAbierto ? (
-                  <button type="button" className="ld-focus__cta" onClick={() => setFormAbierto(true)}>
-                    <span className="ld-btn-tx">{focoEstado.estado === "agotado" ? "avísame si vuelve" : "me interesa"} <span className="arrow">→</span></span>
-                  </button>
-                ) : envio === "listo" ? (
-                  <p className="ld-form__ok">Recibido. Te escribimos pronto.</p>
-                ) : (
-                  <form className="ld-form" onSubmit={enviar}>
-                    <input name="nombre" placeholder="nombre" autoComplete="name" required maxLength={120} />
-                    <input name="contacto" placeholder="correo o whatsapp" autoComplete="email" required maxLength={160} />
-                    <textarea name="mensaje" placeholder="¿algo que quieras preguntar?" rows={2} maxLength={1500} />
-                    <input name="sitio" className="ld-form__trampa" tabIndex={-1} autoComplete="off" aria-hidden />
-                    <div className="ld-form__row">
-                      <span className="ld-form__nota">{errorForm || "te contestamos nosotros"}</span>
-                      <button type="submit" className="ld-focus__cta" style={{ marginTop: 0 }} disabled={envio === "enviando"}>
-                        <span className="ld-btn-tx">{envio === "enviando" ? "enviando" : "enviar"} <span className="arrow">→</span></span>
+              {focoColores.length > 1 && (
+                <div className="ld-colores" role="group" aria-label="Color" style={{ opacity: 0 }}>
+                  {focoColores.map((j) => {
+                    const q = PRODUCTOS[j];
+                    return (
+                      <button
+                        key={q.id}
+                        type="button"
+                        className={`ld-color${j === foco.i ? " is-on" : ""}`}
+                        aria-pressed={j === foco.i}
+                        aria-label={q.color}
+                        title={q.color}
+                        onClick={() => cambiarColor(j)}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={q.src} alt="" draggable={false} />
                       </button>
-                    </div>
-                  </form>
-                )}
+                    );
+                  })}
+                </div>
+              )}
+              <div className="ld-focus__acciones" style={{ opacity: 0 }}>
+                <a className="ld-focus__cta" href={linkWhatsApp(mensajePieza(foco.p, inv, focoSku))} target="_blank" rel="noreferrer">
+                  <span className="ld-btn-tx">{focoEstado.estado === "agotado" ? "avísame si vuelve" : "me interesa"} <span className="arrow">→</span></span>
+                </a>
+                {focoEstado.estado !== "agotado" &&
+                  (focoEnCarrito ? (
+                    <button type="button" className="ld-focus__sec" onClick={verCarrito}>
+                      ver carrito
+                    </button>
+                  ) : (
+                    <button type="button" className="ld-focus__sec" onClick={() => agregarAlCarrito(foco.p, focoSku)}>
+                      agregar al carrito
+                    </button>
+                  ))}
               </div>
             </div>
           </div>
