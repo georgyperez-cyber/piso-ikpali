@@ -36,6 +36,118 @@ const OBJETOS = PARENTESIS.map((id) => foto(id));
 // Cada invitado puede venir con una persona (+1)
 const ACOMPANANTES: [number, string][] = [[0, "solo yo"], [1, "+1"]];
 
+// Clave de país del teléfono. México va primero y es la que sale puesta; luego Estados Unidos y
+// Canadá, y el resto en orden alfabético. Quien no encuentre su país puede escribir su número
+// completo empezando con "+" y se respeta tal cual.
+const CLAVES: [string, string][] = [
+  ["México", "52"],
+  ["Estados Unidos / Canadá", "1"],
+  ["Alemania", "49"],
+  ["Arabia Saudita", "966"],
+  ["Argentina", "54"],
+  ["Australia", "61"],
+  ["Austria", "43"],
+  ["Bélgica", "32"],
+  ["Belice", "501"],
+  ["Bolivia", "591"],
+  ["Brasil", "55"],
+  ["Bulgaria", "359"],
+  ["Catar", "974"],
+  ["Chile", "56"],
+  ["China", "86"],
+  ["Colombia", "57"],
+  ["Corea del Sur", "82"],
+  ["Costa Rica", "506"],
+  ["Croacia", "385"],
+  ["Cuba", "53"],
+  ["Dinamarca", "45"],
+  ["Ecuador", "593"],
+  ["Egipto", "20"],
+  ["El Salvador", "503"],
+  ["Emiratos Árabes Unidos", "971"],
+  ["España", "34"],
+  ["Filipinas", "63"],
+  ["Finlandia", "358"],
+  ["Francia", "33"],
+  ["Grecia", "30"],
+  ["Guatemala", "502"],
+  ["Haití", "509"],
+  ["Honduras", "504"],
+  ["Hong Kong", "852"],
+  ["Hungría", "36"],
+  ["India", "91"],
+  ["Indonesia", "62"],
+  ["Irlanda", "353"],
+  ["Islandia", "354"],
+  ["Israel", "972"],
+  ["Italia", "39"],
+  ["Japón", "81"],
+  ["Kenia", "254"],
+  ["Líbano", "961"],
+  ["Luxemburgo", "352"],
+  ["Malasia", "60"],
+  ["Marruecos", "212"],
+  ["Nicaragua", "505"],
+  ["Nigeria", "234"],
+  ["Noruega", "47"],
+  ["Nueva Zelanda", "64"],
+  ["Países Bajos", "31"],
+  ["Pakistán", "92"],
+  ["Panamá", "507"],
+  ["Paraguay", "595"],
+  ["Perú", "51"],
+  ["Polonia", "48"],
+  ["Portugal", "351"],
+  ["Reino Unido", "44"],
+  ["República Checa", "420"],
+  ["Rumania", "40"],
+  ["Rusia", "7"],
+  ["Serbia", "381"],
+  ["Singapur", "65"],
+  ["Sudáfrica", "27"],
+  ["Suecia", "46"],
+  ["Suiza", "41"],
+  ["Tailandia", "66"],
+  ["Taiwán", "886"],
+  ["Turquía", "90"],
+  ["Ucrania", "380"],
+  ["Uruguay", "598"],
+  ["Venezuela", "58"],
+  ["Vietnam", "84"],
+];
+const CLAVE_MX = "52";
+
+// Separa un teléfono guardado ("+52 5512345678") en clave y número, para volver a llenar el formulario.
+// Los guardados sin clave (antes del selector) se toman como de México.
+const separarTelefono = (w: string): { clave: string; numero: string } => {
+  const t = (w || "").trim();
+  if (!t.startsWith("+")) return { clave: CLAVE_MX, numero: t };
+  const d = t.replace(/\D/g, "");
+  const clave = CLAVES.map(([, c]) => c)
+    .sort((x, y) => y.length - x.length)
+    .find((c) => d.startsWith(c));
+  return clave ? { clave, numero: d.slice(clave.length) } : { clave: CLAVE_MX, numero: t };
+};
+
+// Arma el teléfono completo con clave de país. Devuelve null si el número no está completo.
+const armarTelefono = (clave: string, escrito: string): string | null => {
+  const t = escrito.trim();
+  let d = t.replace(/\D/g, "");
+  // Número ya escrito con su clave ("+34 612…" o "0034 612…"): se respeta tal cual
+  if (t.startsWith("+") || t.startsWith("00")) {
+    if (t.startsWith("00")) d = d.slice(2);
+    return d.length >= 10 && d.length <= 15 ? `+${d}` : null;
+  }
+  if (clave === CLAVE_MX) {
+    // Hay quien escribe el 52 (o el 521 de antes) aunque ya esté puesto en el selector
+    if (d.length === 13 && d.startsWith("521")) d = d.slice(3);
+    else if (d.length === 12 && d.startsWith("52")) d = d.slice(2);
+    return d.length === 10 ? `+52 ${d}` : null;
+  }
+  const total = clave.length + d.length;
+  return d.length >= 6 && total >= 10 && total <= 15 ? `+${clave} ${d}` : null;
+};
+
 type Fase = "cerrado" | "form" | "listo";
 type Respuesta = { nombre: string; whatsapp: string; correo: string; acompanantes: number; instagram: string };
 type ErrorForm = { texto: string; correo?: string } | null;
@@ -99,6 +211,7 @@ export default function RsvpHero() {
   const [fase, setFase] = useState<Fase>("cerrado");
   const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
   const [acomp, setAcomp] = useState(0);
+  const [clave, setClave] = useState(CLAVE_MX);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<ErrorForm>(null);
 
@@ -129,6 +242,7 @@ export default function RsvpHero() {
     if (r) {
       setRespuesta(r);
       setAcomp(Math.min(1, r.acompanantes));
+      setClave(separarTelefono(r.whatsapp).clave);
       setFase("listo");
     }
   }, []);
@@ -172,16 +286,17 @@ export default function RsvpHero() {
     e.preventDefault();
     if (enviando) return;
     const fd = new FormData(e.currentTarget);
+    const telefono = armarTelefono(clave, String(fd.get("whatsapp") || ""));
     const r: Respuesta = {
       nombre: String(fd.get("nombre") || "").trim().replace(/\s+/g, " "),
-      whatsapp: String(fd.get("whatsapp") || "").trim(),
+      whatsapp: telefono || "",
       correo: String(fd.get("correo") || "").trim(),
       instagram: String(fd.get("instagram") || "").trim(),
       acompanantes: acomp,
     };
     if (r.nombre.split(" ").length < 2) return setError({ texto: "Escribe tu nombre completo, con apellido." });
-    const digitos = r.whatsapp.replace(/\D/g, "");
-    if (digitos.length < 10 || digitos.length > 15) return setError({ texto: "Escribe tu WhatsApp a 10 dígitos." });
+    if (!telefono)
+      return setError({ texto: clave === CLAVE_MX ? "Escribe tu número a 10 dígitos." : "Revisa tu número, parece incompleto." });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.correo)) return setError({ texto: "Escribe un correo válido." });
     setError(null);
     setEnviando(true);
@@ -294,18 +409,31 @@ export default function RsvpHero() {
                   <span className="rv-etiqueta">Nombre completo</span>
                   <input ref={nombreRef} name="nombre" autoComplete="name" required maxLength={120} defaultValue={respuesta?.nombre} />
                 </label>
-                <label className="rv-campo">
-                  <span className="rv-etiqueta">WhatsApp</span>
-                  <input
-                    name="whatsapp"
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    required
-                    maxLength={40}
-                    defaultValue={respuesta?.whatsapp}
-                  />
-                </label>
+                <div className="rv-campo" role="group" aria-labelledby="rv-tel">
+                  <span className="rv-etiqueta" id="rv-tel">WhatsApp / número de teléfono</span>
+                  <div className="rv-tel">
+                    <span className="rv-clave">
+                      <span aria-hidden>+{clave}</span>
+                      <select aria-label="Clave de país" value={clave} onChange={(e) => setClave(e.target.value)}>
+                        {CLAVES.map(([pais, c]) => (
+                          <option key={c} value={c}>
+                            {pais} +{c}
+                          </option>
+                        ))}
+                      </select>
+                    </span>
+                    <input
+                      name="whatsapp"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel-national"
+                      aria-label="Número de teléfono"
+                      required
+                      maxLength={40}
+                      defaultValue={separarTelefono(respuesta?.whatsapp || "").numero}
+                    />
+                  </div>
+                </div>
                 <label className="rv-campo">
                   <span className="rv-etiqueta">Correo</span>
                   <input
