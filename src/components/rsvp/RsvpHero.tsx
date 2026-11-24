@@ -494,9 +494,9 @@ export default function RsvpHero() {
 
             {fase === "listo" && respuesta && (
               <div className="rv-listo grid gap-5" role="status">
-                <h3>Listo, {primerNombre(respuesta.nombre)}.</h3>
+                <h3>Muy bien, {primerNombre(respuesta.nombre)}.</h3>
                 <p>
-                  Te esperamos el sábado{NB}5 de{NB}diciembre, de{NB}{EVENTO.horario}.
+                  Te vemos pronto: sábado{NB}5 de{NB}diciembre, de{NB}{EVENTO.horario}.
                   {respuesta.acompanantes > 0 && <> Contamos contigo y{NB}con tu{NB}+1.</>}
                 </p>
                 <div>
